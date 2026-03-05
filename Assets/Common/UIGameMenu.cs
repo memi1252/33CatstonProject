@@ -30,8 +30,7 @@ namespace Starter
 		public GameObject StartGroup;
 		public GameObject DisconnectGroup;
 
-		[HideInInspector]
-		public NetworkRunner _runnerInstance;
+		private NetworkRunner _runnerInstance;
 		private static string _shutdownStatus;
 
 		public async void StartGame()
