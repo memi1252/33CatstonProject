@@ -55,8 +55,12 @@ namespace Starter
 				PlayerCount = MaxPlayerCount,
 				// We need to specify a session property for matchmaking to decide where the player wants to join.
 				// Otherwise players from Platformer scene could connect to ThirdPersonCharacter game etc.
+
+				
 				SessionProperties = new Dictionary<string, SessionProperty> {["GameMode"] = GameModeIdentifier},
 				Scene = sceneInfo,
+				IsOpen = true,
+				IsVisible = true,
 			};
 
 			StatusText.text = startArguments.GameMode == GameMode.Single ? "Starting single-player..." : "Connecting...";

@@ -140,8 +140,10 @@ namespace Starter.Platformer
 				return;
 
 			// Update camera pivot and transfer properties from camera handle to Main Camera.
-			CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
-			Camera.main.transform.SetPositionAndRotation(CameraHandle.position, CameraHandle.rotation);
+			//CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
+			//Camera.main.transform.SetPositionAndRotation(CameraHandle.position, CameraHandle.rotation);
+			Camera.main.transform.position = CameraHandle.position + new  Vector3(0f, 0f, -10f);
+			Camera.main.transform.rotation = CameraHandle.localRotation;
 		}
 
 		private void ProcessInput(GameplayInput input)
@@ -160,7 +162,7 @@ namespace Starter.Platformer
 
 			float speed = input.Sprint ? SprintSpeed : WalkSpeed;
 
-			var lookRotation = Quaternion.Euler(0f, input.LookRotation.y, 0f);
+			var lookRotation = Quaternion.Euler(0f, 0, 0f);
 
 			// Calculate correct move direction from input (rotated based on camera look)
 			var moveDirection = lookRotation * new Vector3(input.MoveDirection.x, 0f, input.MoveDirection.y);
