@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 41ab4e3ff0785434b86a662d4725ae79
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 2100000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/03_Shooter/3rdParty/Ultimate Monsters/Blob/FBX/ChickenParticle.mat
+  uploadId: 728251

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 079132a17419d8a4aa5853e5ade2ceec
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/02_Platformer/3rdParty/Starter-Kit-3D-Platformer/models/platform-falling.glb
+  uploadId: 728251

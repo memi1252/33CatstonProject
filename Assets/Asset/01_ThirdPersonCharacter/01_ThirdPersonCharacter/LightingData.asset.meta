@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: ac0837569daa73942ac29ee342716ac8
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 112000000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/01_ThirdPersonCharacter/01_ThirdPersonCharacter/LightingData.asset
+  uploadId: 728251

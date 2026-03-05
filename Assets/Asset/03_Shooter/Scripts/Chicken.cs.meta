@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 0a9a06240a9f44a1aea859c853ae7da4
+timeCreated: 1715259897
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/03_Shooter/Scripts/Chicken.cs
+  uploadId: 728251

@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: f1ca215a66f40ae4d9effea046152a26
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/03_Shooter/3rdParty/Starter-Kit-FPS/models/wall-high.glb.import
+  uploadId: 728251

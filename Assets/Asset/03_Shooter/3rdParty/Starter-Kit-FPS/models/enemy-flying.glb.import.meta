@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0fefa3a95b8020544810d389ef84bbc8
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/03_Shooter/3rdParty/Starter-Kit-FPS/models/enemy-flying.glb.import
+  uploadId: 728251

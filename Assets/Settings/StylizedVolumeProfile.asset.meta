@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: 5b65ee6abcc2a22458c26872ab81c194
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 11400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/Settings/StylizedVolumeProfile.asset
+  uploadId: 728251

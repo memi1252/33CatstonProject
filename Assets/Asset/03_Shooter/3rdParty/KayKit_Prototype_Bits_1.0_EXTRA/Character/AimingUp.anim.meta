@@ -1,0 +1,15 @@
+fileFormatVersion: 2
+guid: c4b4970f7b3c5bf4189b8c1e91982f98
+NativeFormatImporter:
+  externalObjects: {}
+  mainObjectFileID: 7400000
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/03_Shooter/3rdParty/KayKit_Prototype_Bits_1.0_EXTRA/Character/AimingUp.anim
+  uploadId: 728251

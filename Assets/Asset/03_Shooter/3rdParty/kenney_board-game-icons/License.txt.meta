@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: e590e963f2ff26d44a831b83ffa2a2ff
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/03_Shooter/3rdParty/kenney_board-game-icons/License.txt
+  uploadId: 728251

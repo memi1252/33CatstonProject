@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 0a23a8cec7f6d804595d13e0f668104d
+TextScriptImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/03_Shooter/3rdParty/KayKit_Prototype_Bits_1.0_EXTRA/License.txt
+  uploadId: 728251

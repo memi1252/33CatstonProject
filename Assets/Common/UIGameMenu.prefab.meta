@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 8ef8c98852a6f494c97ab4073099c9a6
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/Common/UIGameMenu.prefab
+  uploadId: 728251

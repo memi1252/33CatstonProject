@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7189b7c33d080ae4e8cf346d625c78f9
+PrefabImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 291051
+  packageName: Photon Fusion Starter - Multiplayer
+  packageVersion: 2.0.4f1
+  assetPath: Assets/Common/Runner.prefab
+  uploadId: 728251
