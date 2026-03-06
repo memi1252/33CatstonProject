@@ -123,5 +123,5 @@ AssetOrigin:
   productId: 291051
   packageName: Photon Fusion Starter - Multiplayer
   packageVersion: 2.0.4f1
-  assetPath: Assets/01_ThirdPersonCharacter/3rdParty/StarterAssets/Environment/Art/Textures/Grid_01_BaseMap.png
+  assetPath: Assets/Asset/01_ThirdPersonCharacter/3rdParty/StarterAssets/Environment/Art/Textures/Grid_01_BaseMap.png
   uploadId: 728251

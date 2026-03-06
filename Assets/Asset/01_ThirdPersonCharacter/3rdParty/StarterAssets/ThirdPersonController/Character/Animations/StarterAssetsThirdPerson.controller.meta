@@ -11,5 +11,5 @@ AssetOrigin:
   productId: 291051
   packageName: Photon Fusion Starter - Multiplayer
   packageVersion: 2.0.4f1
-  assetPath: Assets/01_ThirdPersonCharacter/3rdParty/StarterAssets/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller
+  assetPath: Assets/Asset/01_ThirdPersonCharacter/3rdParty/StarterAssets/ThirdPersonController/Character/Animations/StarterAssetsThirdPerson.controller
   uploadId: 728251
