@@ -12,8 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
   m_Name: testBuff2
   m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
+  buffID: 0
   buffName: test2
   buffIcon: {fileID: 0}
-  buffDescription: test2
+  buffDescription: test2\n test2
   buffConditions: test2
-  buff: {fileID: 0}
+  buffProperties:
+    maxHp: 2
+    speed: 2
+    damage: 2
+    criticalDamage: 2
+    criticalChance: 2
+    attackRange: 2
+    meleeDefense: 2
+    magicDefense: 2

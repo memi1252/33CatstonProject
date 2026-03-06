@@ -96,6 +96,17 @@ namespace Starter
 			if (PanelGroup.gameObject.activeSelf && _runnerInstance == null)
 				return; // Panel cannot be hidden if the game is not running
 
+			if (PanelGroup.gameObject.activeSelf)
+			{
+				Cursor.lockState = CursorLockMode.None;
+				Cursor.visible = true;
+			}
+			else
+			{
+				Cursor.lockState = CursorLockMode.Locked;
+				Cursor.visible = false;
+			}
+
 			PanelGroup.gameObject.SetActive(!PanelGroup.gameObject.activeSelf);
 		}
 

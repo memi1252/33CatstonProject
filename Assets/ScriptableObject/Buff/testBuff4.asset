@@ -12,8 +12,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
   m_Name: testBuff4
   m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
+  buffID: 0
   buffName: test4
   buffIcon: {fileID: 0}
-  buffDescription: test4
+  buffDescription: test4\n test4
   buffConditions: test4
-  buff: {fileID: 0}
+  buffProperties:
+    maxHp: 4
+    speed: 4
+    damage: 4
+    criticalDamage: 4
+    criticalChance: 0
+    attackRange: 4
+    meleeDefense: 4
+    magicDefense: 4

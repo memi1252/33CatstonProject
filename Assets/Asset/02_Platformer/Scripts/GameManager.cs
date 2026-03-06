@@ -8,18 +8,48 @@ namespace Starter.Platformer
 	/// </summary>
 	public sealed class GameManager : NetworkBehaviour
 	{
+		public static GameManager Instance { get; private set; }
 		public int MinCoinsToWin = 10;
 		public float GameOverTime = 4f;
 		public Player PlayerPrefab;
 		public float SpawnRadius = 3f;
 
 		public Player LocalPlayer { get; private set; }
-		public bool IsGameFinished  => GameOverTimer.IsRunning;
+		public bool IsGameFinished => GameOverTimer.IsRunning;
 
 		[Networked]
 		public PlayerRef Winner { get; set; }
 		[Networked]
 		public TickTimer GameOverTimer { get; set; }
+
+		[Networked, Capacity(4)]
+		public NetworkDictionary<PlayerRef, NetworkString<_16>> PlayerNames => default;
+
+		void Awake()
+		{
+			if (Instance == null) Instance = this;
+			else Destroy(gameObject);
+		}
+
+		[Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+		public void RPC_RegisterPlayerName(PlayerRef player, string name)
+		{
+			if (!string.IsNullOrEmpty(name))
+			{
+				PlayerNames.Set(player, name);
+				Debug.Log($"[GameManager] {player} 이름 등록: {name}");
+			}
+		}
+
+		// 플레이어 번호(Ref)로 이름을 찾는 도우미 함수
+		public string GetPlayerName(PlayerRef player)
+		{
+			if (PlayerNames.TryGet(player, out var name))
+			{
+				return name.ToString();
+			}
+			return "Unknown";
+		}
 
 		// Called from UnityEvent on Flag gameobject
 		public void OnFlagReached(Player player)

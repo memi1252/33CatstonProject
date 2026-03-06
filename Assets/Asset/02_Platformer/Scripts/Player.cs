@@ -48,6 +48,17 @@ namespace Starter.Platformer
 
 		[Networked, OnChangedRender(nameof(OnJumpingChanged))]
 		private NetworkBool _isJumping { get; set; }
+		
+		[Header("Stats")]
+		[Networked] public float hp { get; set; } = 0f;
+		[Networked] public float maxHp { get; set; } = 0f;
+		[Networked] public float speed { get; set; } = 0f;
+		[Networked] public float damage { get; set; } = 0f;
+		[Networked] public float criticalDamage { get; set; } = 0f;
+		[Networked] public float criticalChance { get; set; } = 0f;
+		[Networked] public float attackRange { get; set; } = 0f;
+		[Networked] public float meleeDefense { get; set; } = 0f;
+		[Networked] public float magicDefense { get; set; } = 0f; 
 
 		// Animation IDs
 		private int _animIDSpeed;
@@ -70,7 +81,7 @@ namespace Starter.Platformer
 			}
 		}
 
-		public override void Spawned()
+		public override async void Spawned()
 		{
 			if (HasStateAuthority)
 			{
@@ -78,6 +89,10 @@ namespace Starter.Platformer
 
 				// Set player nickname that is saved in UIGameMenu
 				Nickname = PlayerPrefs.GetString("PlayerName");
+
+				while (GameManager.Instance == null) await System.Threading.Tasks.Task.Delay(100);
+
+				GameManager.Instance.RPC_RegisterPlayerName(Runner.LocalPlayer, Nickname);
 			}
 
 			// In case the nickname is already changed,
@@ -142,7 +157,7 @@ namespace Starter.Platformer
 			// Update camera pivot and transfer properties from camera handle to Main Camera.
 			//CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
 			//Camera.main.transform.SetPositionAndRotation(CameraHandle.position, CameraHandle.rotation);
-			Camera.main.transform.position = CameraHandle.position + new  Vector3(0f, 0f, -10f);
+			Camera.main.transform.position = CameraHandle.position + new Vector3(0f, 0f, -10f);
 			Camera.main.transform.rotation = CameraHandle.localRotation;
 		}
 

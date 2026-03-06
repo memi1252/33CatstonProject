@@ -7,13 +7,12 @@ using System.Threading.Tasks;
 
 namespace Starter
 {
-    // MonoBehaviour를 상속받고 Fusion의 콜백 인터페이스를 구현합니다.
     public class RoomList : MonoBehaviour, INetworkRunnerCallbacks
     {
         [Header("References")]
-        public UIGameMenu GameMenu;          // 기존 코드와 연결
-        public GameObject RoomEntryPrefab;   // 방 정보를 표시할 UI 프리팹
-        public Transform ContentParent;      // ScrollView의 Content
+        public UIGameMenu GameMenu;          
+        public GameObject RoomEntryPrefab;  
+        public Transform ContentParent;      
 
         private NetworkRunner _lobbyRunner;
 
