@@ -40,6 +40,8 @@ namespace Starter.Platformer
 				Debug.Log($"[GameManager] {player} 이름 등록: {name}");
 			}
 		}
+		
+		
 
 		// 플레이어 번호(Ref)로 이름을 찾는 도우미 함수
 		public string GetPlayerName(PlayerRef player)

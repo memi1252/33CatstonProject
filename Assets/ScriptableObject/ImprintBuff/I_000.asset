@@ -1,0 +1,21 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
+  m_Name: I_000
+  m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
+  buffID: 0
+  buffName: "\uC6B0\uB9B0 \uB9DD\uD588\uC5B4"
+  buffIcon: {fileID: 0}
+  buffDescription: "\uC544\uAD70\uC774 \uBC1B\uB294 \uD53C\uD574\uB7C9\uC774 \uC99D\uAC00\uD558\uACE0
+    \uC801\uC774 \uAC00\uD558\uB294 \uD53C\uD574\uB7C9\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4"
+  buffConditions: "\uBAA8\uB4E0 \uC778\uC6D0\uC774 \uB450\uD45C\uB97C \uD588\uC744
+    \uACBD\uC6B0 \uC544\uAD70\uC774 \uAC00\uD558\uB294 \uD53C\uD574\uB7C9\uB9CC \uC99D\uAC00\uD569\uB2C8\uB2E4"

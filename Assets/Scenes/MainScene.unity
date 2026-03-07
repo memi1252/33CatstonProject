@@ -4278,17 +4278,27 @@ MonoBehaviour:
   bufffSlotPrefab: {fileID: 3012248348386653284, guid: 685de29612716754bb50f713fe178aab,
     type: 3}
   buffSlotParent: {fileID: 225861930}
-  voteTime: 30
-  timerFillAmount: 1
+  imprintVoteTime: 30
+  contractVoteTime: 15
   timerFillImage: {fileID: 1025937827}
   timerText: {fileID: 1506435064}
-  availableBuffs:
+  imprintAvailableBuffs:
+  - {fileID: 11400000, guid: d29c019b420626a4ea4e2fa676770992, type: 2}
   - {fileID: 11400000, guid: 0b5daf57f124b2e45ad6929a648cc59e, type: 2}
   - {fileID: 11400000, guid: 17ba4d7c212b7784c825b087d1998212, type: 2}
   - {fileID: 11400000, guid: d586838dcc4ca4a4388ae6f7cef6cff0, type: 2}
   - {fileID: 11400000, guid: 10dd82e4c3e2acf40b3eb600f00032df, type: 2}
   - {fileID: 11400000, guid: 2bd9e494852d14049bd7019c9889d3bc, type: 2}
-  _isBuffActive: 0
+  contractAvailableBuffs:
+  - {fileID: 11400000, guid: d29c019b420626a4ea4e2fa676770992, type: 2}
+  - {fileID: 11400000, guid: 0b5daf57f124b2e45ad6929a648cc59e, type: 2}
+  - {fileID: 11400000, guid: 17ba4d7c212b7784c825b087d1998212, type: 2}
+  - {fileID: 11400000, guid: d586838dcc4ca4a4388ae6f7cef6cff0, type: 2}
+  - {fileID: 11400000, guid: 10dd82e4c3e2acf40b3eb600f00032df, type: 2}
+  - {fileID: 11400000, guid: 2bd9e494852d14049bd7019c9889d3bc, type: 2}
+  _isImprintBuffActive: 0
+  _isContractBuffActive: 0
+  _isVoteFinished: 0
   _playerVotes:
     _items: []
 --- !u!1001 &1320233463
