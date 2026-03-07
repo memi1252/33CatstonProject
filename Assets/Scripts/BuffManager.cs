@@ -213,13 +213,14 @@ public class BuffManager : NetworkBehaviour
                     var props = winnerBuffAsset.buffProperties;
                     
                     player.maxHp += props.maxHp;
-                    player.speed += props.speed;
+                    player.maxMp += props.maxMp;
                     player.damage += props.damage;
+                    player.attackSpeed += props.attackSpeed;
+                    player.moveSpeed += props.moveSpeed;
+                    player.allDamage += props.allDamage;
+                    player.damageReceived += props.damageReceived;
                     player.criticalDamage += props.criticalDamage;
                     player.criticalChance += props.criticalChance;
-                    player.attackRange += props.attackRange;
-                    player.meleeDefense += props.meleeDefense;
-                    player.magicDefense += props.magicDefense;
 
                     Debug.Log($"[Buff] {player.Nickname}에게 {winnerBuffAsset.buffName} 적용 완료!");
                 }
@@ -251,13 +252,14 @@ public class BuffManager : NetworkBehaviour
                     {
                         var props = buff.buffProperties;
                         player.maxHp += props.maxHp;
-                        player.speed += props.speed;
+                        player.maxMp += props.maxMp;
                         player.damage += props.damage;
+                        player.attackSpeed += props.attackSpeed;
+                        player.moveSpeed += props.moveSpeed;
+                        player.allDamage += props.allDamage;
+                        player.damageReceived += props.damageReceived;
                         player.criticalDamage += props.criticalDamage;
                         player.criticalChance += props.criticalChance;
-                        player.attackRange += props.attackRange;
-                        player.meleeDefense += props.meleeDefense;
-                        player.magicDefense += props.magicDefense;
 
                         Debug.Log($"[Buff] {player.Nickname}에게 {buff.buffName} 적용 완료!");
                     }

@@ -14,13 +14,19 @@ public class BuffScripableObject : ScriptableObject
 [System.Serializable]
 public class BuffProperties{
     [Header("Buff Properties")]
-    public float maxHp =0f;
-    public float speed = 0f;
-    public float damage = 0f;
-    public float criticalDamage = 0f;
-    public float criticalChance = 0f;
-    public float attackRange = 0f;
-    public float meleeDefense = 0f;
-    public float magicDefense = 0f;    
-
+    public float maxHp;
+    public float maxMp;
+    public float damage;
+    public float attackSpeed;
+    public float moveSpeed;
+    public float allDamage;
+    public float damageReceived;
+    public float criticalChance;
+    public float criticalDamage;
+    public float enemiesDamage;
+    public float enemiesReceived;
+    public float enemiesHp;
+    public float boosDamage;
+    public float boosReceived;
+    public float boosHp;
 }

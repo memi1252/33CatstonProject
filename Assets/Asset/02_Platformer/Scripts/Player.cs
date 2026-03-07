@@ -50,15 +50,17 @@ namespace Starter.Platformer
 		private NetworkBool _isJumping { get; set; }
 		
 		[Header("Stats")]
-		[Networked] public float hp { get; set; } = 0f;
-		[Networked] public float maxHp { get; set; } = 0f;
-		[Networked] public float speed { get; set; } = 0f;
-		[Networked] public float damage { get; set; } = 0f;
-		[Networked] public float criticalDamage { get; set; } = 0f;
+		[Networked] public float hp { get; set; } = 100f;
+		[Networked] public float maxHp { get; set; } = 100f;
+		[Networked] public float mp { get; set; } = 50f;
+		[Networked] public float maxMp { get; set; } = 50f;
+		[Networked] public float damage { get; set; } = 0f; // damage * N% + WaeponDamage
+		[Networked] public float attackSpeed { get; set; } = 100f; //100% + N%
+		[Networked] public float moveSpeed { get; set; } = 10f; // 100% + N%
+		[Networked] public float allDamage { get; set; } = 0f; // 스킬, 무기 데미지, 속설 추가뎀 전부 포함
+		[Networked] public float damageReceived { get; set; } = 0f;
 		[Networked] public float criticalChance { get; set; } = 0f;
-		[Networked] public float attackRange { get; set; } = 0f;
-		[Networked] public float meleeDefense { get; set; } = 0f;
-		[Networked] public float magicDefense { get; set; } = 0f; 
+		[Networked] public float criticalDamage { get; set; } = 0f; // damage * criticalDamage%
 
 		// Animation IDs
 		private int _animIDSpeed;
