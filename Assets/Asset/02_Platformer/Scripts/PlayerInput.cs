@@ -13,6 +13,7 @@ namespace Starter.Platformer
 		public Vector2 MoveDirection;
 		public bool Jump;
 		public bool Sprint;
+		public bool Attack;
 	}
 
 	/// <summary>
@@ -51,6 +52,7 @@ namespace Starter.Platformer
 			//_input.MoveDirection = default;
 			_input.Jump = false;
 			_input.Sprint = false;
+			_input.Attack = false;
 		}
 
 		private void Awake()
@@ -160,6 +162,18 @@ namespace Starter.Platformer
 			if (Cursor.lockState != CursorLockMode.Locked)
 				return;
 			_input.Sprint |= value.isPressed;
+		}
+
+		void OnAttack(InputValue value)
+		{
+            if(_networkObject == null || !_networkObject.HasInputAuthority)
+
+                return;
+
+            if (Cursor.lockState != CursorLockMode.Locked)
+                return;
+
+            _input.Attack |= value.isPressed;	
 		}
 
 		private Vector2 ClampLookRotation(Vector2 lookRotation)

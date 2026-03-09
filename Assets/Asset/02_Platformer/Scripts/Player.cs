@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Fusion;
 using Fusion.Addons.SimpleKCC;
+using UnityEngine.UIElements;
 
 namespace Starter.Platformer
 {
@@ -18,7 +19,24 @@ namespace Starter.Platformer
 		public Transform ScalingRoot;
 		public UINameplate Nameplate;
 
-		[Header("Weapon")] public WeaponScriptableObject CurrentWeaponScriptableObject;
+		[Header("Weapon")]
+		private WeaponScriptableObject WeaponScriptableObject;
+		public WeaponScriptableObject CurrentWeaponScriptableObject
+		{
+			get { return WeaponScriptableObject; }
+			set
+			{
+				if (value != WeaponScriptableObject)
+				{
+					ChangeWeaponSO();
+                    WeaponScriptableObject = value;
+				}
+			}
+		}
+		
+		public Transform WeaponSpawnTransform;
+		public float WeaponTimer;
+		public bool WeaponUse = true;
 
 		[Header("Movement Setup")]
 		public float WalkSpeed = 2f;
@@ -71,6 +89,8 @@ namespace Starter.Platformer
 		private Vector3 _moveVelocity;
 
 		private GameManager _gameManager;
+
+		private Weapon _weapon;
 
 		public void Respawn(Vector3 position, bool resetCoins)
 		{
@@ -145,9 +165,38 @@ namespace Starter.Platformer
 					playerInput.ResetInput();
 				}
 			}
+			if(CurrentWeaponScriptableObject != null)
+			{
+				if(WeaponSpawnTransform.childCount == 0)
+				{
+                    var weaponObject = Instantiate(CurrentWeaponScriptableObject.weaponPrefab, WeaponSpawnTransform);
+                    _weapon = weaponObject.GetComponent<Weapon>();
+					_weapon.WeaponSO = CurrentWeaponScriptableObject;
+					moveSpeed += CurrentWeaponScriptableObject.playerSpeed;
+                }
+			}
+			else
+			{
+				if(WeaponSpawnTransform.childCount > 0)
+				{
+					foreach (Transform child in WeaponSpawnTransform)
+					{
+						Destroy(child.gameObject);
+					}
+				}
+			}
 		}
+		private void ChangeWeaponSO()
+		{
+            moveSpeed -= CurrentWeaponScriptableObject.playerSpeed;
+            foreach (Transform child in WeaponSpawnTransform)
+            {
+                Destroy(child.gameObject);
+            }
+        }
 
-		public override void Render()
+
+        public override void Render()
 		{
 			Animator.SetFloat(_animIDSpeed, KCC.RealSpeed);
 			Animator.SetBool(_animIDGrounded, KCC.IsGrounded);
@@ -166,7 +215,20 @@ namespace Starter.Platformer
 			AssignAnimationIDs();
 		}
 
-		private void LateUpdate()
+        private void Update()
+        {
+			if (!WeaponUse)
+			{
+				WeaponTimer -= Time.deltaTime;
+				if (WeaponTimer <= 0)
+				{
+					WeaponTimer = 0;
+					WeaponUse = true;
+				}
+			}
+        }
+
+        private void LateUpdate()
 		{
 			// Only local player needs to update the camera
 			if (HasStateAuthority == false)
@@ -225,6 +287,16 @@ namespace Starter.Platformer
 			_moveVelocity = Vector3.Lerp(_moveVelocity, desiredMoveVelocity, acceleration * Runner.DeltaTime);
 
 			KCC.Move(_moveVelocity, jumpImpulse);
+			if (WeaponUse)
+			{
+                if (input.Attack)
+                {
+                    WeaponUse = false;
+                    WeaponTimer = CurrentWeaponScriptableObject.attackSpeed;
+                    _weapon.Attack(transform.forward);
+                }
+            }
+			
 		}
 
 		private void AssignAnimationIDs()

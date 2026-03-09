@@ -12,8 +12,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c6d217c060421042b2dcf8b2aebdb7f, type: 3}
   m_Name: TESTWeapon
   m_EditorClassIdentifier: Assembly-CSharp::Weapon
+  weaponID: 0
+  weaponName: 
+  weaponIcon: {fileID: 0}
+  description: 
+  weaponPrefab: {fileID: 5968150836135053750, guid: 0fb09913fa9498e4baa5ab202758f000,
+    type: 3}
+  projectilePrefab: {fileID: 4705942470810935141, guid: f0854f29768a1574f95d2a690c7b3e46,
+    type: 3}
   weaponType: 0
   grade: 0
-  damage: 1
+  damageRatio: 0
+  weaponDamage: 0
   tileSize: 1
   intersection: 1
+  attackSpeed: 2
+  playerSpeed: 10
+  projectileSpeed: 10
