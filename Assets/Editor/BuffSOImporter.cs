@@ -10,7 +10,7 @@ public class BuffSOImporter : EditorWindow
     private const string ImprintCSV_URL =
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vStTr_3obhFkhhsVXuKaaj6FFZ_B68LeWYFilpvg0AI_oWd9YeZdvypOP1lhV3yjGGYM_P1j5vppA28/pub?gid=847422572&single=true&output=csv";
 
-    private const string ImprintSAVE_PATH = "Assets/Resources/ImprintBuffs";
+    private const string ImprintSAVE_PATH = "Assets/ScriptableObject/ImprintBuffs";
 
     [MenuItem("Tools/Sync Buff Data (Regex CSV)")]
     public static void DownloadSheet()
@@ -63,20 +63,47 @@ public class BuffSOImporter : EditorWindow
             so.buffName = name;
             so.buffIcon = Resources.Load<Sprite>($"Icons/{data[1]}");
             so.buffDescription = data[5];
+            if (data[10] == "true")
+            {
+                so.isVotingCondition = true;
+            }
+            else
+            {
+                so.isVotingCondition = false;
+            }
+            ResetProperties(so.votingAbility);
+            if (int.Parse(data[16]) <= 0)
+            {
+                ApplyStatMapping(so.votingAbility, data[11], data[16], true);
+            }
+            else
+            {
+                ApplyStatMapping(so.votingAbility, data[11], data[16], false);
+            }
+            switch (data[12])
+            {
+                case "Count": case "count": so.votingCondition = VotingCondition.Count; break;
+                case "Percent": case "percent": so.votingCondition = VotingCondition.Percent; break;
+                case "MAX": case "max": so.votingCondition = VotingCondition.MAX; break;
+            }
+            so.votingValue = int.Parse(data[13]);
             so.buffConditions = data[14];
-            // Condition_EX는 19번째 열 (인덱스 18)
-            if (data.Length > 18) so.buffConditions = data[18];
-
+            switch (data[15])
+            {
+                case "Count": case "count": so.VotingVType  = VotingCondition.Count; break;
+                case "Percent": case "percent": so.VotingVType  = VotingCondition.Percent; break;
+                case "MAX": case "max": so.VotingVType  = VotingCondition.MAX; break;
+            }
+            so.VotingRatio = int.Parse(data[16]);
+            so.minPlayer = int.Parse(data[17]);
             if (so.buffProperties == null) so.buffProperties = new BuffProperties();
             ResetProperties(so.buffProperties);
 
             // --- 능력치 매핑 핵심 구간 ---
             
-            // 1. 증가 처리 (Increase_Abilities: data[4], Increase_Ratio: data[9])
             // isDecrease 파라미터를 false로 전달
             ApplyStatMapping(so.buffProperties, data[3], data[8], false);
 
-            // 2. 감소 처리 (Decrease_Abilities: data[5], Decrease_Ratio: data[10])
             // isDecrease 파라미터를 true로 전달하여 무조건 마이너스 처리
             ApplyStatMapping(so.buffProperties, data[4], data[9], true);
 

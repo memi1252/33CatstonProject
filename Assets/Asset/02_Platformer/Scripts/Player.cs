@@ -18,6 +18,8 @@ namespace Starter.Platformer
 		public Transform ScalingRoot;
 		public UINameplate Nameplate;
 
+		[Header("Weapon")] public WeaponScriptableObject CurrentWeaponScriptableObject;
+
 		[Header("Movement Setup")]
 		public float WalkSpeed = 2f;
 		public float SprintSpeed = 5f;
@@ -117,7 +119,16 @@ namespace Starter.Platformer
 				Respawn(_gameManager.GetSpawnPosition(), false);
 			}
 
-			ProcessInput(PlayerInput.CurrentInput);
+			// 네트워크를 통해 동기화된 입력 사용
+			if (GetInput<GameplayInput>(out var input))
+			{
+				ProcessInput(input);
+				
+			}
+			else
+			{
+				ProcessInput(default);
+			}
 
 			if (KCC.IsGrounded)
 			{
@@ -125,7 +136,15 @@ namespace Starter.Platformer
 				_isJumping = false;
 			}
 
-			PlayerInput.ResetInput();
+			// Input Authority를 가진 클라이언트만 입력 리셋
+			if (HasInputAuthority)
+			{
+				var playerInput = FindFirstObjectByType<PlayerInput>();
+				if (playerInput != null)
+				{
+					playerInput.ResetInput();
+				}
+			}
 		}
 
 		public override void Render()

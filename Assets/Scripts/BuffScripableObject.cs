@@ -1,4 +1,4 @@
-using UnityEngine;
+using System;using UnityEngine;
 
 [CreateAssetMenu(fileName = "New Buff", menuName = "Buff")]
 public class BuffScripableObject : ScriptableObject
@@ -7,8 +7,24 @@ public class BuffScripableObject : ScriptableObject
     public string buffName;
     public Sprite buffIcon;
     public string buffDescription;
-    public string buffConditions;
     public BuffProperties buffProperties;
+    public bool isVotingCondition;
+    public BuffProperties votingAbility;
+    public VotingCondition votingCondition = VotingCondition.Count;
+    public int votingValue;
+    public string buffConditions;
+    public VotingCondition VotingVType = VotingCondition.Count;
+    public int VotingRatio;
+    public int minPlayer;
+
+
+}
+
+public enum VotingCondition
+{
+    Count,
+    Percent,
+    MAX
 }
 
 [System.Serializable]

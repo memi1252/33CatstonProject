@@ -1,11 +1,13 @@
-﻿using UnityEngine;
+﻿using Fusion;
+using UnityEngine;
+using UnityEngine.InputSystem;
 
 namespace Starter.Platformer
 {
 	/// <summary>
 	/// Structure holding player input.
 	/// </summary>
-	public struct GameplayInput
+	public struct GameplayInput : INetworkInput
 	{
 		public Vector2 LookRotation;
 		public Vector2 MoveDirection;
@@ -16,44 +18,148 @@ namespace Starter.Platformer
 	/// <summary>
 	/// PlayerInput handles accumulating player input from Unity.
 	/// </summary>
+	[RequireComponent(typeof(UnityEngine.InputSystem.PlayerInput))]
 	public sealed class PlayerInput : MonoBehaviour
 	{
 		public float InitialLookRotation = 18f;
 
 		public GameplayInput CurrentInput => _input;
 		private GameplayInput _input;
+		
+		private UnityEngine.InputSystem.PlayerInput _playerInputComponent;
+		private NetworkObject _networkObject;
+
+		/// <summary>
+		/// Called by NetworkRunner to get input data for networking
+		/// </summary>
+		public void OnInput(NetworkRunner runner, NetworkInput input)
+		{
+			input.Set(_input);
+		}
+
+		/// <summary>
+		/// Called when input is missing for a player
+		/// </summary>
+		public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input)
+		{
+			input.Set(default(GameplayInput));
+		}
 
 		public void ResetInput()
 		{
 			// Reset input after it was used to detect changes correctly again
-			_input.MoveDirection = default;
+			//_input.MoveDirection = default;
 			_input.Jump = false;
 			_input.Sprint = false;
+		}
+
+		private void Awake()
+		{
+			// NetworkObject 찾기
+			_networkObject = GetComponent<NetworkObject>();
+			
+			// Unity PlayerInput 컴포넌트 찾기 및 설정
+			_playerInputComponent = GetComponent<UnityEngine.InputSystem.PlayerInput>();
+			if (_playerInputComponent == null)
+			{
+				Debug.LogError("[PlayerInput] Unity PlayerInput 컴포넌트를 찾을 수 없습니다!");
+				return;
+			}
+
+			// PlayerInput 컴포넌트가 Send Messages 방식으로 설정되어 있는지 확인
+			if (_playerInputComponent.notificationBehavior != UnityEngine.InputSystem.PlayerNotifications.SendMessages)
+			{
+				Debug.LogWarning("[PlayerInput] PlayerInput 컴포넌트의 Behavior를 Send Messages로 설정합니다.");
+				_playerInputComponent.notificationBehavior = UnityEngine.InputSystem.PlayerNotifications.SendMessages;
+			}
+
+			// 처음에는 모든 PlayerInput을 비활성화
+			_playerInputComponent.enabled = false;
+			Debug.Log("[PlayerInput] Unity PlayerInput 컴포넌트 초기 비활성화");
 		}
 
 		private void Start()
 		{
 			// Set initial camera rotation
 			_input.LookRotation = new Vector2(InitialLookRotation, 0f);
+			
+			// NetworkObject가 스폰되면 InputAuthority 확인
+			if (_networkObject != null && _networkObject.HasInputAuthority)
+			{
+				EnableInput();
+			}
+		}
+
+		public void EnableInput()
+		{
+			if (_playerInputComponent != null)
+			{
+				_playerInputComponent.enabled = true;
+				Debug.Log($"[PlayerInput] Unity PlayerInput 활성화 - HasInputAuthority: {_networkObject?.HasInputAuthority}");
+			}
+		}
+
+		public void DisableInput()
+		{
+			if (_playerInputComponent != null)
+			{
+				_playerInputComponent.enabled = false;
+				Debug.Log("[PlayerInput] Unity PlayerInput 비활성화");
+			}
 		}
 
 		private void Update()
 		{
-			// Accumulate input only if the cursor is locked.
-			if (Cursor.lockState != CursorLockMode.Locked)
+			// New Input System을 사용하므로 Update에서 직접 입력 처리하지 않음
+			// 모든 입력은 OnMove, OnLook, OnJump, OnSprint 콜백으로 처리됨
+		}
+
+		// New Input System 콜백들
+		void OnMove(InputValue value)
+		{
+			// InputAuthority를 가진 플레이어만 입력 처리
+			if (_networkObject == null || !_networkObject.HasInputAuthority)
 				return;
 
-			// Accumulate input from Keyboard/Mouse. Input accumulation is mandatory (at least for look rotation here) as Update can be
-			// called multiple times before next FixedUpdateNetwork is called - common if rendering speed is faster than Fusion simulation.
-
-			var lookRotationDelta = new Vector2(-Input.GetAxisRaw("Mouse Y"), Input.GetAxisRaw("Mouse X"));
-			_input.LookRotation = ClampLookRotation(_input.LookRotation + lookRotationDelta);
-
-			var moveDirection = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
+			var moveDirection = value.Get<Vector2>();
 			_input.MoveDirection = moveDirection.normalized;
+		}
 
-			_input.Jump |= Input.GetButtonDown("Jump");
-			_input.Sprint |= Input.GetButton("Sprint");
+		void OnLook(InputValue value)
+		{
+			// InputAuthority를 가진 플레이어만 입력 처리
+			if (_networkObject == null || !_networkObject.HasInputAuthority)
+				return;
+
+			if (Cursor.lockState != CursorLockMode.Locked)
+				return;
+			
+			// Look 입력 누적 처리 (마우스 델타값)
+			var lookDelta = value.Get<Vector2>();
+			lookDelta.x *= -1; // Y축 반전 (마우스 Y는 보통 반전해야 함)
+			_input.LookRotation = ClampLookRotation(_input.LookRotation + lookDelta);
+		}
+
+		void OnJump(InputValue value)
+		{
+			// InputAuthority를 가진 플레이어만 입력 처리
+			if (_networkObject == null || !_networkObject.HasInputAuthority)
+				return;
+
+			if (Cursor.lockState != CursorLockMode.Locked)
+				return;
+			_input.Jump |= value.isPressed;
+		}
+
+		void OnSprint(InputValue value)
+		{
+			// InputAuthority를 가진 플레이어만 입력 처리
+			if (_networkObject == null || !_networkObject.HasInputAuthority)
+				return;
+
+			if (Cursor.lockState != CursorLockMode.Locked)
+				return;
+			_input.Sprint |= value.isPressed;
 		}
 
 		private Vector2 ClampLookRotation(Vector2 lookRotation)

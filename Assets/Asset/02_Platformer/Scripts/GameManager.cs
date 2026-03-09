@@ -1,5 +1,8 @@
 ﻿using UnityEngine;
 using Fusion;
+using Fusion.Sockets;
+using System.Collections.Generic;
+using System;
 
 namespace Starter.Platformer
 {
@@ -14,8 +17,9 @@ namespace Starter.Platformer
 		public Player PlayerPrefab;
 		public float SpawnRadius = 3f;
 
-		public Player LocalPlayer { get; private set; }
-		public bool IsGameFinished => GameOverTimer.IsRunning;
+	public Player LocalPlayer { get; private set; }
+	public bool IsGameFinished => GameOverTimer.IsRunning;
+		
 
 		[Networked]
 		public PlayerRef Winner { get; set; }
@@ -71,15 +75,35 @@ namespace Starter.Platformer
 
 		public Vector3 GetSpawnPosition()
 		{
-			var randomPositionOffset = Random.insideUnitCircle * SpawnRadius;
+			var randomPositionOffset = UnityEngine.Random.insideUnitCircle * SpawnRadius;
 			return transform.position + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
 		}
 
-		public override void Spawned()
+	public override void Spawned()
+	{
+		LocalPlayer = Runner.Spawn(PlayerPrefab, GetSpawnPosition(), Quaternion.identity, Runner.LocalPlayer);
+		Runner.SetPlayerObject(Runner.LocalPlayer, LocalPlayer.Object);
+		
+		// LocalPlayer가 InputAuthority를 가진 경우에만 InputHandler 추가
+		if (LocalPlayer.HasInputAuthority)
 		{
-			LocalPlayer = Runner.Spawn(PlayerPrefab, GetSpawnPosition(), Quaternion.identity, Runner.LocalPlayer);
-			Runner.SetPlayerObject(Runner.LocalPlayer, LocalPlayer.Object);
+			// PlayerInput 활성화
+			var playerInput = LocalPlayer.GetComponent<PlayerInput>();
+			if (playerInput != null)
+			{
+				playerInput.EnableInput();
+			}
+
+			// InputHandler 추가
+			var inputHandler = LocalPlayer.gameObject.AddComponent<InputHandler>();
+			inputHandler.Initialize(Runner);
+			Debug.Log("[GameManager] InputHandler를 LocalPlayer에 추가했습니다.");
 		}
+		else
+		{
+			Debug.Log("[GameManager] LocalPlayer에 InputAuthority가 없어서 입력 시스템을 활성화하지 않았습니다.");
+		}
+	}
 
 		public override void FixedUpdateNetwork()
 		{
@@ -111,9 +135,9 @@ namespace Starter.Platformer
 			LocalPlayer.Respawn(position, resetCoins);
 		}
 
-		private void OnDrawGizmosSelected()
-		{
-			Gizmos.DrawWireSphere(transform.position, SpawnRadius);
-		}
+	private void OnDrawGizmosSelected()
+	{
+		Gizmos.DrawWireSphere(transform.position, SpawnRadius);
 	}
+}
 }

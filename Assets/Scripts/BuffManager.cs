@@ -185,6 +185,38 @@ public class BuffManager : NetworkBehaviour
                 voteCounts[2]++;
             }
             Debug.Log(voteCounts[0] + " / " + voteCounts[1] + " / " + voteCounts[2]);
+            
+            
+        }
+
+        for (int i = 0; i < buffSlots.Count; i++)
+        {
+            BuffScripableObject buff = buffSlots[i].buffScripableObject;
+            if (buff.isVotingCondition)
+            {
+                switch (buff.votingCondition)
+                {
+                    case VotingCondition.Count:
+                        if (voteCounts[i] == buff.votingValue)
+                        {
+                            imprintConditionApplyBuff(i);
+                        }
+                        break;
+                    case VotingCondition.Percent:
+                        float percent = (float)voteCounts[i] / Runner.ActivePlayers.Count() * 100f;
+                        if (percent >= buff.votingValue)
+                        {
+                            imprintConditionApplyBuff(i);
+                        }
+                        break;
+                    case VotingCondition.MAX:
+                        if (voteCounts[i] == Runner.ActivePlayers.Count())
+                        {
+                            imprintConditionApplyBuff(i);
+                        }
+                        break;
+                }
+            }
         }
         
         if (voteCounts.Count > 0)
@@ -192,6 +224,41 @@ public class BuffManager : NetworkBehaviour
             int maxValue = voteCounts.Max();
             int maxIndex = voteCounts.IndexOf(maxValue);
             imprintApplyBuff(maxIndex);
+        }
+
+        
+    }
+
+    private void imprintConditionApplyBuff(int maxIndex)
+    {
+        var conditionBuffAsset = buffSlots[maxIndex].buffScripableObject;
+
+        if (conditionBuffAsset == null) return;
+        
+        foreach (var playerRef in Runner.ActivePlayers)
+        {
+            NetworkObject playerObj = Runner.GetPlayerObject(playerRef);
+
+            if (playerObj != null)
+            {
+                if (playerObj.TryGetComponent(out Player player))
+                {
+                    
+                    var props = conditionBuffAsset.votingAbility;
+                    
+                    player.maxHp += props.maxHp;
+                    player.maxMp += props.maxMp;
+                    player.damage += props.damage;
+                    player.attackSpeed += props.attackSpeed;
+                    player.moveSpeed += props.moveSpeed;
+                    player.allDamage += props.allDamage;
+                    player.damageReceived += props.damageReceived;
+                    player.criticalDamage += props.criticalDamage;
+                    player.criticalChance += props.criticalChance;
+
+                    Debug.Log($"[Buff] {player.Nickname}에게 {conditionBuffAsset.buffName} 적용 완료!");
+                }
+            }
         }
     }
 
@@ -240,12 +307,13 @@ public class BuffManager : NetworkBehaviour
     
     private void contractApplyBuff()
     {
+        // 게약은 각인과 달리 무기에 적용시키는 증강이 있아서 나중에 무기를 만든후 무기에적용시키는 증강 만들어야할듯
         foreach (var buff in contractChosenBuff)
         {
             foreach (var playerRef in Runner.ActivePlayers)
             {
                 NetworkObject playerObj = Runner.GetPlayerObject(playerRef);
-
+        
                 if (playerObj != null)
                 {
                     if (playerObj.TryGetComponent(out Player player))
@@ -260,7 +328,7 @@ public class BuffManager : NetworkBehaviour
                         player.damageReceived += props.damageReceived;
                         player.criticalDamage += props.criticalDamage;
                         player.criticalChance += props.criticalChance;
-
+        
                         Debug.Log($"[Buff] {player.Nickname}에게 {buff.buffName} 적용 완료!");
                     }
                 }
