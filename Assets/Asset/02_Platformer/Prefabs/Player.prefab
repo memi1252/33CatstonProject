@@ -96,9 +96,11 @@ MonoBehaviour:
   CameraHandle: {fileID: 8328573696601887576}
   ScalingRoot: {fileID: 7912246800516094496}
   Nameplate: {fileID: 9066350602577507296}
-  CurrentWeaponScriptableObject: {fileID: 11400000, guid: e8f32abe05028034cb5a1e914dca5916,
+  WeaponScriptableObject: {fileID: 11400000, guid: 3f801a032e330d141bb03be70ab42b36,
     type: 2}
   WeaponSpawnTransform: {fileID: 4146053014953141876}
+  WeaponTimer: 0
+  WeaponUse: 1
   WalkSpeed: 5
   SprintSpeed: 7
   JumpImpulse: 10

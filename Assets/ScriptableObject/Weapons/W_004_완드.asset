@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c6d217c060421042b2dcf8b2aebdb7f, type: 3}
+  m_Name: "W_004_\uC644\uB4DC"
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponScriptableObject
+  weaponID: 0
+  weaponName: "\uC644\uB4DC"
+  weaponIcon: {fileID: 0}
+  description: "\uD718\uB450\uB974\uAE30\uC5D4 \uB108\uBB34 \uC57D\uD558\uACE0, \uB9C8\uBC95\uC774\uB77C\uAE30\uC5D4
+    \uBBFC\uB9DD\uD55C \uC218\uC900\uC785\uB2C8\uB2E4. \uD558\uC9C0\uB9CC \uC704\uAE09\uD55C
+    \uC21C\uAC04 \uD300\uC6D0\uC744 \uBC29\uD328 \uC0BC\uC544 \uB3C4\uB9DD\uCE60
+    \uC2DC\uAC04 \uC815\uB3C4\uB294 \uBC8C\uC5B4\uC904 \uC218 \uC788\uACA0\uB124\uC694."
+  weaponPrefab: {fileID: 0}
+  projectilePrefab: {fileID: 0}
+  weaponType: 0
+  targetAttribute: 5
+  grade: 0
+  damageRatio: 120
+  weaponDamage: 10
+  tileSize: 5
+  attackSpeed: 3
+  playerSpeed: 5
+  projectileSpeed: 15
+  projectileDis: 10

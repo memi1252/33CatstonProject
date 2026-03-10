@@ -20,7 +20,7 @@ namespace Starter.Platformer
 		public UINameplate Nameplate;
 
 		[Header("Weapon")]
-		private WeaponScriptableObject WeaponScriptableObject;
+		public WeaponScriptableObject WeaponScriptableObject;
 		public WeaponScriptableObject CurrentWeaponScriptableObject
 		{
 			get { return WeaponScriptableObject; }
@@ -172,7 +172,9 @@ namespace Starter.Platformer
                     var weaponObject = Instantiate(CurrentWeaponScriptableObject.weaponPrefab, WeaponSpawnTransform);
                     _weapon = weaponObject.GetComponent<Weapon>();
 					_weapon.WeaponSO = CurrentWeaponScriptableObject;
-					moveSpeed += CurrentWeaponScriptableObject.playerSpeed;
+					moveSpeed = CurrentWeaponScriptableObject.playerSpeed;
+					WalkSpeed += moveSpeed;
+					SprintSpeed += moveSpeed;
                 }
 			}
 			else
@@ -188,7 +190,8 @@ namespace Starter.Platformer
 		}
 		private void ChangeWeaponSO()
 		{
-            moveSpeed -= CurrentWeaponScriptableObject.playerSpeed;
+			WalkSpeed -= moveSpeed;
+			SprintSpeed -= moveSpeed;
             foreach (Transform child in WeaponSpawnTransform)
             {
                 Destroy(child.gameObject);

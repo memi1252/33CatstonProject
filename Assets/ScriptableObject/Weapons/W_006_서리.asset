@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c6d217c060421042b2dcf8b2aebdb7f, type: 3}
+  m_Name: "W_006_\uC11C\uB9AC"
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponScriptableObject
+  weaponID: 0
+  weaponName: "\uC11C\uB9AC"
+  weaponIcon: {fileID: 0}
+  description: "\uC801\uB4E4\uC744 \uB290\uB9AC\uAC8C \uB9CC\uB4E4\uC9C0\uB9CC, \uB2F9\uC2E0\uC744
+    \uB4A4\uCAD3\uC544\uC624\uB294 \uC544\uAD70\uC758 \uBC1C\uAC78\uC74C\uB3C4 \uBB34\uAC70\uC6CC\uC9C8
+    \uAC83\uC785\uB2C8\uB2E4."
+  weaponPrefab: {fileID: 0}
+  projectilePrefab: {fileID: 0}
+  weaponType: 0
+  targetAttribute: 2
+  grade: 1
+  damageRatio: 100
+  weaponDamage: 8
+  tileSize: 7
+  attackSpeed: 2
+  playerSpeed: 6
+  projectileSpeed: 18
+  projectileDis: 12.5

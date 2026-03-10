@@ -13,8 +13,9 @@ GameObject:
   - component: {fileID: 6049279314072060195}
   - component: {fileID: 4614013358710334695}
   - component: {fileID: 2852850018172844721}
+  - component: {fileID: 791290653626071114}
   m_Layer: 0
-  m_Name: AmmoTest
+  m_Name: Fire_WandAmmo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -30,7 +31,7 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -1.73471, y: -1.06, z: -2.76432}
-  m_LocalScale: {x: 0.1, y: 0.1, z: 0.1}
+  m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
@@ -139,3 +140,19 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
+--- !u!114 &791290653626071114
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4705942470810935141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fbb2261fb3b279045b91691affc66dee, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Ammo
+  projectileDis: 3
+  weaponTransform: {fileID: 0}
+  projectileParticles: {fileID: 0}
+  projectileVisualEffect: {fileID: 0}
