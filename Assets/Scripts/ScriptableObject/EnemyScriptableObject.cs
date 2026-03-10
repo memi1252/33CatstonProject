@@ -23,7 +23,7 @@ public class EnemyScriptableObject : ScriptableObject
     [Header("기본 정보")]
     public int enemyID;
     public string enemyName;
-    public bool appeared = true;
+    public int appeared;
     public Sprite enemyIcon;
     public GameObject enemyPrefab;
     public string description;

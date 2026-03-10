@@ -378,11 +378,13 @@ public class BuffSOImporter : EditorWindow
             so.enemyIcon = Resources.Load<Sprite>($"EnemyIcons/{prefabName}");
             so.enemyPrefab = Resources.Load<GameObject>($"EnemyPrefabs/{prefabName}");
 
-            // Appeared 매핑 (true/false)
-            if (bool.TryParse(data[1], out bool appeared))
-                so.appeared = appeared;
-            else
-                so.appeared = data[1].ToLower() == "true" || data[1] == "1";
+            switch (data[1].ToLower())
+            {
+                case "1": so.appeared = 1; break;
+                case "2": so.appeared = 2; break;
+                case "3": so.appeared = 3; break;
+                case "4": so.appeared = 4; break;
+            }
 
             // EnemyType 매핑 (Normal, Elite, Boss, Special)
             switch (data[4].ToLower())
@@ -473,12 +475,18 @@ public class BuffSOImporter : EditorWindow
             so.skillIcon = Resources.Load<Sprite>($"SkillIcons/{iconName}");
             so.description = data[3]; // Explanation
 
+           switch (data[5].ToLower())
+            {
+                case "duration": so.ActivationType = ActivationType.Duration; break;
+                case "attackcount": case "attacl_count": so.ActivationType= ActivationType.AttackCount; break;
+            }
+
             // 수치 데이터 파싱
-            if (float.TryParse(data[5], out float skillDuration))
-                so.skillDuration = skillDuration;
+            if (float.TryParse(data[6], out float skillDuration))
+                so.ActivationValue = skillDuration;
 
             // ValueType 매핑 (Percent, Fixed, Count)
-            switch (data[6].ToLower())
+            switch (data[7].ToLower())
             {
                 case "percent": so.valueType = ValueType.Percent; break;
                 case "fixed": so.valueType = ValueType.Fixed; break;
@@ -488,7 +496,7 @@ public class BuffSOImporter : EditorWindow
 
             // 여러 버프와 비율 처리
             string buffString = data[4]; // Buff
-            string ratioString = data[7]; // Buff_Ratio
+            string ratioString = data[8]; // Buff_Ratio
 
             string[] buffTypes = buffString.Split(new[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
             string[] buffRatios = ratioString.Split(new[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
