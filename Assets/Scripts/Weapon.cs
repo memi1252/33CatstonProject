@@ -1,3 +1,5 @@
+using System;
+using System.Collections;
 using UnityEngine;
 
 public class Weapon : MonoBehaviour
@@ -7,12 +9,14 @@ public class Weapon : MonoBehaviour
 
     private Animator Animator;
     private LineRenderer LineRenderer;
+    private ParticleSystem laserBeamEffect;
     private GameObject projectilePrefab;
 
     private void Awake()
     {
         Animator = GetComponent<Animator>();
         TryGetComponent(out LineRenderer);
+        gameObject.transform.GetChild(2).TryGetComponent(out laserBeamEffect);
     }
 
     private void Start()
@@ -36,25 +40,59 @@ public class Weapon : MonoBehaviour
             case WeaponType.Laser:
                 if(LineRenderer != null)
                 {
-                    Ray ray = new Ray(fireTransform.position, Look);
-                    if (Physics.Raycast(ray, out RaycastHit hit))
-                    {
-                        if(hit.distance < WeaponSO.projectileDis)
-                        {
-                            LineRenderer.SetPosition(1, hit.point);
-                        }
-                        else
-                        {
-                            LineRenderer.SetPosition(1, fireTransform.position + Look * WeaponSO.projectileDis);
-                        }
-                    }
-                    LineRenderer.SetPosition(0, fireTransform.position);
-                    LineRenderer.enabled = true;
+                    StartCoroutine(FireLaser());
                 }
                 break;
             case WeaponType.FloorBoard :
                 break;
         }
         
+    }
+    
+    private IEnumerator FireLaser()
+    {
+        LineRenderer.enabled = true;
+        laserBeamEffect.Play();
+        LineRenderer.positionCount = 2;
+        LineRenderer.SetPosition(0, fireTransform.position);
+        LineRenderer.SetPosition(1, fireTransform.position);
+
+        Ray ray = new Ray(fireTransform.position, transform.forward);
+        Vector3 endPoint;
+
+        if (Physics.Raycast(ray, out RaycastHit hit))
+        {
+            endPoint = hit.point;
+        }
+        else
+        {
+            endPoint = fireTransform.position + transform.forward * 50;
+        }
+
+        float timer = 0f;
+        float duration = .5f; 
+        Vector3 startPos = fireTransform.position;
+
+        while (timer < duration)
+        {
+            timer += Time.deltaTime;
+            float progress = timer / duration;
+            LineRenderer.SetPosition(1, Vector3.Lerp(startPos, endPoint, progress));
+            yield return null;
+        }
+        LineRenderer.SetPosition(1, endPoint);
+        
+        yield return new WaitForSeconds(0.3f);
+        laserBeamEffect.Stop();
+        LineRenderer.enabled = false;
+    }
+
+    
+    private void Update()
+    {
+        if (WeaponSO.weaponType == WeaponType.Laser)
+        {
+            Debug.DrawRay(fireTransform.position, transform.forward * 100, Color.red);
+        }
     }
 }

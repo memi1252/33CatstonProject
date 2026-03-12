@@ -19,7 +19,8 @@ MonoBehaviour:
     \uC55E\uAE38\uC744 \uB9C9\uB294 \uC790\uB294 \uB204\uAD6C\uB4E0 \uC804\uAE30\uC758
     \uC2EC\uD310\uC744 \uBC1B\uAC8C \uB420 \uAC83\uC785\uB2C8\uB2E4. \uADF8\uAC8C
     \uC544\uAD70\uC774\uB77C \uD560\uC9C0\uB77C\uB3C4\uC694."
-  weaponPrefab: {fileID: 0}
+  weaponPrefab: {fileID: 8317104441977495887, guid: 473cf1cfc5558cd46a6b5d65bf0168e3,
+    type: 3}
   projectilePrefab: {fileID: 0}
   weaponType: 1
   targetAttribute: 3
