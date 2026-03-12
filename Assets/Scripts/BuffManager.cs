@@ -100,7 +100,7 @@ public class BuffManager : NetworkBehaviour
                                 }
                             }
                         }
-                        
+
                     }
                 }
                 else
@@ -114,8 +114,8 @@ public class BuffManager : NetworkBehaviour
                         }
                         playerVotes.Clear();
                         contractVoteTime = contractVoteTimeMax;
-                        Cursor.lockState = CursorLockMode.Locked;
-                        Cursor.visible = false;
+                        //Cursor.lockState = CursorLockMode.Locked;
+                        //Cursor.visible = false;
                         BuffUI.SetActive(false);
                     }
                 }
@@ -156,8 +156,8 @@ public class BuffManager : NetworkBehaviour
                     playerVotes.Clear();
                     imprintVoteTimeMax = 30f;
                     imprintVoteTime = imprintVoteTimeMax;
-                    Cursor.lockState = CursorLockMode.Locked;
-                    Cursor.visible = false;
+                    //Cursor.lockState = CursorLockMode.Locked;
+                    //Cursor.visible = false;
                     BuffUI.SetActive(false);
                 }
             }
@@ -412,37 +412,83 @@ public class BuffManager : NetworkBehaviour
         {
             if (!isContractBuffActive)
             {
-                int[] buffIndices = new int[Runner.ActivePlayers.Count()*3];
-                for (int i = 0; i < Runner.ActivePlayers.Count()*3; i++)
+                int neededBuffCount = Runner.ActivePlayers.Count() * 3;
+                int[] buffIndices = new int[neededBuffCount];
+                
+                // 사용 가능한 버프 인덱스 리스트 생성
+                List<int> availableIndices = new List<int>();
+                for (int j = 0; j < contractAvailableBuffs.Length; j++)
                 {
-                    int randomIndex = Random.Range(0, contractAvailableBuffs.Length);
-                    while (archiveBuffs.Contains(imprintAvailableBuffs[randomIndex]))
+                    if (!archiveBuffs.Contains(contractAvailableBuffs[j]))
                     {
-                        randomIndex = Random.Range(0, contractAvailableBuffs.Length);
+                        availableIndices.Add(j);
                     }
+                }
+                
+                // 사용 가능한 버프가 부족하면 archiveBuffs 초기화
+                if (availableIndices.Count < neededBuffCount)
+                {
+                    Debug.Log($"[BuffManager] 계약 버프 풀 초기화 (필요: {neededBuffCount}, 남음: {availableIndices.Count})");
+                    //archiveBuffs.Clear();
+                    availableIndices.Clear();
+                    for (int j = 0; j < contractAvailableBuffs.Length; j++)
+                    {
+                        availableIndices.Add(j);
+                    }
+                }
+                
+                // 랜덤하게 선택
+                for (int i = 0; i < neededBuffCount; i++)
+                {
+                    int randomListIndex = Random.Range(0, availableIndices.Count);
+                    int randomIndex = availableIndices[randomListIndex];
                     buffIndices[i] = randomIndex;
                     archiveBuffs.Add(contractAvailableBuffs[randomIndex]);
+                    availableIndices.RemoveAt(randomListIndex);
                 }
                 RPC_ContractBuffVote(buffIndices);
-                
             }
         }
         
         //각인 증강 시작 임시
         if (Input.GetKeyDown(KeyCode.B))
         {
+            if (imprintAvailableBuffs.Length == 0)
+                return;
             if (!isImprintBuffActive)
             {
                 int[] buffIndices = new int[3];
+                
+                // 사용 가능한 버프 인덱스 리스트 생성
+                List<int> availableIndices = new List<int>();
+                for (int j = 0; j < imprintAvailableBuffs.Length; j++)
+                {
+                    if (!archiveBuffs.Contains(imprintAvailableBuffs[j]))
+                    {
+                        availableIndices.Add(j);
+                    }
+                }
+                
+                // 사용 가능한 버프가 부족하면 archiveBuffs 초기화
+                if (availableIndices.Count < 3)
+                {
+                    Debug.Log($"[BuffManager] 각인 버프 풀 초기화 (필요: 3, 남음: {availableIndices.Count})");
+                    //archiveBuffs.Clear();
+                    availableIndices.Clear();
+                    for (int j = 0; j < imprintAvailableBuffs.Length; j++)
+                    {
+                        availableIndices.Add(j);
+                    }
+                }
+                
+                // 랜덤하게 선택
                 for (int i = 0; i < 3; i++)
                 {
-                    int randomIndex = Random.Range(0, imprintAvailableBuffs.Length);
-                    while (archiveBuffs.Contains(imprintAvailableBuffs[randomIndex]))
-                    {
-                        randomIndex = Random.Range(0, imprintAvailableBuffs.Length);
-                    }
+                    int randomListIndex = Random.Range(0, availableIndices.Count);
+                    int randomIndex = availableIndices[randomListIndex];
                     buffIndices[i] = randomIndex;
                     archiveBuffs.Add(imprintAvailableBuffs[randomIndex]);
+                    availableIndices.RemoveAt(randomListIndex);
                 }
                 RPC_ImprintBuffVote(buffIndices);
             }
@@ -522,11 +568,6 @@ public class BuffManager : NetworkBehaviour
                     buffSlot.Order = Order++;
                 }
                 break;
-        }
-        
-        foreach (int index in buffIndices)
-        {
-            
         }
     }
 

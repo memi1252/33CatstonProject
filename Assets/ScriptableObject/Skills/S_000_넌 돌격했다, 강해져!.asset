@@ -15,16 +15,16 @@ MonoBehaviour:
   skillID: 0
   skillName: "\uB10C \uB3CC\uACA9\uD588\uB2E4, \uAC15\uD574\uC838!"
   skillIcon: {fileID: 0}
-  description: "{Activation_Value}\uCD08 \uB3D9\uC548 \uAC00\uD558\uB294 \uD53C\uD574\uC640
-    \uC774\uC18D\uC774 \uC99D\uAC00\uD569\uB2C8\uB2E4"
+  description: "{Activation_Value:0}\uCD08 \uB3D9\uC548 \uAC00\uD558\uB294 \uD53C\uD574\uAC00
+    {Buff_Ratio:0}\uC640 \uC774\uC18D\uC774 {Buff_Ratio:1} \uC99D\uAC00\uD569\uB2C8\uB2E4"
   skillBuffs:
   - buffType:
       maxHp: 0
       maxMp: 0
-      damage: 0
+      damage: 20
       attackSpeed: 0
       moveSpeed: 0
-      allDamage: 20
+      allDamage: 0
       damageReceived: 0
       criticalChance: 0
       criticalDamage: 0

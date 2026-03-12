@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c57875c4cad480d933d467adef3817e, type: 3}
-  m_Name: "S_004_\uACE0\uAE30 \uBC29\uD328"
+  m_Name: "S_006_\uC720\uB9AC\uB300\uD3EC"
   m_EditorClassIdentifier: Assembly-CSharp::SkillScriptableObject
   skillID: 0
-  skillName: "\uACE0\uAE30 \uBC29\uD328"
+  skillName: "\uC720\uB9AC\uB300\uD3EC"
   skillIcon: {fileID: 0}
-  description: "{Activation_Value:0}\uCD08 \uB3D9\uC548 \uBC1B\uB294 \uD53C\uD574\uAC00
-    \uC808\uBC18 \uAC10\uC18C\uD569\uB2C8\uB2E4"
+  description: "{Activation_Value:0}\uD68C\uC758 \uACF5\uACA9\uC774 \uCE58\uBA85\uD0C0
+    \uD655\uB960 100%\uB85C \uC801\uC6A9\uB429\uB2C8\uB2E4."
   skillBuffs:
   - buffType:
       maxHp: 0
@@ -25,8 +25,8 @@ MonoBehaviour:
       attackSpeed: 0
       moveSpeed: 0
       allDamage: 0
-      damageReceived: 50
-      criticalChance: 0
+      damageReceived: 0
+      criticalChance: 100
       criticalDamage: 0
       enemiesDamage: 0
       enemiesReceived: 0
@@ -34,7 +34,7 @@ MonoBehaviour:
       boosDamage: 0
       boosReceived: 0
       boosHp: 0
-    buffRatio: 50
+    buffRatio: 100
   ActivationType: 0
-  ActivationValue: 5
-  valueType: 0
+  ActivationValue: 3
+  valueType: 2

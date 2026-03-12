@@ -103,8 +103,8 @@ namespace Starter
 			}
 			else
 			{
-				Cursor.lockState = CursorLockMode.Locked;
-				Cursor.visible = false;
+				//Cursor.lockState = CursorLockMode.Locked;
+				//Cursor.visible = false;
 			}
 
 			PanelGroup.gameObject.SetActive(!PanelGroup.gameObject.activeSelf);
@@ -145,8 +145,8 @@ namespace Starter
 			}
 			else
 			{
-				Cursor.lockState = CursorLockMode.Locked;
-				Cursor.visible = false;
+				//Cursor.lockState = CursorLockMode.Locked;
+				//Cursor.visible = false;
 			}
 		}
 

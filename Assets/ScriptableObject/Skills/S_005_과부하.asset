@@ -15,14 +15,14 @@ MonoBehaviour:
   skillID: 0
   skillName: "\uACFC\uBD80\uD558"
   skillIcon: {fileID: 0}
-  description: "{Activation_Value}\uCD08 \uB3D9\uC548 \uBC1B\uB294 \uACF5\uC18D\uC774
-    \uB300\uD3ED \uC99D\uAC00\uD569\uB2C8\uB2E4"
+  description: "{Activation_Value:0}\uCD08 \uB3D9\uC548 \uBC1B\uB294 \uACF5\uC18D\uC774
+    {Buff_Ratio:0} \uC99D\uAC00\uD569\uB2C8\uB2E4"
   skillBuffs:
   - buffType:
       maxHp: 0
       maxMp: 0
       damage: 0
-      attackSpeed: -50
+      attackSpeed: 50
       moveSpeed: 0
       allDamage: 0
       damageReceived: 0
@@ -34,7 +34,7 @@ MonoBehaviour:
       boosDamage: 0
       boosReceived: 0
       boosHp: 0
-    buffRatio: -50
+    buffRatio: 50
   ActivationType: 0
   ActivationValue: 3
   valueType: 0

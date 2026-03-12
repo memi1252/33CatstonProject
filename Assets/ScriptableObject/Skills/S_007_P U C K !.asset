@@ -10,13 +10,13 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 0c57875c4cad480d933d467adef3817e, type: 3}
-  m_Name: "S_004_\uACE0\uAE30 \uBC29\uD328"
+  m_Name: S_007_P U C K !
   m_EditorClassIdentifier: Assembly-CSharp::SkillScriptableObject
   skillID: 0
-  skillName: "\uACE0\uAE30 \uBC29\uD328"
+  skillName: P U C K !
   skillIcon: {fileID: 0}
-  description: "{Activation_Value:0}\uCD08 \uB3D9\uC548 \uBC1B\uB294 \uD53C\uD574\uAC00
-    \uC808\uBC18 \uAC10\uC18C\uD569\uB2C8\uB2E4"
+  description: "\uB2F9\uC2E0\uC740 PUCK\uC5D0 \uC655\uC774 \uB418\uC5C8\uC2B5\uB2C8\uB2E4!
+    \uC544\uBB34\uB7F0 \uD6A8\uACFC\uB294 \uC5C6\uC9C0\uB9CC \uAE30\uBD84\uC774 \uC88B\uC544\uC9C0\uC796\uC544\uC694"
   skillBuffs:
   - buffType:
       maxHp: 0
@@ -25,7 +25,7 @@ MonoBehaviour:
       attackSpeed: 0
       moveSpeed: 0
       allDamage: 0
-      damageReceived: 50
+      damageReceived: 0
       criticalChance: 0
       criticalDamage: 0
       enemiesDamage: 0
@@ -34,7 +34,7 @@ MonoBehaviour:
       boosDamage: 0
       boosReceived: 0
       boosHp: 0
-    buffRatio: 50
+    buffRatio: 0
   ActivationType: 0
-  ActivationValue: 5
+  ActivationValue: 1
   valueType: 0

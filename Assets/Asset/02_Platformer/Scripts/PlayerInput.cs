@@ -9,7 +9,7 @@ namespace Starter.Platformer
 	/// </summary>
 	public struct GameplayInput : INetworkInput
 	{
-		public Vector2 LookRotation;
+		//public Vector2 LookRotation;
 		public Vector2 MoveDirection;
 		public bool Jump;
 		public bool Sprint;
@@ -83,7 +83,7 @@ namespace Starter.Platformer
 		private void Start()
 		{
 			// Set initial camera rotation
-			_input.LookRotation = new Vector2(InitialLookRotation, 0f);
+			//_input.LookRotation = new Vector2(InitialLookRotation, 0f);
 			
 			// NetworkObject가 스폰되면 InputAuthority 확인
 			if (_networkObject != null && _networkObject.HasInputAuthority)
@@ -127,20 +127,17 @@ namespace Starter.Platformer
 			_input.MoveDirection = moveDirection.normalized;
 		}
 
-		void OnLook(InputValue value)
-		{
-			// InputAuthority를 가진 플레이어만 입력 처리
-			if (_networkObject == null || !_networkObject.HasInputAuthority)
-				return;
-
-			if (Cursor.lockState != CursorLockMode.Locked)
-				return;
-			
-			// Look 입력 누적 처리 (마우스 델타값)
-			var lookDelta = value.Get<Vector2>();
-			lookDelta.x *= -1; // Y축 반전 (마우스 Y는 보통 반전해야 함)
-			_input.LookRotation = ClampLookRotation(_input.LookRotation + lookDelta);
-		}
+		// void OnLook(InputValue value)
+		// {
+		// 	// InputAuthority를 가진 플레이어만 입력 처리
+		// 	if (_networkObject == null || !_networkObject.HasInputAuthority)
+		// 		return;
+		// 	
+		// 	// Look 입력 누적 처리 (마우스 델타값)
+		// 	var lookDelta = value.Get<Vector2>();
+		// 	lookDelta.x *= -1; // Y축 반전 (마우스 Y는 보통 반전해야 함)
+		// 	_input.LookRotation = ClampLookRotation(_input.LookRotation + lookDelta);
+		// }
 
 		void OnJump(InputValue value)
 		{
@@ -158,9 +155,7 @@ namespace Starter.Platformer
 			// InputAuthority를 가진 플레이어만 입력 처리
 			if (_networkObject == null || !_networkObject.HasInputAuthority)
 				return;
-
-			if (Cursor.lockState != CursorLockMode.Locked)
-				return;
+			
 			_input.Sprint |= value.isPressed;
 		}
 
@@ -168,9 +163,6 @@ namespace Starter.Platformer
 		{
             if(_networkObject == null || !_networkObject.HasInputAuthority)
 
-                return;
-
-            if (Cursor.lockState != CursorLockMode.Locked)
                 return;
 
             _input.Attack |= value.isPressed;	

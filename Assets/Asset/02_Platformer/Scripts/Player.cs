@@ -190,12 +190,15 @@ namespace Starter.Platformer
 		}
 		private void ChangeWeaponSO()
 		{
-			WalkSpeed -= moveSpeed;
-			SprintSpeed -= moveSpeed;
-            foreach (Transform child in WeaponSpawnTransform)
-            {
-                Destroy(child.gameObject);
-            }
+			if (_weapon != null)
+			{
+				WalkSpeed -= moveSpeed;
+				SprintSpeed -= moveSpeed;
+				foreach (Transform child in WeaponSpawnTransform)
+				{
+					Destroy(child.gameObject);
+				}
+			}
         }
 
 
@@ -263,10 +266,8 @@ namespace Starter.Platformer
 
 			float speed = input.Sprint ? SprintSpeed : WalkSpeed;
 
-			var lookRotation = Quaternion.Euler(0f, 0, 0f);
-
 			// Calculate correct move direction from input (rotated based on camera look)
-			var moveDirection = lookRotation * new Vector3(input.MoveDirection.x, 0f, input.MoveDirection.y);
+			var moveDirection = new Vector3(input.MoveDirection.x, 0f, input.MoveDirection.y);
 			var desiredMoveVelocity = moveDirection * speed;
 
 			float acceleration;
@@ -277,29 +278,41 @@ namespace Starter.Platformer
 			}
 			else
 			{
-				// Rotate the character towards move direction over time
-				var currentRotation = KCC.TransformRotation;
-				var targetRotation = Quaternion.LookRotation(moveDirection);
-				var nextRotation = Quaternion.Lerp(currentRotation, targetRotation, RotationSpeed * Runner.DeltaTime);
-
-				KCC.SetLookRotation(nextRotation.eulerAngles);
-
 				acceleration = KCC.IsGrounded ? GroundAcceleration : AirAcceleration;
 			}
 
 			_moveVelocity = Vector3.Lerp(_moveVelocity, desiredMoveVelocity, acceleration * Runner.DeltaTime);
 
 			KCC.Move(_moveVelocity, jumpImpulse);
+
+			// 마우스 위치를 월드 좌표로 변환
+			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+			Plane groundPlane = new Plane(Vector3.up, transform.position);
+			Vector3 mouseWorldPos = Vector3.zero;
+			if (groundPlane.Raycast(ray, out float distance))
+			{
+				mouseWorldPos = ray.GetPoint(distance);
+			}
+			mouseWorldPos.y = transform.position.y; // 같은 높이로 맞춤
+			// 캐릭터가 마우스 방향을 바라보도록 회전
+			Vector3 lookDirection = (mouseWorldPos - transform.position).normalized;
+			if (lookDirection != Vector3.zero)
+			{
+				Quaternion targetRotation = Quaternion.LookRotation(lookDirection);
+
+				KCC.SetLookRotation(Quaternion
+					.Slerp(transform.rotation, targetRotation, RotationSpeed * Runner.DeltaTime).eulerAngles);
+			}
+			
 			if (WeaponUse)
 			{
-                if (input.Attack)
-                {
-                    WeaponUse = false;
-                    WeaponTimer = CurrentWeaponScriptableObject.attackSpeed;
-                    _weapon.Attack(transform.forward);
-                }
-            }
-			
+				if (input.Attack)
+				{
+					WeaponUse = false;
+					WeaponTimer = CurrentWeaponScriptableObject.attackSpeed;
+					_weapon.Attack(transform.forward);
+				}
+			}
 		}
 
 		private void AssignAnimationIDs()
