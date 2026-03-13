@@ -212,7 +212,8 @@ public class BuffSOImporter : EditorWindow
             {
                 case "projectile": so.weaponType = WeaponType.Projectile; break;
                 case "laser": so.weaponType = WeaponType.Laser; break;
-                case "floorboard": so.weaponType = WeaponType.FloorBoard; break;
+                case "area": so.weaponType = WeaponType.Area; break;
+                case "strike": so.weaponType = WeaponType.Strike; break;
                 default: so.weaponType = WeaponType.Projectile; break;
             }
 
@@ -578,6 +579,7 @@ public class BuffSOImporter : EditorWindow
                 case "projectile": so.targetType = TargetType.Projectile; break;
                 case "laser": so.targetType = TargetType.Laser; break;
                 case "area": so.targetType = TargetType.Area; break;
+                case "strike": so.targetType = TargetType.Strike; break;
                 default: so.targetType = TargetType.None; break;
             }
 

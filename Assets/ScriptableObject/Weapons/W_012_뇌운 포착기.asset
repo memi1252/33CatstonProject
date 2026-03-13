@@ -23,7 +23,7 @@ MonoBehaviour:
     \uB9C8\uC74C\uC73C\uB85C \uC3D8\uC138\uC694!"
   weaponPrefab: {fileID: 0}
   projectilePrefab: {fileID: 0}
-  weaponType: 0
+  weaponType: 3
   targetAttribute: 3
   grade: 2
   damageRatio: 100

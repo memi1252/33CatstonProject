@@ -4,7 +4,8 @@ public enum WeaponType
 {
     Projectile,
     Laser,
-    FloorBoard
+    Area,
+    Strike,
 }
 
 public enum Grade

@@ -6,6 +6,7 @@ public enum TargetType
     Projectile,
     Laser,
     Area,
+    Strike,
     None
 }
 

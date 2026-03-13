@@ -122,6 +122,15 @@ namespace Starter.Platformer
 			// In case the nickname is already changed,
 			// we need to trigger the change manually
 			OnNicknameChanged();
+			
+			// 무기 스폰 
+			var weaponObject = Instantiate(CurrentWeaponScriptableObject.weaponPrefab, WeaponSpawnTransform);
+			_weapon = weaponObject.GetComponent<Weapon>();
+			_weapon.WeaponSO = CurrentWeaponScriptableObject;
+			moveSpeed = CurrentWeaponScriptableObject.playerSpeed;
+			WalkSpeed += moveSpeed;
+			SprintSpeed += moveSpeed;
+			
 		}
 
 		public override void FixedUpdateNetwork()
@@ -165,28 +174,6 @@ namespace Starter.Platformer
 					playerInput.ResetInput();
 				}
 			}
-			if(CurrentWeaponScriptableObject != null)
-			{
-				if(WeaponSpawnTransform.childCount == 0)
-				{
-                    var weaponObject = Instantiate(CurrentWeaponScriptableObject.weaponPrefab, WeaponSpawnTransform);
-                    _weapon = weaponObject.GetComponent<Weapon>();
-					_weapon.WeaponSO = CurrentWeaponScriptableObject;
-					moveSpeed = CurrentWeaponScriptableObject.playerSpeed;
-					WalkSpeed += moveSpeed;
-					SprintSpeed += moveSpeed;
-                }
-			}
-			else
-			{
-				if(WeaponSpawnTransform.childCount > 0)
-				{
-					foreach (Transform child in WeaponSpawnTransform)
-					{
-						Destroy(child.gameObject);
-					}
-				}
-			}
 		}
 		private void ChangeWeaponSO()
 		{
@@ -198,6 +185,10 @@ namespace Starter.Platformer
 				{
 					Destroy(child.gameObject);
 				}
+			}
+			else
+			{
+				
 			}
         }
 
