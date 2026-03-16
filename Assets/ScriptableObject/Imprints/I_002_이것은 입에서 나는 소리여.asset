@@ -1,0 +1,84 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
+  m_Name: "I_002_\uC774\uAC83\uC740 \uC785\uC5D0\uC11C \uB098\uB294 \uC18C\uB9AC\uC5EC"
+  m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
+  buffID: 2
+  buffName: "\uC774\uAC83\uC740 \uC785\uC5D0\uC11C \uB098\uB294 \uC18C\uB9AC\uC5EC"
+  buffIcon: {fileID: 0}
+  buffDescription: "\uC544\uAD70\uC5D0 \uACF5\uACA9\uC18D\uB3C4\uAC00 {Ratio:0} \uC99D\uAC00\uD558\uC9C0\uB9CC
+    \uB370\uBBF8\uC9C0\uAC00 {Ratio:1} \uAC10\uC18C\uD569\uB2C8\uB2E4."
+  isSpecial: 0
+  buffProperties:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 1
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 1
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: -0.5
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: -0.5
+  isVotingCondition: 0
+  Condition: 3
+  VotingCondition: 2
+  votingValue: 0
+  applyType: 0
+  votingAbility:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0
+  VotingVType: 1
+  voteDesc: "(\uC5C6\uC74C)"
+  minPlayer: 4

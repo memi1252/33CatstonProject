@@ -74,13 +74,13 @@ namespace Starter.Platformer
 		[Networked] public float maxHp { get; set; } = 100f;
 		[Networked] public float mp { get; set; } = 50f;
 		[Networked] public float maxMp { get; set; } = 50f;
-		[Networked] public float damage { get; set; } = 0f; // damage * N% + WaeponDamage
-		[Networked] public float attackSpeed { get; set; } = 100f; //100% + N%
+		[Networked] public float damage { get; set; } = 5f; // damage * N% + WaeponDamage
+		[Networked] public float attackSpeed { get; set; } = 1f; //100% + N%
 		[Networked] public float moveSpeed { get; set; } = 10f; // 100% + N%
 		[Networked] public float allDamage { get; set; } = 0f; // 스킬, 무기 데미지, 속설 추가뎀 전부 포함
-		[Networked] public float damageReceived { get; set; } = 0f;
-		[Networked] public float criticalChance { get; set; } = 0f;
-		[Networked] public float criticalDamage { get; set; } = 0f; // damage * criticalDamage%
+		[Networked] public float damageReceived { get; set; } = 1f;
+		[Networked] public float criticalChance { get; set; } = 0.1f;
+		[Networked] public float criticalDamage { get; set; } = .5f; // damage * criticalDamage%
 
 		// Animation IDs
 		private int _animIDSpeed;
@@ -127,10 +127,6 @@ namespace Starter.Platformer
 			var weaponObject = Instantiate(CurrentWeaponScriptableObject.weaponPrefab, WeaponSpawnTransform);
 			_weapon = weaponObject.GetComponent<Weapon>();
 			_weapon.WeaponSO = CurrentWeaponScriptableObject;
-			moveSpeed = CurrentWeaponScriptableObject.playerSpeed;
-			WalkSpeed += moveSpeed;
-			SprintSpeed += moveSpeed;
-			
 		}
 
 		public override void FixedUpdateNetwork()
@@ -179,8 +175,6 @@ namespace Starter.Platformer
 		{
 			if (_weapon != null)
 			{
-				WalkSpeed -= moveSpeed;
-				SprintSpeed -= moveSpeed;
 				foreach (Transform child in WeaponSpawnTransform)
 				{
 					Destroy(child.gameObject);
@@ -199,7 +193,7 @@ namespace Starter.Platformer
 			Animator.SetBool(_animIDGrounded, KCC.IsGrounded);
 
 			FootstepSound.enabled = KCC.IsGrounded && KCC.RealSpeed > 1f;
-			FootstepSound.pitch = KCC.RealSpeed > SprintSpeed - 1 ? 1.5f : 1f;
+			FootstepSound.pitch = KCC.RealSpeed > moveSpeed + 3 - 1 ? 1.5f : 1f;
 
 			ScalingRoot.localScale = Vector3.Lerp(ScalingRoot.localScale, Vector3.one, Time.deltaTime * 8f);
 
@@ -255,7 +249,7 @@ namespace Starter.Platformer
 			// It feels better when the player falls quicker
 			KCC.SetGravity(KCC.RealVelocity.y >= 0f ? UpGravity : DownGravity);
 
-			float speed = input.Sprint ? SprintSpeed : WalkSpeed;
+			float speed = input.Sprint ? moveSpeed +3 : moveSpeed;
 
 			// Calculate correct move direction from input (rotated based on camera look)
 			var moveDirection = new Vector3(input.MoveDirection.x, 0f, input.MoveDirection.y);
@@ -295,15 +289,29 @@ namespace Starter.Platformer
 					.Slerp(transform.rotation, targetRotation, RotationSpeed * Runner.DeltaTime).eulerAngles);
 			}
 			
-			if (WeaponUse)
+			if (WeaponUse && !BuffManager.Instance.isContractBuffActive && !BuffManager.Instance.isImprintBuffActive)
 			{
 				if (input.Attack)
 				{
 					WeaponUse = false;
 					WeaponTimer = CurrentWeaponScriptableObject.attackSpeed;
-					_weapon.Attack(transform.forward);
+					float value = Random.value;
+					bool isCritical = value <= criticalChance;
+					if (isCritical)
+					{
+						_weapon.Attack(transform.forward,damage ,criticalDamage );
+					}
+					else
+					{
+						_weapon.Attack(transform.forward, damage, 1);
+					}
 				}
 			}
+		}
+
+		public void TakeDamage(float damage)
+		{
+			hp -= damageReceived * damage;
 		}
 
 		private void AssignAnimationIDs()

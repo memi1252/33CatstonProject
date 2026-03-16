@@ -9,6 +9,8 @@ public class Weapon : MonoBehaviour
     public Transform fireTransform;
     public GameObject attackScope;
 
+    public float damage;
+
     private Animator Animator;
     private LineRenderer LineRenderer;
     private ParticleSystem ParticleEffect;
@@ -45,7 +47,7 @@ public class Weapon : MonoBehaviour
         projectilePrefab = WeaponSO.projectilePrefab;
     }
 
-    public void Attack(Vector3 Look)
+    public void Attack(Vector3 Look, float damage, float criticalDamage)
     {
         //Animator.SetTrigger("Attack");
         switch (WeaponSO.weaponType)

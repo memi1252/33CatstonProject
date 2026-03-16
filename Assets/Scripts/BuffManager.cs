@@ -24,7 +24,7 @@ public class BuffManager : NetworkBehaviour
 
     public BuffScripableObject[] imprintAvailableBuffs; // 각인 투표 가능한 버프 목록
     
-    public BuffScripableObject[] contractAvailableBuffs; // 계약으로 얻을 수 있는 버프 목록
+    public ContractScriptableObject[] contractAvailableBuffs; // 계약으로 얻을 수 있는 버프 목록
 
     [Networked]
     public bool isImprintBuffActive { get; set; } = false; // 각인 버프 활성화 여부
@@ -38,10 +38,11 @@ public class BuffManager : NetworkBehaviour
     [Networked, Capacity(4)]
     public NetworkDictionary<PlayerRef, int> playerVotes => default;
 
-    private Dictionary<BuffScripableObject, int> myContractBuff = new Dictionary<BuffScripableObject, int>(); // 현제 보여지고있는 계약 
+    private Dictionary<ContractScriptableObject, int> myContractBuff = new Dictionary<ContractScriptableObject, int>(); // 현제 보여지고있는 계약 
     
-    private List<BuffScripableObject> contractChosenBuff = new List<BuffScripableObject>(); // 선택받은 계약 버프들 
-    private List<BuffScripableObject> archiveBuffs = new List<BuffScripableObject>();
+    private List<ContractScriptableObject> contractChosenBuff = new List<ContractScriptableObject>(); // 선택받은 계약 버프들 
+    private List<ContractScriptableObject> archiveContractBuffs = new List<ContractScriptableObject>(); // 계약 버프 중복 방지 위한 아카이브
+    private List<BuffScripableObject> archiveImprintBuffs = new List<BuffScripableObject>();
     private List<BuffSlot> buffSlots = new List<BuffSlot>();
     private ChangeDetector _changeDetector;
 
@@ -194,7 +195,7 @@ public class BuffManager : NetworkBehaviour
             BuffScripableObject buff = buffSlots[i].buffScripableObject;
             if (buff.isVotingCondition)
             {
-                switch (buff.votingCondition)
+                switch (buff.Condition)
                 {
                     case VotingCondition.Count:
                         if (voteCounts[i] == buff.votingValue)
@@ -243,18 +244,21 @@ public class BuffManager : NetworkBehaviour
             {
                 if (playerObj.TryGetComponent(out Player player))
                 {
+
+                    for (int i = 0; i < conditionBuffAsset.votingAbility.Length; i++)
+                    {
+                        var props = conditionBuffAsset.votingAbility[i].targetAbilities;
+                        player.maxHp += props.maxHp;
+                        player.maxMp += props.maxMp;
+                        player.damage *= props.damage;
+                        player.attackSpeed = (props.attackSpeed / (player.attackSpeed/100f));
+                        player.moveSpeed += props.moveSpeed;
+                        player.allDamage += props.allDamage;
+                        player.damageReceived += props.damageReceived;
+                        player.criticalDamage += props.criticalDamage;
+                        player.criticalChance += props.criticalChance;
+                    }
                     
-                    var props = conditionBuffAsset.votingAbility;
-                    
-                    player.maxHp += props.maxHp;
-                    player.maxMp += props.maxMp;
-                    player.damage += props.damage;
-                    player.attackSpeed += props.attackSpeed;
-                    player.moveSpeed += props.moveSpeed;
-                    player.allDamage += props.allDamage;
-                    player.damageReceived += props.damageReceived;
-                    player.criticalDamage += props.criticalDamage;
-                    player.criticalChance += props.criticalChance;
 
                     Debug.Log($"[Buff] {player.Nickname}에게 {conditionBuffAsset.buffName} 적용 완료!");
                 }
@@ -276,19 +280,27 @@ public class BuffManager : NetworkBehaviour
             {
                 if (playerObj.TryGetComponent(out Player player))
                 {
-                    
-                    var props = winnerBuffAsset.buffProperties;
-                    
-                    player.maxHp += props.maxHp;
-                    player.maxMp += props.maxMp;
-                    player.damage += props.damage;
-                    player.attackSpeed += props.attackSpeed;
-                    player.moveSpeed += props.moveSpeed;
-                    player.allDamage += props.allDamage;
-                    player.damageReceived += props.damageReceived;
-                    player.criticalDamage += props.criticalDamage;
-                    player.criticalChance += props.criticalChance;
 
+                    for (int i = 0; i < winnerBuffAsset.buffProperties.Length; i++)
+                    {
+                        var props = winnerBuffAsset.buffProperties[i].targetAbilities;
+                        if (winnerBuffAsset.Condition == VotingCondition.Fixed)
+                        {
+                            player.maxHp += props.maxHp;
+                            player.maxMp += props.maxMp;
+                        }else if( winnerBuffAsset.Condition == VotingCondition.Percent)
+                        {
+                            player.maxHp *= (1 + props.maxHp);
+                            player.maxMp *= (1 + props.maxMp);
+                        }
+                        player.damage *= props.damage;
+                        player.attackSpeed = (player.attackSpeed + props.attackSpeed);
+                        player.moveSpeed = player.WalkSpeed * (1 + props.moveSpeed);
+                        player.allDamage += props.allDamage;
+                        player.damageReceived += props.damageReceived;
+                        player.criticalDamage += props.criticalDamage;
+                        player.criticalChance += props.criticalChance;
+                    }
                     Debug.Log($"[Buff] {player.Nickname}에게 {winnerBuffAsset.buffName} 적용 완료!");
                 }
             }
@@ -299,9 +311,9 @@ public class BuffManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_ContractBuffTransmission(int buffIndex)
     {
-        BuffScripableObject chosenBuff = contractAvailableBuffs[buffIndex];
+        ContractScriptableObject chosenBuff = contractAvailableBuffs[buffIndex];
         contractChosenBuff.Add(chosenBuff);
-        Debug.Log($"[Buff] {chosenBuff.buffName}");
+        Debug.Log($"[Buff] {chosenBuff.contractName}");
     }
     
     
@@ -318,18 +330,24 @@ public class BuffManager : NetworkBehaviour
                 {
                     if (playerObj.TryGetComponent(out Player player))
                     {
-                        var props = buff.buffProperties;
-                        player.maxHp += props.maxHp;
-                        player.maxMp += props.maxMp;
-                        player.damage += props.damage;
-                        player.attackSpeed += props.attackSpeed;
-                        player.moveSpeed += props.moveSpeed;
-                        player.allDamage += props.allDamage;
-                        player.damageReceived += props.damageReceived;
-                        player.criticalDamage += props.criticalDamage;
-                        player.criticalChance += props.criticalChance;
-        
-                        Debug.Log($"[Buff] {player.Nickname}에게 {buff.buffName} 적용 완료!");
+                        for (int i = 0; i < buff.contractBuffs.Length; i++)
+                        {
+                            var props = buff.contractBuffs[i].targetAbilities;
+                            if(buff.valueType == ValueType.Percent)
+                            {
+                                player.maxHp *= (1 + props.maxHp);
+                                player.maxMp *= (1 + props.maxMp);
+                            }
+                            player.damage *= props.damage;
+                            player.attackSpeed = (player.attackSpeed + props.attackSpeed);
+                            player.moveSpeed = player.WalkSpeed * (1 + props.moveSpeed);
+                            player.allDamage += props.allDamage;
+                            player.damageReceived += props.damageReceived;
+                            player.criticalDamage += props.criticalDamage;
+                            player.criticalChance += props.criticalChance;
+                        }
+                        
+                        Debug.Log($"[Buff] {player.Nickname}에게 {buff.contractName} 적용 완료!");
                     }
                 }
             }
@@ -419,7 +437,7 @@ public class BuffManager : NetworkBehaviour
                 List<int> availableIndices = new List<int>();
                 for (int j = 0; j < contractAvailableBuffs.Length; j++)
                 {
-                    if (!archiveBuffs.Contains(contractAvailableBuffs[j]))
+                    if (!archiveContractBuffs.Contains(contractAvailableBuffs[j]))
                     {
                         availableIndices.Add(j);
                     }
@@ -443,7 +461,7 @@ public class BuffManager : NetworkBehaviour
                     int randomListIndex = Random.Range(0, availableIndices.Count);
                     int randomIndex = availableIndices[randomListIndex];
                     buffIndices[i] = randomIndex;
-                    archiveBuffs.Add(contractAvailableBuffs[randomIndex]);
+                    archiveContractBuffs.Add(contractAvailableBuffs[randomIndex]);
                     availableIndices.RemoveAt(randomListIndex);
                 }
                 RPC_ContractBuffVote(buffIndices);
@@ -463,7 +481,7 @@ public class BuffManager : NetworkBehaviour
                 List<int> availableIndices = new List<int>();
                 for (int j = 0; j < imprintAvailableBuffs.Length; j++)
                 {
-                    if (!archiveBuffs.Contains(imprintAvailableBuffs[j]))
+                    if (!archiveImprintBuffs.Contains(imprintAvailableBuffs[j]))
                     {
                         availableIndices.Add(j);
                     }
@@ -487,7 +505,7 @@ public class BuffManager : NetworkBehaviour
                     int randomListIndex = Random.Range(0, availableIndices.Count);
                     int randomIndex = availableIndices[randomListIndex];
                     buffIndices[i] = randomIndex;
-                    archiveBuffs.Add(imprintAvailableBuffs[randomIndex]);
+                    archiveImprintBuffs.Add(imprintAvailableBuffs[randomIndex]);
                     availableIndices.RemoveAt(randomListIndex);
                 }
                 RPC_ImprintBuffVote(buffIndices);
@@ -519,7 +537,7 @@ public class BuffManager : NetworkBehaviour
             case 1:
                 for(int i = 0; i < 3; i++)
                 {
-                    BuffScripableObject buff = contractAvailableBuffs[i];
+                    ContractScriptableObject buff = contractAvailableBuffs[i];
                     var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
                     BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
                     buffSlot.UpdateVotePlayer("");
@@ -532,7 +550,7 @@ public class BuffManager : NetworkBehaviour
             case 2:
                 for(int i = 3; i < 6; i++)
                 {
-                    BuffScripableObject buff = contractAvailableBuffs[i];
+                    ContractScriptableObject buff = contractAvailableBuffs[i];
                     var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
                     BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
                     buffSlot.UpdateVotePlayer("");
@@ -545,7 +563,7 @@ public class BuffManager : NetworkBehaviour
             case 3:
                 for(int i = 6; i < 9; i++)
                 {
-                    BuffScripableObject buff = contractAvailableBuffs[i];
+                    ContractScriptableObject buff = contractAvailableBuffs[i];
                     var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
                     BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
                     buffSlot.UpdateVotePlayer("");
@@ -558,7 +576,7 @@ public class BuffManager : NetworkBehaviour
             case 4:
                 for(int i = 9; i < 12; i++)
                 {
-                    BuffScripableObject buff = contractAvailableBuffs[i];
+                    ContractScriptableObject buff = contractAvailableBuffs[i];
                     var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
                     BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
                     buffSlot.UpdateVotePlayer("");

@@ -4333,16 +4333,11 @@ MonoBehaviour:
   timerText: {fileID: 1506435064}
   imprintAvailableBuffs:
   - {fileID: 11400000, guid: 7d91cb0030da5e145b76b88ce1d9c52e, type: 2}
-  - {fileID: 11400000, guid: 6ded3fee89ace0340aee448ebc5edd46, type: 2}
-  - {fileID: 11400000, guid: 910aae6531321bd42b2bb7a5eff23620, type: 2}
-  - {fileID: 11400000, guid: a92b3e282e2d04345b7919b74c69b8d6, type: 2}
-  - {fileID: 11400000, guid: d19956e6a93beed429dc91f9c323c288, type: 2}
-  - {fileID: 11400000, guid: 282328e7482e7a7419658e043fe610be, type: 2}
-  - {fileID: 11400000, guid: 79c745230ca7fff41b2497ba273cc708, type: 2}
-  - {fileID: 11400000, guid: f24c581d607c6bc4bb060cc1f5a88619, type: 2}
-  - {fileID: 11400000, guid: a3212be9566cbcb4e964b922a4c10feb, type: 2}
-  - {fileID: 11400000, guid: 0cb73f89ae6feaf4d9556d05b420fd6e, type: 2}
   - {fileID: 11400000, guid: b3a0599753a696548a0ff3e2bff1b91f, type: 2}
+  - {fileID: 11400000, guid: 870d7d729541ab349870968873a0a82c, type: 2}
+  - {fileID: 11400000, guid: 1bfd88b5161c4ba42bd7f5ae23544fd4, type: 2}
+  - {fileID: 11400000, guid: 41cc3baca059f1c448b138854fb83269, type: 2}
+  - {fileID: 11400000, guid: a0ed8b3523ba6b642b62f91105586e76, type: 2}
   contractAvailableBuffs:
   - {fileID: 11400000, guid: 7d91cb0030da5e145b76b88ce1d9c52e, type: 2}
   - {fileID: 11400000, guid: b3a0599753a696548a0ff3e2bff1b91f, type: 2}

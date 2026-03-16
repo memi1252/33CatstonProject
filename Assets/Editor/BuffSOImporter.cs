@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 public class BuffSOImporter : EditorWindow
 {
     private const string ImprintCSV_URL =
-        "https://docs.google.com/spreadsheets/d/e/2PACX-1vStTr_3obhFkhhsVXuKaaj6FFZ_B68LeWYFilpvg0AI_oWd9YeZdvypOP1lhV3yjGGYM_P1j5vppA28/pub?gid=847422572&single=true&output=csv";
+        "https://docs.google.com/spreadsheets/d/e/2PACX-1vStTr_3obhFkhhsVXuKaaj6FFZ_B68LeWYFilpvg0AI_oWd9YeZdvypOP1lhV3yjGGYM_P1j5vppA28/pub?gid=1006365244&single=true&output=csv";
     private const string WeaponCSV_URL =
         "https://docs.google.com/spreadsheets/d/e/2PACX-1vStTr_3obhFkhhsVXuKaaj6FFZ_B68LeWYFilpvg0AI_oWd9YeZdvypOP1lhV3yjGGYM_P1j5vppA28/pub?gid=0&single=true&output=csv";
     private const string EnemyCSV_URL =
@@ -274,7 +274,9 @@ public class BuffSOImporter : EditorWindow
             string idStr = data[0];
             if (string.IsNullOrEmpty(idStr)) continue;
 
-            string name = data[2];
+            string name = data[1];
+            
+            
             string assetPath = $"{ImprintSAVE_PATH}/{idStr}_{name}.asset";
             BuffScripableObject so = AssetDatabase.LoadAssetAtPath<BuffScripableObject>(assetPath);
 
@@ -283,12 +285,19 @@ public class BuffSOImporter : EditorWindow
                 so = ScriptableObject.CreateInstance<BuffScripableObject>();
                 AssetDatabase.CreateAsset(so, assetPath);
             }
-
             int.TryParse(new string(idStr.Where(char.IsDigit).ToArray()), out so.buffID);
+            if (data[2].ToLower() == "true")
+            {
+                so.isSpecial = true;
+            }
+            else
+            {
+                so.isSpecial = false;
+            }
             so.buffName = name;
-            so.buffIcon = Resources.Load<Sprite>($"Icons/{data[1]}");
-            so.buffDescription = data[5];
-            if (data[10] == "true")
+            //so.buffIcon = Resources.Load<Sprite>($"Icons/{data[1]}");
+            so.buffDescription = data[7];
+            if (data[3] == "true")
             {
                 so.isVotingCondition = true;
             }
@@ -296,42 +305,90 @@ public class BuffSOImporter : EditorWindow
             {
                 so.isVotingCondition = false;
             }
-            ResetProperties(so.votingAbility);
-            if (int.Parse(data[16]) <= 0)
+            
+            // 여러 버프와 비율 처리
+            string abilitiesString = data[4]; // TargetAbilities
+            string ratioString = data[6]; // Ratio
+
+            string[] abilityTypes = abilitiesString.Split(new[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+            string[] ratios = ratioString.Split(new[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+
+            // 버프 개수만큼 배열 생성
+            int buffCount = Mathf.Max(abilityTypes.Length, ratios.Length);
+            so.buffProperties = new ContractBuffData[buffCount];
+
+            for (int k = 0; k < buffCount; k++)
             {
-                ApplyStatMapping(so.votingAbility, data[11], data[16], true);
+                so.buffProperties[k] = new ContractBuffData();
+                so.buffProperties[k].targetAbilities = new BuffProperties();
+                
+                // 각 버프에 해당하는 비율 값 파싱
+                float ratio = 0f;
+                if (k < ratios.Length && float.TryParse(ratios[k].Trim(), out ratio))
+                    so.buffProperties[k].ratio = ratio;
+
+                // 버프 타입에 따라 BuffProperties의 적절한 속성에 해당 비율 값 설정
+                if (k < abilityTypes.Length)
+                {
+                    string abilityType = abilityTypes[k].Trim();
+                    ApplyContractBuffMapping(so.buffProperties[k].targetAbilities, abilityType, so.buffProperties[k].ratio);
+                }
             }
-            else
+            switch (data[5].ToLower())
             {
-                ApplyStatMapping(so.votingAbility, data[11], data[16], false);
+                case "Fixed": case "fixed": so.Condition = VotingCondition.Fixed; break;
+                case "Percent": case "percent": so.Condition = VotingCondition.Percent; break;
             }
-            switch (data[12])
+            
+            
+            switch (data[8].ToLower())
             {
-                case "Count": case "count": so.votingCondition = VotingCondition.Count; break;
-                case "Percent": case "percent": so.votingCondition = VotingCondition.Percent; break;
-                case "MAX": case "max": so.votingCondition = VotingCondition.MAX; break;
-            }
-            so.votingValue = int.Parse(data[13]);
-            so.buffConditions = data[14];
-            switch (data[15])
-            {
-                case "Count": case "count": so.VotingVType  = VotingCondition.Count; break;
+                case "Min": case "min": so.VotingVType  = VotingCondition.Min; break;
+                case "Fixed": case "fixed": so.VotingVType  = VotingCondition.Fixed; break;
                 case "Percent": case "percent": so.VotingVType  = VotingCondition.Percent; break;
                 case "MAX": case "max": so.VotingVType  = VotingCondition.MAX; break;
             }
-            so.VotingRatio = int.Parse(data[16]);
-            so.minPlayer = int.Parse(data[17]);
-            if (so.buffProperties == null) so.buffProperties = new BuffProperties();
-            ResetProperties(so.buffProperties);
+            so.votingValue = int.Parse(data[9]);
 
-            // --- 능력치 매핑 핵심 구간 ---
+            switch (data[10].ToLower())
+            {
+                case "Self": case "self": so.applyType = ApplyType.Self; break;
+                case "VotedPlayer": case "votedplayer": so.applyType = ApplyType.VotedPlayer; break;
+                case "RandomOne": case "randomone": so.applyType = ApplyType.RandomOne; break;
+                case "ALLTeam": case "allteam": so.applyType = ApplyType.ALLTeam; break;
+            }
             
-            // isDecrease 파라미터를 false로 전달
-            ApplyStatMapping(so.buffProperties, data[3], data[8], false);
+            // 여러 버프와 비율 처리
+            string abilitiesString2 = data[11]; // TargetAbilities
+            string ratioString2 = data[13]; // Ratio
 
-            // isDecrease 파라미터를 true로 전달하여 무조건 마이너스 처리
-            ApplyStatMapping(so.buffProperties, data[4], data[9], true);
+            string[] abilityTypes2 = abilitiesString2.Split(new[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
+            string[] ratios2 = ratioString2.Split(new[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries);
 
+            // 버프 개수만큼 배열 생성
+            int buffCount2 = Mathf.Max(abilityTypes2.Length, ratios2.Length);
+            so.votingAbility = new ContractBuffData[buffCount2];
+
+            for (int k = 0; k < buffCount2; k++)
+            {
+                so.votingAbility[k] = new ContractBuffData();
+                so.votingAbility[k].targetAbilities = new BuffProperties();
+                
+                // 각 버프에 해당하는 비율 값 파싱
+                float ratio = 0f;
+                if (k < ratios2.Length && float.TryParse(ratios2[k].Trim(), out ratio))
+                    so.votingAbility[k].ratio = ratio;
+
+                // 버프 타입에 따라 BuffProperties의 적절한 속성에 해당 비율 값 설정
+                if (k < abilityTypes2.Length)
+                {
+                    string abilityType = abilityTypes2[k].Trim();
+                    ApplyContractBuffMapping(so.votingAbility[k].targetAbilities, abilityType, so.votingAbility[k].ratio);
+                }
+            }
+            so.voteDesc = data[14];
+            so.minPlayer = int.Parse(data[15]);
+            
             EditorUtility.SetDirty(so);
         }
 
@@ -726,6 +783,7 @@ public class BuffSOImporter : EditorWindow
             case "criticalchance": case "critchance": props.criticalChance = value; break;
             case "criticaldamage": case "critdmg": props.criticalDamage = value; break;
             case "enemiesdamage": case "enemiesdmg": props.enemiesDamage = value; break;
+            case "enemiesspeed": case "enemiesspd": props.enemiesSpeed = value; break;
             case "enemiesreceived": props.enemiesReceived = value; break;
             case "enemieshp": props.enemiesHp = value; break;
             case "bossdamage": case "bossdmg": case "boosdamage": case "boosdmg": props.boosDamage = value; break;

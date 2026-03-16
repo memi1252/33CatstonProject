@@ -1,0 +1,85 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
+  m_Name: "I_004_\uD1A0\uB07C\uC640 \uAC70\uBD81\uC774"
+  m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
+  buffID: 4
+  buffName: "\uD1A0\uB07C\uC640 \uAC70\uBD81\uC774"
+  buffIcon: {fileID: 0}
+  buffDescription: "\uC544\uAD70\uC5D0 \uC774\uB3D9\uC18D\uB3C4\uAC00 {Ratio:0} \uC99D\uAC00\uD569\uB2C8\uB2E4.
+    \uC801\uC740 \uC774\uB3D9\uC18D\uB3C4\uAC00 {Ratio:1} \uAC10\uC18C\uD569\uB2C8\uB2E4."
+  isSpecial: 0
+  buffProperties:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0.4
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0.4
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: -0.35
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: -0.35
+  isVotingCondition: 0
+  Condition: 3
+  VotingCondition: 2
+  votingValue: 2
+  applyType: 0
+  votingAbility:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0.5
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0.5
+  VotingVType: 1
+  voteDesc: "2\uBA85\uC774\uB77C\uB3C4 \uD22C\uD45C\uD588\uC744 \uACBD\uC6B0 \uC801\uC758
+    \uC774\uB3D9\uC18D\uB3C4\uAC00 {Voted_Raito:0}\uB9CC\uD07C \uC99D\uAC00\uD569\uB2C8\uB2E4"
+  minPlayer: 3

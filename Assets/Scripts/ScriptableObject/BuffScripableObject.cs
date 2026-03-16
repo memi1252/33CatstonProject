@@ -7,21 +7,37 @@ public class BuffScripableObject : ScriptableObject
     public string buffName;
     public Sprite buffIcon;
     public string buffDescription;
-    public BuffProperties buffProperties;
+    public bool isSpecial;
+    public ContractBuffData[] buffProperties;
     public bool isVotingCondition;
-    public BuffProperties votingAbility;
-    public VotingCondition votingCondition = VotingCondition.Count;
+    public VotingCondition Condition = VotingCondition.Count;
+    public VotingCondition VotingCondition = VotingCondition.Count;
     public int votingValue;
-    public string buffConditions;
+    public ApplyType applyType;
+    public ContractBuffData[] votingAbility;
     public VotingCondition VotingVType = VotingCondition.Count;
-    public int VotingRatio;
+    public string voteDesc;
     public int minPlayer;
 
 
 }
 
+[System.Serializable]
+public enum ApplyType
+{
+    Self,
+    VotedPlayer,
+    RandomOne,
+    ALLTeam,
+    None
+}
+
+
+[System.Serializable]
 public enum VotingCondition
 {
+    Min,
+    Fixed,
     Count,
     Percent,
     MAX
@@ -40,6 +56,7 @@ public class BuffProperties{
     public float criticalChance;
     public float criticalDamage;
     public float enemiesDamage;
+    public float enemiesSpeed;
     public float enemiesReceived;
     public float enemiesHp;
     public float boosDamage;

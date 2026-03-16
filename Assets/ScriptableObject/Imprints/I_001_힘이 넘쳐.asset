@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
+  m_Name: "I_001_\uD798\uC774 \uB118\uCCD0"
+  m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
+  buffID: 1
+  buffName: "\uD798\uC774 \uB118\uCCD0"
+  buffIcon: {fileID: 0}
+  buffDescription: "\uAC00\uD558\uB294 \uD53C\uD574\uAC00 {Ratio:0}% \uC99D\uAC00\uD569\uB2C8\uB2E4."
+  isSpecial: 0
+  buffProperties:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0.2
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0.2
+  isVotingCondition: 0
+  Condition: 3
+  VotingCondition: 2
+  votingValue: 0
+  applyType: 0
+  votingAbility:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0
+  VotingVType: 1
+  voteDesc: "(\uC5C6\uC74C)"
+  minPlayer: 4

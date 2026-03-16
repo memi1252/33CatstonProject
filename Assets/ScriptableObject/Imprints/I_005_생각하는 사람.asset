@@ -1,0 +1,87 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
+  m_Name: "I_005_\uC0DD\uAC01\uD558\uB294 \uC0AC\uB78C"
+  m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
+  buffID: 5
+  buffName: "\uC0DD\uAC01\uD558\uB294 \uC0AC\uB78C"
+  buffIcon: {fileID: 0}
+  buffDescription: "\uB108\uBB34 \uC2E0\uC911\uC9D1\uB2C8\uB2E4. \uBAA8\uB4E0 \uD53C\uD574\uAC00
+    {Ratio:0} \uC99D\uAC00\uD569\uB2C8\uB2E4. \uB2E4\uB9CC \uB108\uBB34 \uC0DD\uAC01\uC744
+    \uB9CE\uC774 \uD558\uC5EC \uC774\uB3D9\uC18D\uB3C4\uAC00 {Ratio:1} \uAC10\uC18C\uD569\uB2C8\uB2E4"
+  isSpecial: 0
+  buffProperties:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0.5
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0.5
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: -0.75
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: -0.75
+  isVotingCondition: 0
+  Condition: 3
+  VotingCondition: 2
+  votingValue: 4
+  applyType: 0
+  votingAbility:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0.25
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0.25
+  VotingVType: 4
+  voteDesc: "\uD300\uC6D0 \uC804\uCCB4\uAC00 \uD22C\uD45C\uD588\uC744 \uACBD\uC6B0
+    \uD50C\uB808\uC774\uC5B4 \uD55C\uBA85\uC5D0 \uCE58\uBA85\uD0C0 \uD655\uB960\uC774
+    {Voted_Raito:0} \uC99D\uAC00\uD569\uB2C8\uB2E4"
+  minPlayer: 2
