@@ -18,7 +18,7 @@ public enum Grade
 [CreateAssetMenu(fileName = "New Weapon", menuName = "Weapon")]
 public class WeaponScriptableObject : ScriptableObject
 {
-    public int weaponID;
+    public string weaponID;
     public string weaponName;
     public Sprite weaponIcon;
     public string description;

@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 4155602845998252645}
   - component: {fileID: 731081082244027627}
   - component: {fileID: 1526919877228550752}
+  - component: {fileID: 8887271899658672753}
   - component: {fileID: 8261807108443789817}
   - component: {fileID: 6744880684058088246}
   - component: {fileID: 6263971509055261721}
@@ -62,6 +63,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 1526919877228550752}
+  - {fileID: 8887271899658672753}
   - {fileID: 8261807108443789817}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &731081082244027627
@@ -96,11 +98,6 @@ MonoBehaviour:
   CameraHandle: {fileID: 8328573696601887576}
   ScalingRoot: {fileID: 7912246800516094496}
   Nameplate: {fileID: 9066350602577507296}
-  WeaponScriptableObject: {fileID: 11400000, guid: 0fc7743a1fc593749b69fa236046f503,
-    type: 2}
-  WeaponSpawnTransform: {fileID: 4146053014953141876}
-  WeaponTimer: 0
-  WeaponUse: 1
   WalkSpeed: 5
   SprintSpeed: 7
   JumpImpulse: 10
@@ -123,13 +120,27 @@ MonoBehaviour:
   _maxHp: 100
   _mp: 50
   _maxMp: 50
-  _damage: 0
+  _damage: 5
   _attackSpeed: 100
   _moveSpeed: 10
-  _allDamage: 0
-  _damageReceived: 0
-  _criticalChance: 0
-  _criticalDamage: 0
+  _allDamage: 100
+  _damageReceived: 100
+  _criticalChance: 10
+  _criticalDamage: 5
+--- !u!114 &8887271899658672753
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3123905968297068043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24013f15c679a614e8ddc4a548180aac, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponController
+  weaponHold: {fileID: 4146053014953141876}
+  startWeapon: {fileID: 11400000, guid: 0fc7743a1fc593749b69fa236046f503, type: 2}
 --- !u!114 &8261807108443789817
 MonoBehaviour:
   m_ObjectHideFlags: 0

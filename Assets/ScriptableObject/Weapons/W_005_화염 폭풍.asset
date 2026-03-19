@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9c6d217c060421042b2dcf8b2aebdb7f, type: 3}
   m_Name: "W_005_\uD654\uC5FC \uD3ED\uD48D"
   m_EditorClassIdentifier: Assembly-CSharp::WeaponScriptableObject
-  weaponID: 0
+  weaponID: W_005
   weaponName: "\uD654\uC5FC \uD3ED\uD48D"
   weaponIcon: {fileID: 0}
   description: "\uB208\uC55E\uC758 \uBAA8\uB4E0 \uAC83\uC744 \uD0DC\uC6CC\uBC84\uB9BD\uB2C8\uB2E4.

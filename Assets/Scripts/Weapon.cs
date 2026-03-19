@@ -1,13 +1,17 @@
 using System;
 using System.Collections;
+using Fusion;
 using UnityEngine;
 using UnityEngine.VFX;
 
-public class Weapon : MonoBehaviour
+public class Weapon : NetworkBehaviour
 {
     public WeaponScriptableObject WeaponSO;
     public Transform fireTransform;
     public GameObject attackScope;
+
+    private float msBetweenShots = 4;
+    private float nextShotTime;
 
     public float damage;
 
@@ -43,20 +47,62 @@ public class Weapon : MonoBehaviour
     private void Start()
     {
         originParent = transform.parent;
-        projectilePrefab = WeaponSO.projectilePrefab;
+        if (WeaponSO != null)
+        {
+            if(WeaponSO.projectilePrefab != null) projectilePrefab = WeaponSO.projectilePrefab;
+            msBetweenShots = WeaponSO.attackSpeed;
+        }
+       
+        
     }
+    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
+    public void RPC_PlayAnimation(string type, string triggerName)
+    {
+        switch (type)
+        {
+            case "Trigger":
+                Animator.SetTrigger(triggerName);
+                break;
+            case "Bool":
+                Animator.SetBool(triggerName, true);
+                break;
+            case "Int":
+                Animator.SetInteger(triggerName, 1);
+                break;
+            case "Float":
+                Animator.SetFloat(triggerName, 1f);
+                break;
+                
+        }
+    }
+    
 
     public void Attack(Vector3 Look, float damage, float criticalDamage)
     {
-        
+        if (Time.time <= nextShotTime)
+        {
+            return;
+        }
+        nextShotTime = Time.time + msBetweenShots;
         switch (WeaponSO.weaponType)
         {
             case WeaponType.Projectile:
-                Animator.SetTrigger("Attack");
-                var ammoObj = Instantiate(projectilePrefab, fireTransform.position, Quaternion.Euler(Look));
-                Rigidbody rb = ammoObj.GetComponent<Rigidbody>();
-                rb.AddForce(Look * WeaponSO.projectileSpeed, ForceMode.Impulse);
+                RPC_PlayAnimation("Trigger", "Attack");
+                
+                var ammoObj = Runner.Spawn(projectilePrefab, fireTransform.position, Quaternion.Euler(Look));
                 Ammo ammo = ammoObj.GetComponent<Ammo>();
+                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+                Plane groundPlane = new Plane(Vector3.up, transform.position);
+                Vector3 mouseWorldPos = Vector3.zero;
+                if (groundPlane.Raycast(ray, out float distance))
+                {
+                    mouseWorldPos = ray.GetPoint(distance);
+                }
+                mouseWorldPos.y = transform.position.y; 
+                Vector3 lookDirection = (mouseWorldPos - transform.position).normalized;
+                ammo.SetLookDirection(lookDirection);
+                ammo.SetDamage(damage + WeaponSO.weaponDamage);
+                ammo.speed = WeaponSO.projectileSpeed;
                 ammo.projectileDis = WeaponSO.projectileDis;
                 ammoObj.transform.localScale = Vector3.one * WeaponSO.tileSize *0.1f;
                 Destroy(ammoObj, 10);

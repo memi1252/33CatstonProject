@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4adcd431372e4a678b0f5a8f6cd5aae1, type: 3}
   m_Name: "E_000_\uB354\uBBF8"
   m_EditorClassIdentifier: Assembly-CSharp::EnemyScriptableObject
-  enemyID: 0
+  enemyID: E_000
   enemyName: "\uB354\uBBF8"
   appeared: 1
   enemyIcon: {fileID: 0}

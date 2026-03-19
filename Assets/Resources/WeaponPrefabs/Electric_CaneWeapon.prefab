@@ -4995,6 +4995,7 @@ GameObject:
   - component: {fileID: 7016560550556559198}
   - component: {fileID: 8878336020959020304}
   - component: {fileID: 2992379853136890157}
+  - component: {fileID: -3396783326375852554}
   m_Layer: 6
   m_Name: Electric_CaneWeapon
   m_TagString: Untagged
@@ -5034,6 +5035,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Weapon
   WeaponSO: {fileID: 0}
   fireTransform: {fileID: 2737075188821834619}
+  attackScope: {fileID: 0}
+  damage: 0
 --- !u!120 &8878336020959020304
 LineRenderer:
   serializedVersion: 2
@@ -5164,6 +5167,25 @@ Animator:
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
   m_WriteDefaultValuesOnDisable: 0
+--- !u!114 &-3396783326375852554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8317104441977495887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 3299514668
+  ObjectInterest: 1
+  Flags: 1
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 7016560550556559198}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &8716768347738134392
 GameObject:
   m_ObjectHideFlags: 0

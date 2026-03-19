@@ -26,7 +26,7 @@ public enum ActivationType
 public class SkillScriptableObject : ScriptableObject
 {
     [Header("기본 정보")]
-    public int skillID;
+    public string skillID;
     public string skillName;
     public Sprite skillIcon;
     public string description;

@@ -19,25 +19,6 @@ namespace Starter.Platformer
 		public Transform ScalingRoot;
 		public UINameplate Nameplate;
 
-		[Header("Weapon")]
-		public WeaponScriptableObject WeaponScriptableObject;
-		public WeaponScriptableObject CurrentWeaponScriptableObject
-		{
-			get { return WeaponScriptableObject; }
-			set
-			{
-				if (value != WeaponScriptableObject)
-				{
-					ChangeWeaponSO();
-                    WeaponScriptableObject = value;
-				}
-			}
-		}
-		
-		public Transform WeaponSpawnTransform;
-		public float WeaponTimer;
-		public bool WeaponUse = true;
-
 		[Header("Movement Setup")]
 		public float WalkSpeed = 2f;
 		public float SprintSpeed = 5f;
@@ -90,8 +71,6 @@ namespace Starter.Platformer
 
 		private GameManager _gameManager;
 
-		private Weapon _weapon;
-
 		public void Respawn(Vector3 position, bool resetCoins)
 		{
 			KCC.SetPosition(position);
@@ -122,11 +101,6 @@ namespace Starter.Platformer
 			// In case the nickname is already changed,
 			// we need to trigger the change manually
 			OnNicknameChanged();
-			
-			// 무기 스폰 
-			var weaponObject = Instantiate(CurrentWeaponScriptableObject.weaponPrefab, WeaponSpawnTransform);
-			_weapon = weaponObject.GetComponent<Weapon>();
-			_weapon.WeaponSO = CurrentWeaponScriptableObject;
 		}
 
 		public override void FixedUpdateNetwork()
@@ -171,20 +145,6 @@ namespace Starter.Platformer
 				}
 			}
 		}
-		private void ChangeWeaponSO()
-		{
-			if (_weapon != null)
-			{
-				foreach (Transform child in WeaponSpawnTransform)
-				{
-					Destroy(child.gameObject);
-				}
-			}
-			else
-			{
-				
-			}
-        }
 
 
         public override void Render()
@@ -206,18 +166,7 @@ namespace Starter.Platformer
 			AssignAnimationIDs();
 		}
 
-        private void Update()
-        {
-			if (!WeaponUse)
-			{
-				WeaponTimer -= Time.deltaTime;
-				if (WeaponTimer <= 0)
-				{
-					WeaponTimer = 0;
-					WeaponUse = true;
-				}
-			}
-        }
+        
 
         private void LateUpdate()
 		{
@@ -288,24 +237,11 @@ namespace Starter.Platformer
 				KCC.SetLookRotation(Quaternion
 					.Slerp(transform.rotation, targetRotation, RotationSpeed * Runner.DeltaTime).eulerAngles);
 			}
-			
-			if (WeaponUse && !BuffManager.Instance.isContractBuffActive && !BuffManager.Instance.isImprintBuffActive)
+
+			if (input.Attack)
 			{
-				if (input.Attack)
-				{
-					WeaponUse = false;
-					WeaponTimer = CurrentWeaponScriptableObject.attackSpeed;
-					float value = Random.value;
-					bool isCritical = value <= criticalChance;
-					if (isCritical)
-					{
-						_weapon.Attack(transform.forward,damage ,criticalDamage );
-					}
-					else
-					{
-						_weapon.Attack(transform.forward, damage, 1);
-					}
-				}
+				input.Attack = false; // 공격 입력 초기화
+				GetComponent<WeaponController>().Attack(transform.forward, damage, criticalDamage);
 			}
 		}
 

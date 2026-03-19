@@ -432,6 +432,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4456342224105129039}
   - component: {fileID: 9085656982817572121}
+  - component: {fileID: 8828225339365680580}
   m_Layer: 0
   m_Name: Fire_CaneWeapon
   m_TagString: Untagged
@@ -472,6 +473,26 @@ MonoBehaviour:
   WeaponSO: {fileID: 0}
   fireTransform: {fileID: 0}
   attackScope: {fileID: 8069932826129485148}
+  damage: 0
+--- !u!114 &8828225339365680580
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6870260640496897606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 781991032
+  ObjectInterest: 1
+  Flags: 1
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 9085656982817572121}
+  ForceRemoteRenderTimeframe: 0
 --- !u!1 &7605276268703199881
 GameObject:
   m_ObjectHideFlags: 0

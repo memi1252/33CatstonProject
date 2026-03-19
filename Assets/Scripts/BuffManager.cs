@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using Starter.Platformer;
 using TMPro;
 using System.Linq;
+using Febucci.TextAnimatorForUnity;
 using UnityEngine.Serialization;
 
 public class BuffManager : NetworkBehaviour
@@ -608,6 +609,7 @@ public class BuffManager : NetworkBehaviour
             buffSlot.UpdateVotePlayer("");
             buffSlots.Add(buffSlot);
             buffSlot.Set(buffData);
+            
             buffSlot.Order = Order++;
         }
     }

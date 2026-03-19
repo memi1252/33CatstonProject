@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c57875c4cad480d933d467adef3817e, type: 3}
+  m_Name: "S_008_\uD55C \uB300\uBA74 \uCDA9\uBD84\uD574"
+  m_EditorClassIdentifier: Assembly-CSharp::SkillScriptableObject
+  skillID: S_008
+  skillName: "\uD55C \uB300\uBA74 \uCDA9\uBD84\uD574"
+  skillIcon: {fileID: 0}
+  description: "{Activation_Value:0}\uD68C\uC758 \uACF5\uACA9\uC774 \uCE58\uBA85\uD0C0
+    \uD53C\uD574 {Buff_Ratio:0}\uB85C \uC801\uC6A9\uB429\uB2C8\uB2E4. \uB2E8 \uCE58\uBA85\uD0C0
+    \uD655\uC728\uC774 {Buff_Ratio:1} \uAC10\uC18C\uD569\uB2C8\uB2E4"
+  skillBuffs:
+  - buffType:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 400
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    buffRatio: 400
+  - buffType:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: -99
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    buffRatio: -99
+  ActivationType: 0
+  ActivationValue: 1
+  valueType: 0

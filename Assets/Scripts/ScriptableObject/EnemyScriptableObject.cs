@@ -21,7 +21,7 @@ public enum ProjectileType
 public class EnemyScriptableObject : ScriptableObject
 {
     [Header("기본 정보")]
-    public int enemyID;
+    public string enemyID;
     public string enemyName;
     public int appeared;
     public Sprite enemyIcon;

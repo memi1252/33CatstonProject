@@ -32,7 +32,7 @@ public class ContractBuffData
 public class ContractScriptableObject : ScriptableObject
 {
     [Header("기본 정보")]
-    public int contractID;
+    public string contractID;
     public string contractName;
     public Sprite contractIcon;
     public string description;

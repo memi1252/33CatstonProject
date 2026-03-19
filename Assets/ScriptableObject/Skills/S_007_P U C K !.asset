@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c57875c4cad480d933d467adef3817e, type: 3}
   m_Name: S_007_P U C K !
   m_EditorClassIdentifier: Assembly-CSharp::SkillScriptableObject
-  skillID: 0
+  skillID: S_007
   skillName: P U C K !
   skillIcon: {fileID: 0}
   description: "\uB2F9\uC2E0\uC740 PUCK\uC5D0 \uC655\uC774 \uB418\uC5C8\uC2B5\uB2C8\uB2E4!
@@ -29,6 +29,7 @@ MonoBehaviour:
       criticalChance: 0
       criticalDamage: 0
       enemiesDamage: 0
+      enemiesSpeed: 0
       enemiesReceived: 0
       enemiesHp: 0
       boosDamage: 0

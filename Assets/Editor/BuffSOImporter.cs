@@ -185,9 +185,8 @@ public class BuffSOImporter : EditorWindow
                 AssetDatabase.CreateAsset(so, assetPath);
             }
 
-            // 데이터 매핑
-            if (int.TryParse(idStr, out int weaponID))
-                so.weaponID = weaponID;
+            
+            so.weaponID = idStr;
                 
             so.weaponName = name;
             so.weaponIcon = Resources.Load<Sprite>($"WeaponIcons/{prefabName}");
@@ -285,7 +284,7 @@ public class BuffSOImporter : EditorWindow
                 so = ScriptableObject.CreateInstance<BuffScripableObject>();
                 AssetDatabase.CreateAsset(so, assetPath);
             }
-            int.TryParse(new string(idStr.Where(char.IsDigit).ToArray()), out so.buffID);
+            so.buffID = idStr;
             if (data[2].ToLower() == "true")
             {
                 so.isSpecial = true;
@@ -428,10 +427,8 @@ public class BuffSOImporter : EditorWindow
                 AssetDatabase.CreateAsset(so, assetPath);
             }
 
-            // 데이터 매핑
-            if (int.TryParse(idStr, out int enemyID))
-                so.enemyID = enemyID;
-                
+
+            so.enemyID = idStr;
             so.enemyName = name;
             so.enemyIcon = Resources.Load<Sprite>($"EnemyIcons/{prefabName}");
             so.enemyPrefab = Resources.Load<GameObject>($"EnemyPrefabs/{prefabName}");
@@ -525,9 +522,7 @@ public class BuffSOImporter : EditorWindow
                 AssetDatabase.CreateAsset(so, assetPath);
             }
 
-            // 데이터 매핑
-            if (int.TryParse(idStr, out int skillID))
-                so.skillID = skillID;
+            so.skillID = idStr;
                 
             so.skillName = name;
             so.skillIcon = Resources.Load<Sprite>($"SkillIcons/{iconName}");
@@ -611,7 +606,8 @@ public class BuffSOImporter : EditorWindow
 
             string imageName = data[1]; // ImageName  
             string name = data[2]; // Name
-            string assetPath = $"{ContractSAVE_PATH}/{idStr}_{name}.asset";
+            
+            string assetPath = $"{ContractSAVE_PATH}/{idStr}_{Regex.Replace(name, @"[^a-zA-Z0-9가-힣]", string.Empty, RegexOptions.Singleline)}.asset";
 
             ContractScriptableObject so = AssetDatabase.LoadAssetAtPath<ContractScriptableObject>(assetPath);
 
@@ -620,11 +616,9 @@ public class BuffSOImporter : EditorWindow
                 so = ScriptableObject.CreateInstance<ContractScriptableObject>();
                 AssetDatabase.CreateAsset(so, assetPath);
             }
-
-            // 데이터 매핑
-            if (int.TryParse(idStr, out int contractID))
-                so.contractID = contractID;
-                
+            
+            so.contractID = idStr;
+            
             so.contractName = name;
             so.contractIcon = Resources.Load<Sprite>($"ContractIcons/{imageName}");
             so.description = data[7]; // Explanation

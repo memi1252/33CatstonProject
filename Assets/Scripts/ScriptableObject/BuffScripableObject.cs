@@ -3,7 +3,7 @@ using System;using UnityEngine;
 [CreateAssetMenu(fileName = "New Buff", menuName = "Buff")]
 public class BuffScripableObject : ScriptableObject
 {
-    public int buffID;
+    public string buffID;
     public string buffName;
     public Sprite buffIcon;
     public string buffDescription;

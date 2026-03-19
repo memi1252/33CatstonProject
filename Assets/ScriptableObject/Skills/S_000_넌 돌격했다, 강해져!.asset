@@ -12,10 +12,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c57875c4cad480d933d467adef3817e, type: 3}
   m_Name: "S_000_\uB10C \uB3CC\uACA9\uD588\uB2E4, \uAC15\uD574\uC838!"
   m_EditorClassIdentifier: Assembly-CSharp::SkillScriptableObject
-  skillID: 0
+  skillID: S_000
   skillName: "\uB10C \uB3CC\uACA9\uD588\uB2E4, \uAC15\uD574\uC838!"
   skillIcon: {fileID: 0}
-  description: "{Activation_Value:0}\uCD08 \uB3D9\uC548 \uAC00\uD558\uB294 \uD53C\uD574\uAC00
+  description: "{Activation_Value:0}\uCD08 \uB3D9\uC548 \uAC00\uD558\uB294 \uD53C\uD574
     {Buff_Ratio:0}\uC640 \uC774\uC18D\uC774 {Buff_Ratio:1} \uC99D\uAC00\uD569\uB2C8\uB2E4"
   skillBuffs:
   - buffType:
@@ -29,6 +29,7 @@ MonoBehaviour:
       criticalChance: 0
       criticalDamage: 0
       enemiesDamage: 0
+      enemiesSpeed: 0
       enemiesReceived: 0
       enemiesHp: 0
       boosDamage: 0
@@ -46,6 +47,7 @@ MonoBehaviour:
       criticalChance: 0
       criticalDamage: 0
       enemiesDamage: 0
+      enemiesSpeed: 0
       enemiesReceived: 0
       enemiesHp: 0
       boosDamage: 0

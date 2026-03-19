@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0c57875c4cad480d933d467adef3817e, type: 3}
   m_Name: "S_002_\uC885\uC774 \uC778\uAC04"
   m_EditorClassIdentifier: Assembly-CSharp::SkillScriptableObject
-  skillID: 0
+  skillID: S_002
   skillName: "\uC885\uC774 \uC778\uAC04"
   skillIcon: {fileID: 0}
   description: "{Activation_Value:0}\uCD08 \uB3D9\uC548 \uC774\uC18D\uC774 {Buff_Ratio:0}
@@ -30,6 +30,7 @@ MonoBehaviour:
       criticalChance: 0
       criticalDamage: 0
       enemiesDamage: 0
+      enemiesSpeed: 0
       enemiesReceived: 0
       enemiesHp: 0
       boosDamage: 0
@@ -47,6 +48,7 @@ MonoBehaviour:
       criticalChance: 0
       criticalDamage: 0
       enemiesDamage: 0
+      enemiesSpeed: 0
       enemiesReceived: 0
       enemiesHp: 0
       boosDamage: 0

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
   m_Name: "I_005_\uC0DD\uAC01\uD558\uB294 \uC0AC\uB78C"
   m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
-  buffID: 5
+  buffID: I_005
   buffName: "\uC0DD\uAC01\uD558\uB294 \uC0AC\uB78C"
   buffIcon: {fileID: 0}
   buffDescription: "\uB108\uBB34 \uC2E0\uC911\uC9D1\uB2C8\uB2E4. \uBAA8\uB4E0 \uD53C\uD574\uAC00
@@ -83,5 +83,5 @@ MonoBehaviour:
   VotingVType: 4
   voteDesc: "\uD300\uC6D0 \uC804\uCCB4\uAC00 \uD22C\uD45C\uD588\uC744 \uACBD\uC6B0
     \uD50C\uB808\uC774\uC5B4 \uD55C\uBA85\uC5D0 \uCE58\uBA85\uD0C0 \uD655\uB960\uC774
-    {Voted_Raito:0} \uC99D\uAC00\uD569\uB2C8\uB2E4"
+    \uCD94\uAC00\uB85C{Voted_Raito:0} \uC99D\uAC00\uD569\uB2C8\uB2E4"
   minPlayer: 2

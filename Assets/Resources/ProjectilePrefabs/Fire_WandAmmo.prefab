@@ -14,6 +14,7 @@ GameObject:
   - component: {fileID: 4614013358710334695}
   - component: {fileID: 2852850018172844721}
   - component: {fileID: 791290653626071114}
+  - component: {fileID: 9040228084321473463}
   m_Layer: 0
   m_Name: Fire_WandAmmo
   m_TagString: Untagged
@@ -152,7 +153,30 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fbb2261fb3b279045b91691affc66dee, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Ammo
+  collisionMask:
+    serializedVersion: 2
+    m_Bits: 256
+  speed: 0
   projectileDis: 3
   weaponTransform: {fileID: 0}
   projectileParticles: {fileID: 0}
   projectileVisualEffect: {fileID: 0}
+--- !u!114 &9040228084321473463
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4705942470810935141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 1809311031
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 791290653626071114}
+  ForceRemoteRenderTimeframe: 0

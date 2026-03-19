@@ -2,6 +2,7 @@ using TMPro;
 using UnityEngine.UI;
 using UnityEngine;
 using System.Text.RegularExpressions;
+using Febucci.TextAnimatorForUnity;
 
 public class BuffSlot : MonoBehaviour
 {
@@ -29,7 +30,7 @@ public class BuffSlot : MonoBehaviour
 
     public void Set(ContractScriptableObject buffScripableObject)
     {
-        buffNameText.text = buffScripableObject.contractName;
+         buffNameText.GetComponent<TypewriterComponent>().ShowText(buffScripableObject.contractName);
         buffIconImage.sprite = buffScripableObject.contractIcon;
         string description = buffScripableObject.description;
         if(buffScripableObject.description.Length > 0)
@@ -58,7 +59,8 @@ public class BuffSlot : MonoBehaviour
         
         if (BuffDescriptionText != null)
         {
-            BuffDescriptionText.text = description;
+            BuffDescriptionText.GetComponent<TypewriterComponent>().ShowText(description);
+            //BuffDescriptionText.text = description;
         }
 
         BuffConditionsText.text = "";
@@ -67,7 +69,7 @@ public class BuffSlot : MonoBehaviour
 
     public void Set(BuffScripableObject buffScripableObject)
     {
-        buffNameText.text = buffScripableObject.buffName;
+        buffNameText.GetComponent<TypewriterComponent>().ShowText(buffScripableObject.buffName);
         buffIconImage.sprite = buffScripableObject.buffIcon;
         string description = buffScripableObject.buffDescription;
         if(buffScripableObject.buffProperties.Length > 0)
@@ -96,7 +98,7 @@ public class BuffSlot : MonoBehaviour
         
         if (BuffDescriptionText != null)
         {
-            BuffDescriptionText.text = description;
+            BuffDescriptionText.GetComponent<TypewriterComponent>().ShowText(description);
         }
 
         string conditionDescription = buffScripableObject.voteDesc;
@@ -112,7 +114,7 @@ public class BuffSlot : MonoBehaviour
             // 2. 반복문을 돌며 모든 Ratio 태그 치환
             for (int i = 0; i < buffScripableObject.votingAbility.Length; i++)
             {
-                string targetTag = "{Ratio:" + i + "}";
+                string targetTag = "{Voted_Raito:" + i + "}";
                 string value = (buffScripableObject.votingAbility[i].ratio * 100).ToString(); // 0.5일 경우 50으로 변환
         
                 resultText = resultText.Replace(targetTag, value + "%");
@@ -126,7 +128,7 @@ public class BuffSlot : MonoBehaviour
         }
         else
         {
-            BuffConditionsText.text = "";
+            BuffConditionsText.GetComponent<TypewriterComponent>().ShowText(conditionDescription);
         }
         
         this.buffScripableObject = buffScripableObject;
