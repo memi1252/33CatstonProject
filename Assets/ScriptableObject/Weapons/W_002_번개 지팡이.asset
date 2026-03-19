@@ -23,7 +23,7 @@ MonoBehaviour:
   weaponType: 0
   targetAttribute: 3
   grade: 0
-  damageRatio: 105
+  damageRatio: 1.05
   weaponDamage: 5
   tileSize: 4
   attackSpeed: 1.5

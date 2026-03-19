@@ -26,11 +26,10 @@ public class Weapon : MonoBehaviour
         TryGetComponent(out LineRenderer);
         TryGetComponentInChildren(gameObject, out ParticleEffect);
         TryGetComponentInChildren(gameObject, out VisualEffect);
-        if (VisualEffect != null)
+        if (attackScope != null)
         {
-            VisualEffect.enabled = false;
+            attackScope.transform.localPosition = Vector3.zero;
         }
-        attackScope.transform.localPosition = Vector3.zero;
     }
     
     
@@ -49,22 +48,21 @@ public class Weapon : MonoBehaviour
 
     public void Attack(Vector3 Look, float damage, float criticalDamage)
     {
-        //Animator.SetTrigger("Attack");
+        
         switch (WeaponSO.weaponType)
         {
             case WeaponType.Projectile:
+                Animator.SetTrigger("Attack");
                 var ammoObj = Instantiate(projectilePrefab, fireTransform.position, Quaternion.Euler(Look));
                 Rigidbody rb = ammoObj.GetComponent<Rigidbody>();
                 rb.AddForce(Look * WeaponSO.projectileSpeed, ForceMode.Impulse);
                 Ammo ammo = ammoObj.GetComponent<Ammo>();
                 ammo.projectileDis = WeaponSO.projectileDis;
                 ammoObj.transform.localScale = Vector3.one * WeaponSO.tileSize *0.1f;
+                Destroy(ammoObj, 10);
                 break;
             case WeaponType.Laser:
-                if(LineRenderer != null)
-                {
-                    StartCoroutine(FireLaser());
-                }
+                StartCoroutine(FireLaser());
                 break;
             case WeaponType.Area :
                 StartCoroutine(AreaAttack());
@@ -105,48 +103,66 @@ public class Weapon : MonoBehaviour
     
     private IEnumerator FireLaser()
     {
-        LineRenderer.enabled = true;
-        ParticleEffect.Play();
-        LineRenderer.positionCount = 2;
-        LineRenderer.SetPosition(0, fireTransform.position);
-        LineRenderer.SetPosition(1, fireTransform.position);
-
-        Ray ray = new Ray(fireTransform.position, transform.forward);
-        Vector3 endPoint;
-
-        if (Physics.Raycast(ray, out RaycastHit hit))
+        if (LineRenderer != null)
         {
-            endPoint = hit.point;
-        }
-        else
-        {
-            endPoint = fireTransform.position + transform.forward * 50;
-        }
+            LineRenderer.enabled = true;
+            if (ParticleEffect != null)
+                ParticleEffect.Play();
+            LineRenderer.positionCount = 2;
+            LineRenderer.SetPosition(0, fireTransform.position);
+            LineRenderer.SetPosition(1, fireTransform.position);
 
-        float timer = 0f;
-        float duration = .5f; 
-        Vector3 startPos = fireTransform.position;
+            Ray ray = new Ray(fireTransform.position, transform.forward);
+            Vector3 endPoint;
 
-        while (timer < duration)
-        {
-            timer += Time.deltaTime;
-            float progress = timer / duration;
-            LineRenderer.SetPosition(1, Vector3.Lerp(startPos, endPoint, progress));
-            yield return null;
-        }
-        LineRenderer.SetPosition(1, endPoint);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                endPoint = hit.point;
+            }
+            else
+            {
+                endPoint = fireTransform.position + transform.forward * 50;
+            }
+
+            float timer = 0f;
+            float duration = .5f; 
+            Vector3 startPos = fireTransform.position;
+
+            while (timer < duration)
+            {
+                timer += Time.deltaTime;
+                float progress = timer / duration;
+                LineRenderer.SetPosition(1, Vector3.Lerp(startPos, endPoint, progress));
+                yield return null;
+            }
+            LineRenderer.SetPosition(1, endPoint);
         
-        yield return new WaitForSeconds(0.3f);
-        ParticleEffect.Stop();
-        LineRenderer.enabled = false;
-    }
-
-    
-    private void Update()
-    {
-        if (WeaponSO.weaponType == WeaponType.Laser)
-        {
-            Debug.DrawRay(fireTransform.position, transform.forward * 100, Color.red);
+            yield return new WaitForSeconds(0.3f);
+            if (ParticleEffect != null)
+                ParticleEffect.Stop();
+            LineRenderer.enabled = false;
         }
+        else if (VisualEffect != null)
+        {
+            VisualEffect.Play();
+            if (ParticleEffect != null)
+                ParticleEffect.Play();
+            Ray ray = new Ray(fireTransform.position, transform.forward);
+            if (Physics.Raycast(ray, out RaycastHit hit))
+            {
+                Debug.DrawRay(fireTransform.position, transform.forward * hit.distance, Color.red, 5f);
+                VisualEffect.SetVector3("TargetPosition", new Vector3(0, hit.distance * 0.5f, 0));
+            }
+            else
+            {
+                VisualEffect.SetVector3("TargetPosition", new Vector3(0, 50, 0));
+            }
+            
+            yield return new WaitForSeconds(0.3f);
+            VisualEffect.Stop();
+            if (ParticleEffect != null)
+                ParticleEffect.Stop();
+        }
+        
     }
 }

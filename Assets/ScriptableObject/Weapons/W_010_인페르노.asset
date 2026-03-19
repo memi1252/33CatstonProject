@@ -21,12 +21,13 @@ MonoBehaviour:
     \uC8FD\uB294 \uAC74 \uD654\uB825\uC744 \uACAC\uB514\uC9C0 \uBABB\uD55C \uD300\uC6D0
     \uD0D3\uC774\uB2C8, \uB2F9\uC2E0\uC740 \uC870\uC900\uC5D0\uB9CC \uC9D1\uC911\uD558\uBA74
     \uB429\uB2C8\uB2E4."
-  weaponPrefab: {fileID: 0}
+  weaponPrefab: {fileID: 5684410180746407400, guid: bf9c966baee198f46819ba3e74a76a39,
+    type: 3}
   projectilePrefab: {fileID: 0}
   weaponType: 1
   targetAttribute: 1
   grade: 2
-  damageRatio: 150
+  damageRatio: 1.5
   weaponDamage: 25
   tileSize: 10
   attackSpeed: 5
