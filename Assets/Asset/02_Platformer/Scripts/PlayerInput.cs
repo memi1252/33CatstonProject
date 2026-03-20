@@ -165,7 +165,7 @@ namespace Starter.Platformer
 
                 return;
 
-            _input.Attack |= value.isPressed;	
+			_input.Attack = value.isPressed;	
 		}
 
 		private Vector2 ClampLookRotation(Vector2 lookRotation)

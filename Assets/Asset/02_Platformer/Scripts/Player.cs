@@ -138,10 +138,9 @@ namespace Starter.Platformer
 			// Input Authority를 가진 클라이언트만 입력 리셋
 			if (HasInputAuthority)
 			{
-				var playerInput = FindFirstObjectByType<PlayerInput>();
-				if (playerInput != null)
+				if (PlayerInput != null)
 				{
-					playerInput.ResetInput();
+					PlayerInput.ResetInput();
 				}
 			}
 		}

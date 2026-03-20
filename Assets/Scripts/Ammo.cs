@@ -14,52 +14,56 @@ public class Ammo : NetworkBehaviour
     public ParticleSystem projectileParticles;
     public VisualEffect projectileVisualEffect;
 
-    private Vector3 lookDirection;
-    private float damage;
+    [Networked] private Vector3 MoveDirection { get; set; }
+    [Networked] private float DamageValue { get; set; }
+    [Networked] private float MoveSpeed { get; set; }
+    [Networked] private float MaxDistance { get; set; }
+    [Networked] private Vector3 SpawnPosition { get; set; }
+    [Networked] private NetworkBool IsInitialized { get; set; }
+
+    public void Initialize(Vector3 spawnPosition, Vector3 direction, float damageValue, float moveSpeed, float maxDistance)
+    {
+        SpawnPosition = spawnPosition;
+        MoveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
+        DamageValue = damageValue;
+        MoveSpeed = moveSpeed;
+        MaxDistance = maxDistance;
+        IsInitialized = true;
+    }
     
     public void SetDamage(float damage)
     {
-        this.damage = damage;
+        DamageValue = damage;
     }
     
     public void SetLookDirection(Vector3 lookDirection)
     {
-        this.lookDirection = lookDirection.normalized;
-    }
-
-
-    public void Start()
-    {
-        
-        
+        MoveDirection = lookDirection.sqrMagnitude > 0.0001f ? lookDirection.normalized : transform.forward;
     }
 
 
     public override void FixedUpdateNetwork()
     {
+        if (IsInitialized == false)
+            return;
 
-        // 무기와 거리가 일정 이상이면 총알 삭제
-         
-        if (HasStateAuthority)
-        {
-            if (Vector3.Distance(transform.position, weaponTransform.position) > projectileDis)
-            {
-                Runner.Despawn(Object);
-            }
-            
-        }
-    }
+        float moveDistance = MoveSpeed * Runner.DeltaTime;
+        transform.position += MoveDirection * moveDistance;
 
-    private void Update()
-    {
-        float moveDistance = speed * Time.deltaTime;
-        transform.Translate(lookDirection * moveDistance);
+        if (HasStateAuthority == false)
+            return;
+
         CheckCollisions(moveDistance);
+
+        if (Vector3.Distance(transform.position, SpawnPosition) > MaxDistance)
+        {
+            Runner.Despawn(Object);
+        }
     }
 
     private void CheckCollisions(float moveDistance)
     {
-        Ray ray = new Ray(transform.position, lookDirection);
+        Ray ray = new Ray(transform.position, MoveDirection);
         RaycastHit hit;
         if (Physics.Raycast(ray, out hit, moveDistance, collisionMask, QueryTriggerInteraction.Collide))
         {
@@ -69,12 +73,15 @@ public class Ammo : NetworkBehaviour
 
     private void OnHitObject(RaycastHit hit)
     {
+        if (HasStateAuthority == false)
+            return;
+
         IDamageable damageableObject = hit.collider.GetComponent<IDamageable>();
         if (damageableObject != null)
         {
-            damageableObject.TakeHit(damage, hit); // 데미지 입히기
+            damageableObject.TakeHit(DamageValue, hit); // 데미지 입히기
         }
-        Destroy(gameObject);
+        Runner.Despawn(Object);
     }
 
     // // 트리거 충돌 감지

@@ -22,6 +22,20 @@ public class Weapon : NetworkBehaviour
     private GameObject projectilePrefab;
     
     private Transform originParent;
+    private bool _isBoundToOwner;
+
+    public override void Spawned()
+    {
+        _isBoundToOwner = BindToOwnerWeaponHold();
+    }
+
+    public override void FixedUpdateNetwork()
+    {
+        if (_isBoundToOwner == false)
+        {
+            _isBoundToOwner = BindToOwnerWeaponHold();
+        }
+    }
     
 
     private void Awake()
@@ -52,33 +66,45 @@ public class Weapon : NetworkBehaviour
             if(WeaponSO.projectilePrefab != null) projectilePrefab = WeaponSO.projectilePrefab;
             msBetweenShots = WeaponSO.attackSpeed;
         }
-       
-        
+
+
     }
-    [Rpc(RpcSources.InputAuthority, RpcTargets.All)]
-    public void RPC_PlayAnimation(string type, string triggerName)
+
+    private bool BindToOwnerWeaponHold()
     {
-        switch (type)
-        {
-            case "Trigger":
-                Animator.SetTrigger(triggerName);
-                break;
-            case "Bool":
-                Animator.SetBool(triggerName, true);
-                break;
-            case "Int":
-                Animator.SetInteger(triggerName, 1);
-                break;
-            case "Float":
-                Animator.SetFloat(triggerName, 1f);
-                break;
-                
-        }
+        if (Runner == null || Object == null)
+            return false;
+
+        if (Runner.TryGetPlayerObject(Object.InputAuthority, out NetworkObject ownerObject) == false)
+            return false;
+
+        WeaponController weaponController = ownerObject.GetComponent<WeaponController>();
+        if (weaponController == null || weaponController.weaponHold == null)
+            return false;
+
+        transform.SetParent(weaponController.weaponHold, false);
+        transform.localPosition = Vector3.zero;
+        transform.localRotation = Quaternion.identity;
+        return true;
     }
-    
+
+
 
     public void Attack(Vector3 Look, float damage, float criticalDamage)
     {
+        if (HasStateAuthority == false)
+            return;
+
+        if (_isBoundToOwner == false)
+        {
+            _isBoundToOwner = BindToOwnerWeaponHold();
+            if (_isBoundToOwner == false)
+                return;
+        }
+
+        if (WeaponSO == null)
+            return;
+
         if (Time.time <= nextShotTime)
         {
             return;
@@ -87,25 +113,29 @@ public class Weapon : NetworkBehaviour
         switch (WeaponSO.weaponType)
         {
             case WeaponType.Projectile:
-                RPC_PlayAnimation("Trigger", "Attack");
-                
-                var ammoObj = Runner.Spawn(projectilePrefab, fireTransform.position, Quaternion.Euler(Look));
-                Ammo ammo = ammoObj.GetComponent<Ammo>();
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                Plane groundPlane = new Plane(Vector3.up, transform.position);
-                Vector3 mouseWorldPos = Vector3.zero;
-                if (groundPlane.Raycast(ray, out float distance))
-                {
-                    mouseWorldPos = ray.GetPoint(distance);
-                }
-                mouseWorldPos.y = transform.position.y; 
-                Vector3 lookDirection = (mouseWorldPos - transform.position).normalized;
-                ammo.SetLookDirection(lookDirection);
-                ammo.SetDamage(damage + WeaponSO.weaponDamage);
-                ammo.speed = WeaponSO.projectileSpeed;
-                ammo.projectileDis = WeaponSO.projectileDis;
-                ammoObj.transform.localScale = Vector3.one * WeaponSO.tileSize *0.1f;
-                Destroy(ammoObj, 10);
+                if (projectilePrefab == null)
+                    return;
+
+                Animator.SetTrigger("Attack");
+                Vector3 lookDirection = Look.sqrMagnitude > 0.0001f ? Look.normalized : transform.forward;
+                Quaternion spawnRotation = Quaternion.LookRotation(lookDirection);
+                Vector3 firePosition = fireTransform != null ? fireTransform.position : transform.position;
+
+                Runner.Spawn(projectilePrefab, firePosition, spawnRotation, Object.InputAuthority,
+                    (_, spawnedObject) =>
+                    {
+                        Ammo ammo = spawnedObject.GetComponent<Ammo>();
+                        if (ammo == null)
+                            return;
+
+                        ammo.Initialize(
+                            firePosition,
+                            lookDirection,
+                            damage + WeaponSO.weaponDamage,
+                            WeaponSO.projectileSpeed,
+                            WeaponSO.projectileDis);
+                        spawnedObject.transform.localScale = Vector3.one * WeaponSO.tileSize * 0.1f;
+                    });
                 break;
             case WeaponType.Laser:
                 StartCoroutine(FireLaser());

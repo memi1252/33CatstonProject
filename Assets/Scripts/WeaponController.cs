@@ -8,8 +8,11 @@ public class WeaponController : NetworkBehaviour
     public WeaponScriptableObject startWeapon;
     private Weapon equippedWeapon;
 
-    private void Start()
+    public override void Spawned()
     {
+        if (HasStateAuthority == false)
+            return;
+
         if (startWeapon != null)
         {
             EquipWeapon(startWeapon);
@@ -19,19 +22,31 @@ public class WeaponController : NetworkBehaviour
 
     public void EquipWeapon(WeaponScriptableObject newWeapon)
     {
+        if (HasStateAuthority == false)
+            return;
+
         if (equippedWeapon != null)
         {
-            Runner.Despawn(equippedWeapon.Object);
+            if (equippedWeapon.Object != null)
+            {
+                Runner.Despawn(equippedWeapon.Object);
+            }
         }
 
-        equippedWeapon = Instantiate(newWeapon.weaponPrefab, weaponHold.position, weaponHold.rotation).GetComponent<Weapon>();
+        NetworkObject weaponObject = Runner.Spawn(newWeapon.weaponPrefab, weaponHold.position, weaponHold.rotation, Object.InputAuthority);
+        equippedWeapon = weaponObject.GetComponent<Weapon>();
         equippedWeapon.WeaponSO = newWeapon;
         equippedWeapon.transform.parent = weaponHold;
+        equippedWeapon.transform.localPosition = Vector3.zero;
+        equippedWeapon.transform.localRotation = Quaternion.identity;
     }
 
     public void Attack(Vector3 Look, float damage, float criticalDamage)
     {
-        if (equippedWeapon != null)
+        if (HasStateAuthority == false)
+            return;
+
+        if (equippedWeapon != null && equippedWeapon.Object != null)
         {
             equippedWeapon.Attack(Look, damage, criticalDamage );
         }
