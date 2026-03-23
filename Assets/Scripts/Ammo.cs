@@ -14,13 +14,20 @@ public class Ammo : NetworkBehaviour
     public ParticleSystem projectileParticles;
     public VisualEffect projectileVisualEffect;
 
-    [Networked] private Vector3 MoveDirection { get; set; }
-    [Networked] private float DamageValue { get; set; }
-    [Networked] private float MoveSpeed { get; set; }
-    [Networked] private float MaxDistance { get; set; }
-    [Networked] private Vector3 SpawnPosition { get; set; }
-    [Networked] private NetworkBool IsInitialized { get; set; }
-
+    [Networked] public Vector3 MoveDirection { get; set; }
+    [Networked] public float DamageValue { get; set; }
+    [Networked]  public float MoveSpeed { get; set; }
+    [Networked] public float MaxDistance { get; set; }
+    [Networked] public Vector3 SpawnPosition { get; set; }
+    [Networked] public NetworkBool IsInitialized { get; set; }
+    
+    [Networked] private TickTimer spawnInvincibility { get; set; }
+    
+    public override void Spawned() {
+        // 스폰 후 0.2초 동안은 무적
+        spawnInvincibility = TickTimer.CreateFromSeconds(Runner, 0.2f);
+    }
+    
     public void Initialize(Vector3 spawnPosition, Vector3 direction, float damageValue, float moveSpeed, float maxDistance)
     {
         SpawnPosition = spawnPosition;
@@ -44,21 +51,22 @@ public class Ammo : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (IsInitialized == false)
-            return;
-
-        float moveDistance = MoveSpeed * Runner.DeltaTime;
-        transform.position += MoveDirection * moveDistance;
-
         if (HasStateAuthority == false)
             return;
-
+        
+        float moveDistance = MoveSpeed *Runner.DeltaTime;
+        transform.position += MoveDirection * moveDistance;
         CheckCollisions(moveDistance);
-
+        
         if (Vector3.Distance(transform.position, SpawnPosition) > MaxDistance)
         {
             Runner.Despawn(Object);
         }
+    }
+
+    private void Update()
+    {
+        
     }
 
     private void CheckCollisions(float moveDistance)
@@ -81,7 +89,10 @@ public class Ammo : NetworkBehaviour
         {
             damageableObject.TakeHit(DamageValue, hit); // 데미지 입히기
         }
-        Runner.Despawn(Object);
+        if (Object.HasStateAuthority && spawnInvincibility.ExpiredOrNotRunning(Runner)) {
+            // 무적 시간이 끝난 후에만 삭제 실행
+            Runner.Despawn(Object);
+        }
     }
 
     // // 트리거 충돌 감지

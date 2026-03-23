@@ -23,12 +23,12 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     private void Update()
     {
-        if (target == null)
-        {
-            target = GameObject.FindGameObjectWithTag("Player").transform;
-            StopAllCoroutines();
-            StartCoroutine(UpdatePat());
-        }
+        // if (target == null)
+        // {
+        //     target = GameObject.FindGameObjectWithTag("Player").transform;
+        //     StopAllCoroutines();
+        //     StartCoroutine(UpdatePat());
+        // }
     }
 
     IEnumerator UpdatePat()

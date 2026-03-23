@@ -109,6 +109,7 @@ public class Weapon : NetworkBehaviour
         {
             return;
         }
+
         nextShotTime = Time.time + msBetweenShots;
         switch (WeaponSO.weaponType)
         {
@@ -121,33 +122,36 @@ public class Weapon : NetworkBehaviour
                 Quaternion spawnRotation = Quaternion.LookRotation(lookDirection);
                 Vector3 firePosition = fireTransform != null ? fireTransform.position : transform.position;
 
-                Runner.Spawn(projectilePrefab, firePosition, spawnRotation, Object.InputAuthority,
+                Runner.Spawn(projectilePrefab, firePosition, spawnRotation, Runner.LocalPlayer,
                     (_, spawnedObject) =>
                     {
+                        spawnedObject.transform.position = firePosition;
+                        spawnedObject.transform.localScale  = Vector3.one * WeaponSO.tileSize;
                         Ammo ammo = spawnedObject.GetComponent<Ammo>();
-                        if (ammo == null)
-                            return;
-
-                        ammo.Initialize(
-                            firePosition,
-                            lookDirection,
-                            damage + WeaponSO.weaponDamage,
-                            WeaponSO.projectileSpeed,
-                            WeaponSO.projectileDis);
-                        spawnedObject.transform.localScale = Vector3.one * WeaponSO.tileSize * 0.1f;
+                        if (ammo != null)
+                        {
+                            ammo.Initialize(
+                                firePosition,
+                                lookDirection,
+                                damage + WeaponSO.weaponDamage,
+                                WeaponSO.projectileSpeed,
+                                WeaponSO.projectileDis);
+                            spawnedObject.transform.localScale = Vector3.one * WeaponSO.tileSize * 0.1f;
+                        }
+                        
                     });
                 break;
             case WeaponType.Laser:
                 StartCoroutine(FireLaser());
                 break;
-            case WeaponType.Area :
+            case WeaponType.Area:
                 StartCoroutine(AreaAttack());
                 break;
             case WeaponType.Strike:
                 break;
         }
-        
     }
+
 
     private IEnumerator AreaAttack()
     {

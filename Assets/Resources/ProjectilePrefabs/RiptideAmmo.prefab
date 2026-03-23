@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 2852850018172844721}
   - component: {fileID: 791290653626071114}
   - component: {fileID: -4068758951948758957}
-  - component: {fileID: 7548596661620563296}
+  - component: {fileID: -7320656536532979079}
   m_Layer: 0
   m_Name: RiptideAmmo
   m_TagString: Untagged
@@ -162,6 +162,13 @@ MonoBehaviour:
   weaponTransform: {fileID: 0}
   projectileParticles: {fileID: 0}
   projectileVisualEffect: {fileID: 0}
+  _MoveDirection: {x: 0, y: 0, z: 0}
+  _DamageValue: 0
+  _MoveSpeed: 0
+  _MaxDistance: 0
+  _SpawnPosition: {x: 0, y: 0, z: 0}
+  _IsInitialized:
+    _value: 0
 --- !u!114 &-4068758951948758957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -180,9 +187,9 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 791290653626071114}
-  - {fileID: 7548596661620563296}
+  - {fileID: -7320656536532979079}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &7548596661620563296
+--- !u!114 &-7320656536532979079
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
