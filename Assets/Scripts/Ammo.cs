@@ -20,13 +20,7 @@ public class Ammo : NetworkBehaviour
     [Networked] public float MaxDistance { get; set; }
     [Networked] public Vector3 SpawnPosition { get; set; }
     [Networked] public NetworkBool IsInitialized { get; set; }
-    
-    [Networked] private TickTimer spawnInvincibility { get; set; }
-    
-    public override void Spawned() {
-        // 스폰 후 0.2초 동안은 무적
-        spawnInvincibility = TickTimer.CreateFromSeconds(Runner, 0.2f);
-    }
+ 
     
     public void Initialize(Vector3 spawnPosition, Vector3 direction, float damageValue, float moveSpeed, float maxDistance)
     {
@@ -51,16 +45,23 @@ public class Ammo : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        if (HasStateAuthority == false)
+        if (IsInitialized == false)
             return;
         
-        float moveDistance = MoveSpeed *Runner.DeltaTime;
-        transform.position += MoveDirection * moveDistance;
-        CheckCollisions(moveDistance);
+        float moveDistance = MoveSpeed * Runner.DeltaTime;
         
-        if (Vector3.Distance(transform.position, SpawnPosition) > MaxDistance)
+        // 모든 클라이언트가 동일한 방향으로 이동 (지연 최소)
+        transform.position += MoveDirection * moveDistance;
+        
+        // 충돌 감지와 Despawn은 InputAuthority (총알 쏜 플레이어)만 처리
+        if (HasInputAuthority)
         {
-            Runner.Despawn(Object);
+            CheckCollisions(moveDistance);
+            
+            if (Vector3.Distance(transform.position, SpawnPosition) > MaxDistance)
+            {
+                Runner.Despawn(Object);
+            }
         }
     }
 
@@ -89,10 +90,7 @@ public class Ammo : NetworkBehaviour
         {
             damageableObject.TakeHit(DamageValue, hit); // 데미지 입히기
         }
-        if (Object.HasStateAuthority && spawnInvincibility.ExpiredOrNotRunning(Runner)) {
-            // 무적 시간이 끝난 후에만 삭제 실행
-            Runner.Despawn(Object);
-        }
+        Runner.Despawn(Object);
     }
 
     // // 트리거 충돌 감지

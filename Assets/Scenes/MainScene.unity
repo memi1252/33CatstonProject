@@ -1921,10 +1921,75 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6053448454993229926, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_Range
+      value: 4.92
+      objectReference: {fileID: 0}
+    - target: {fileID: 6053448454993229926, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_Intensity
+      value: 14.7
+      objectReference: {fileID: 0}
+    - target: {fileID: 6053448454993229926, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_BounceIntensity
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6053448454993229926, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_ColorTemperature
+      value: 1500
+      objectReference: {fileID: 0}
+    - target: {fileID: 6053448454993229926, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_UseColorTemperature
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6494670139354868646, guid: c95821f46117d6441b4b8b0f1a357d1e,
         type: 3}
       propertyPath: m_Name
       value: street lamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 3.63
+      objectReference: {fileID: 0}
+    - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7396253856685566293, guid: c95821f46117d6441b4b8b0f1a357d1e,
         type: 3}

@@ -92,7 +92,7 @@ public class Weapon : NetworkBehaviour
 
     public void Attack(Vector3 Look, float damage, float criticalDamage)
     {
-        if (HasStateAuthority == false)
+        if (HasInputAuthority == false)
             return;
 
         if (_isBoundToOwner == false)
@@ -122,7 +122,7 @@ public class Weapon : NetworkBehaviour
                 Quaternion spawnRotation = Quaternion.LookRotation(lookDirection);
                 Vector3 firePosition = fireTransform != null ? fireTransform.position : transform.position;
 
-                Runner.Spawn(projectilePrefab, firePosition, spawnRotation, Runner.LocalPlayer,
+                Runner.Spawn(projectilePrefab, firePosition, spawnRotation, Object.InputAuthority,
                     (_, spawnedObject) =>
                     {
                         spawnedObject.transform.position = firePosition;
