@@ -131,7 +131,6 @@ public class Weapon : NetworkBehaviour
                         if (ammo != null)
                         {
                             ammo.Initialize(
-                                firePosition,
                                 lookDirection,
                                 damage + WeaponSO.weaponDamage,
                                 WeaponSO.projectileSpeed,

@@ -17,14 +17,17 @@ public class Ammo : NetworkBehaviour
     [Networked] public Vector3 MoveDirection { get; set; }
     [Networked] public float DamageValue { get; set; }
     [Networked]  public float MoveSpeed { get; set; }
-    [Networked] public float MaxDistance { get; set; }
-    [Networked] public Vector3 SpawnPosition { get; set; }
+    public float MaxDistance { get; set; }
+    public Vector3 SpawnPosition { get; set; }
     [Networked] public NetworkBool IsInitialized { get; set; }
- 
-    
-    public void Initialize(Vector3 spawnPosition, Vector3 direction, float damageValue, float moveSpeed, float maxDistance)
+
+    private void Start()
     {
-        SpawnPosition = spawnPosition;
+            SpawnPosition = transform.position;
+    }
+
+    public void Initialize( Vector3 direction, float damageValue, float moveSpeed, float maxDistance)
+    {
         MoveDirection = direction.sqrMagnitude > 0.0001f ? direction.normalized : transform.forward;
         DamageValue = damageValue;
         MoveSpeed = moveSpeed;

@@ -56,6 +56,6 @@ public class Enemy : NetworkBehaviour , IDamageable
     public void Die()
     {
         dead = true;
-        Destroy(gameObject);
+        Runner.Despawn(Object);
     }
 }
