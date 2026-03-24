@@ -103,7 +103,7 @@ namespace Projectiles.NetworkObjectExample
         {
             if (_visibleFireCount < _fireCount)
             {
-                PlayFireEffect();
+                //PlayFireEffect();
             }
 
             _visibleFireCount = _fireCount;

@@ -26,11 +26,6 @@ namespace Projectiles.NetworkObjectExample
 		[SerializeField]
 		private float _lifeTimeAfterHit = 2f;
 
-		[Networked]
-		private TickTimer _lifeCooldown { get; set; }
-		[Networked]
-		private NetworkBool _isDestroyed { get; set; }
-
 		private bool _isDestroyedRender;
 
 		private NetworkRigidbody3D _rigidbody;
@@ -38,12 +33,17 @@ namespace Projectiles.NetworkObjectExample
 		private Vector3 moveDirection;
 		private float damageValue;
 		private LayerMask collisionMask;
+		
+		[Networked]
+		private TickTimer _lifeCooldown { get; set; }
+		[Networked]
+		private NetworkBool _isDestroyed { get; set; }
 
 		// PUBLIC METHODS
 
 		public void Fire(Vector3 position, Quaternion rotation, float damageValue, LayerMask collisionMask)
 		{
-			moveDirection = rotation.eulerAngles;
+			moveDirection = rotation * Vector3.forward;
 			this.damageValue = damageValue;
 			this.collisionMask = collisionMask;
 			// ✅ null 체크 추가
@@ -78,7 +78,12 @@ namespace Projectiles.NetworkObjectExample
 			transform.rotation = rotation; // 방향 확실히 지정
 			_rigidbody.Rigidbody.AddForce(transform.forward * _initialImpulse, ForceMode.Impulse);
 
-			// Set cooldown after which the projectile should be despawned
+			_isDestroyed = false;
+			_isDestroyedRender = false;
+			_collider.enabled = true;
+			if (_visualsRoot != null) _visualsRoot.SetActive(true);
+			if (_hitEffect != null) _hitEffect.SetActive(false);
+
 			if (_lifeTime > 0f)
 			{
 				_lifeCooldown = TickTimer.CreateFromSeconds(Runner, _lifeTime);
@@ -89,9 +94,37 @@ namespace Projectiles.NetworkObjectExample
 
 		public override void FixedUpdateNetwork()
 		{
-			_collider.enabled = _isDestroyed == false;
+			// 버퍼에서 미리 생성만 되고 아직 활성화(Fire)되지 않은 객체일 경우, 네트워크 속성 접근을 방지
+			// Object나 Runner가 제대로 할당되지 않았다면 아예 건너뛰게 강제 처리
+			if (Object == null || Runner == null || !Object.IsValid)
+				return;
 
-			if (_lifeCooldown.IsRunning == true && _lifeCooldown.Expired(Runner) == true)
+			try
+			{
+				if (_lifeCooldown.IsRunning == false)
+					return; // 아직 발사(Fire)되지 않은 대기 상태면 실행 생략
+			}
+			catch (System.InvalidOperationException)
+			{
+				return;
+			}
+
+			if (_isDestroyed) 
+			{
+				// 파괴된(폭발 이펙트 재생 중인) 상태라면 수명 타이머만 체크합니다.
+				if (_lifeCooldown.Expired(Runner))
+				{
+					Runner.Despawn(Object);
+				}
+				return;
+			}
+
+			CheckCollisions(_rigidbody.Rigidbody.linearVelocity.magnitude * Runner.DeltaTime);
+			
+			// CheckCollisions 이후 객체가 Despawn 되었을 수 있으므로 다시 체크
+			if (Object == null || !Object.IsValid) return;
+
+			if (_lifeCooldown.Expired(Runner))
 			{
 				Runner.Despawn(Object);
 			}
@@ -123,7 +156,9 @@ namespace Projectiles.NetworkObjectExample
 
 		protected void OnCollisionEnter(Collision collision)
 		{
-			if (collision.rigidbody != null && Object != null)
+			if (Object == null || !Object.IsValid) return;
+
+			if (collision.rigidbody != null)
 			{
 				ProcessHit();
 			}
@@ -133,14 +168,29 @@ namespace Projectiles.NetworkObjectExample
 
 		private void ProcessHit()
 		{
-			// Save destroyed flag so hit effects can be shown on other clients as well
-			_isDestroyed = true;
-
-			_lifeCooldown = TickTimer.CreateFromSeconds(Runner, _lifeTimeAfterHit);
+			try
+			{
+				// Save destroyed flag so hit effects can be shown on other clients as well
+				_isDestroyed = true;
+				_lifeCooldown = TickTimer.CreateFromSeconds(Runner, _lifeTimeAfterHit);
+			}
+			catch (System.InvalidOperationException)
+			{
+				// 아직 Network 속성에 접근할 수 없는 경우 무시
+			}
 
 			// Stop the movement
-			_rigidbody.Rigidbody.isKinematic = true;
-			_collider.enabled = false;
+			if (_rigidbody != null && _rigidbody.Rigidbody != null)
+			{
+				// kinematic 상태인 경우 velocity 설정이 에러를 발생시키므로 순서 변경
+				_rigidbody.Rigidbody.linearVelocity = Vector3.zero;
+				_rigidbody.Rigidbody.angularVelocity = Vector3.zero;
+				_rigidbody.Rigidbody.isKinematic = true;
+			}
+			if (_collider != null)
+			{
+				_collider.enabled = false;
+			}
 		}
 
 		private void ShowDestroyEffect()
@@ -159,9 +209,13 @@ namespace Projectiles.NetworkObjectExample
 		
 		private void CheckCollisions(float moveDistance)
 		{
-			Ray ray = new Ray(transform.position, moveDirection);
+			// 현재 위치에서 한 틱 전 위치를 계산하여 좀 더 안전하게 레이캐스트 시작 (빠른 속도로 인한 판정 무시 방지)
+			Vector3 startPos = transform.position - (moveDirection.normalized * moveDistance);
+			Ray ray = new Ray(startPos, moveDirection.normalized);
 			RaycastHit hit;
-			if (Physics.Raycast(ray, out hit, moveDistance, collisionMask, QueryTriggerInteraction.Collide))
+			
+			// 충돌 판정 거리를 약간 여유 있게 처리
+			if (Physics.Raycast(ray, out hit, moveDistance * 2f, collisionMask, QueryTriggerInteraction.Collide))
 			{
 				OnHitObject(hit);
 			}
@@ -177,7 +231,9 @@ namespace Projectiles.NetworkObjectExample
 			{
 				damageableObject.TakeHit(damageValue, hit); // 데미지 입히기
 			}
-			Runner.Despawn(Object);
+			
+			ProcessHit(); // 시각 효과와 생명 주기 세팅 (여기서 수명을 Hit 후 지연 시간으로 재설정함)
+			// Runner.Despawn(Object); // ❌ 즉시 없애면 이펙트가 안 보이므로 삭제!
 		}
 	}
 }

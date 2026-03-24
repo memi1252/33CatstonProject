@@ -140,7 +140,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponController
   weaponHold: {fileID: 4146053014953141876}
-  startWeapon: {fileID: 11400000, guid: 587118df2b9497e49af0e1e476a8e448, type: 2}
+  startWeapon: {fileID: 11400000, guid: 0fc7743a1fc593749b69fa236046f503, type: 2}
 --- !u!114 &8261807108443789817
 MonoBehaviour:
   m_ObjectHideFlags: 0

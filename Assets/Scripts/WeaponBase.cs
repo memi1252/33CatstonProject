@@ -59,7 +59,7 @@ namespace Projectiles
 
 			if (_fireSoundSources == null)
 			{
-				//_fireSoundSources = _fireSoundSourcesRoot.GetComponentsInChildren<AudioSource>();
+				_fireSoundSources = _fireSoundSourcesRoot.GetComponentsInChildren<AudioSource>();
 			}
 
 			// Find free audio source and play fire sound
