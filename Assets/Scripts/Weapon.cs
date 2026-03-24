@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Fusion;
+using Projectiles;
 using UnityEngine;
 using UnityEngine.VFX;
 
@@ -87,7 +88,7 @@ public class Weapon : NetworkBehaviour
         transform.localRotation = Quaternion.identity;
         return true;
     }
-
+    
 
 
     public void Attack(Vector3 Look, float damage, float criticalDamage)

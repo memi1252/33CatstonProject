@@ -46,6 +46,7 @@ public class Enemy : NetworkBehaviour , IDamageable
     
     public void TakeHit(float damage, RaycastHit hit)
     {
+        Debug.Log(damage);
         health -= damage;
         if (health <= 0 && !dead)
         {

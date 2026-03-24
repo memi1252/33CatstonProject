@@ -1,12 +1,14 @@
 using System;
 using Fusion;
+using Projectiles.NetworkObjectExample;
 using UnityEngine;
 
 public class WeaponController : NetworkBehaviour
 {
     public Transform weaponHold;
     public WeaponScriptableObject startWeapon;
-    private Weapon equippedWeapon;
+    //private Weapon equippedWeapon;
+    private Weapon_NetworkObject equippedWeapon;
 
     public override void Spawned()
     {
@@ -34,7 +36,8 @@ public class WeaponController : NetworkBehaviour
         }
 
         NetworkObject weaponObject = Runner.Spawn(newWeapon.weaponPrefab, weaponHold.position, weaponHold.rotation, Object.InputAuthority);
-        equippedWeapon = weaponObject.GetComponent<Weapon>();
+        //equippedWeapon = weaponObject.GetComponent<Weapon>();
+        equippedWeapon = weaponObject.GetComponent<Weapon_NetworkObject>();
         equippedWeapon.WeaponSO = newWeapon;
         equippedWeapon.transform.parent = weaponHold;
         equippedWeapon.transform.localPosition = Vector3.zero;
@@ -45,10 +48,11 @@ public class WeaponController : NetworkBehaviour
     {
         if (HasStateAuthority == false)
             return;
-
+        
         if (equippedWeapon != null && equippedWeapon.Object != null)
         {
-            equippedWeapon.Attack(Look, damage, criticalDamage );
+            //equippedWeapon.Attack(Look, damage, criticalDamage );
+            equippedWeapon.Fire(damage, criticalDamage);
         }
     }
 }

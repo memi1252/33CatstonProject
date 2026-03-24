@@ -13,9 +13,9 @@ GameObject:
   - component: {fileID: 6049279314072060195}
   - component: {fileID: 4614013358710334695}
   - component: {fileID: 2852850018172844721}
-  - component: {fileID: 791290653626071114}
   - component: {fileID: -4068758951948758957}
-  - component: {fileID: -7320656536532979079}
+  - component: {fileID: 7637223808915930196}
+  - component: {fileID: 9049019671497495747}
   m_Layer: 0
   m_Name: RiptideAmmo
   m_TagString: Untagged
@@ -140,36 +140,9 @@ Rigidbody:
   m_ImplicitTensor: 1
   m_UseGravity: 0
   m_IsKinematic: 0
-  m_Interpolate: 0
+  m_Interpolate: 1
   m_Constraints: 0
-  m_CollisionDetection: 0
---- !u!114 &791290653626071114
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4705942470810935141}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbb2261fb3b279045b91691affc66dee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Ammo
-  collisionMask:
-    serializedVersion: 2
-    m_Bits: 256
-  speed: 0
-  projectileDis: 3
-  weaponTransform: {fileID: 0}
-  projectileParticles: {fileID: 0}
-  projectileVisualEffect: {fileID: 0}
-  _MoveDirection: {x: 0, y: 0, z: 0}
-  _DamageValue: 0
-  _MoveSpeed: 0
-  _MaxDistance: 0
-  _SpawnPosition: {x: 0, y: 0, z: 0}
-  _IsInitialized:
-    _value: 0
+  m_CollisionDetection: 1
 --- !u!114 &-4068758951948758957
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -183,14 +156,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
   SortKey: 3922331296
-  ObjectInterest: 1
+  ObjectInterest: 0
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 791290653626071114}
-  - {fileID: -7320656536532979079}
+  - {fileID: 7637223808915930196}
+  - {fileID: 9049019671497495747}
   ForceRemoteRenderTimeframe: 0
---- !u!114 &-7320656536532979079
+--- !u!114 &7637223808915930196
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -199,14 +172,37 @@ MonoBehaviour:
   m_GameObject: {fileID: 4705942470810935141}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 158639473, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Script: {fileID: 11500000, guid: 0a591d221a634417e9827eb58e17de84, type: 3}
   m_Name: 
-  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkTransform
-  _stateAuthorityChangeErrorCorrectionDelta: 0
+  m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.NetworkRigidbody3D
+  _stateAuthorityChangeErrorCorrectionDelta: 0.15
   SyncScale: 0
   SyncParent: 0
-  _autoAOIOverride: 1
-  DisableSharedModeInterpolation: 0
+  _interpolationTarget: {fileID: 0}
+  UsePreciseRotation: 1
+  UseRenderSleepThresholds: 1
+  RenderThresholds:
+    UseEnergy: 1
+    Position: 0.01
+    Rotation: 0.01
+    Scale: 0.01
+--- !u!114 &9049019671497495747
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4705942470810935141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 557cae761425cb14889fd6727e77f8ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectExample.PhysicsProjectile
+  _initialImpulse: 30
+  _lifeTime: 4
+  _visualsRoot: {fileID: 0}
+  _hitEffect: {fileID: 0}
+  _lifeTimeAfterHit: 2
 --- !u!1001 &9026061300133840248
 PrefabInstance:
   m_ObjectHideFlags: 0

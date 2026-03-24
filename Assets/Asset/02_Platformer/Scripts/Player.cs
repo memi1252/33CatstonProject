@@ -239,7 +239,8 @@ namespace Starter.Platformer
 
 			if (input.Attack)
 			{
-				input.Attack = false; // 공격 입력 초기화
+				// Debug.Log("Ddddddddddddddddd");
+				// input.Attack = false; // 공격 입력 초기화
 				GetComponent<WeaponController>().Attack(transform.forward, damage, criticalDamage);
 			}
 		}

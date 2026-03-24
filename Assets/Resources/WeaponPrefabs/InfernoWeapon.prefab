@@ -32,6 +32,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 5633325670430573276}
+  - {fileID: 8339486346838757907}
   m_Father: {fileID: 1677346284688033691}
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!33 &7960220506025644922
@@ -130,9 +131,10 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1677346284688033691}
-  - component: {fileID: 5635160861140178801}
   - component: {fileID: 764932532431815272}
   - component: {fileID: 5565712752371829374}
+  - component: {fileID: 3421182478042579647}
+  - component: {fileID: 882295628300712362}
   m_Layer: 6
   m_Name: InfernoWeapon
   m_TagString: Untagged
@@ -155,25 +157,8 @@ Transform:
   m_Children:
   - {fileID: 588405243193889372}
   - {fileID: 1728782001539400646}
-  - {fileID: 8339486346838757907}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &5635160861140178801
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5684410180746407400}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c81e7b55de52b8c40b7ebc18d2238e49, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Weapon
-  WeaponSO: {fileID: 0}
-  fireTransform: {fileID: 1728782001539400646}
-  attackScope: {fileID: 0}
-  damage: 0
 --- !u!95 &764932532431815272
 Animator:
   serializedVersion: 7
@@ -213,8 +198,50 @@ MonoBehaviour:
   Flags: 1
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 5635160861140178801}
+  - {fileID: 3421182478042579647}
+  - {fileID: 882295628300712362}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &3421182478042579647
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5684410180746407400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ff01dd5e7309f846a6c3659987e13fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectExample.Weapon_NetworkObject
+  _fireTransform: {fileID: 1728782001539400646}
+  _fireClip: {fileID: 0}
+  _fireSoundSourcesRoot: {fileID: 0}
+  attackScope: {fileID: 0}
+  Animator: {fileID: 0}
+  LineRenderer: {fileID: 0}
+  ParticleEffect: {fileID: 0}
+  VisualEffect: {fileID: 8505345373508941269}
+  _projectilePrefab: {fileID: 0}
+  _useBuffer: 0
+  _projectileBuffer: {fileID: 882295628300712362}
+  WeaponSO: {fileID: 0}
+  raycastLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
+--- !u!114 &882295628300712362
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5684410180746407400}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 081165ad89451c443967130a0e54f8a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectBuffer
+  _prefab: {fileID: 0}
+  _bufferSize: 8
 --- !u!1 &7060161666597554576
 GameObject:
   m_ObjectHideFlags: 0
@@ -341,22 +368,22 @@ PrefabInstance:
   serializedVersion: 2
   m_Modification:
     serializedVersion: 3
-    m_TransformParent: {fileID: 1677346284688033691}
+    m_TransformParent: {fileID: 588405243193889372}
     m_Modifications:
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.14
+      value: 1.4
       objectReference: {fileID: 0}
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.14
+      value: 1.3999996
       objectReference: {fileID: 0}
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 0.30970532
+      value: 0.6194105
       objectReference: {fileID: 0}
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
@@ -366,22 +393,22 @@ PrefabInstance:
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.7020003
       objectReference: {fileID: 0}
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 1.125
+      value: 0.1399988
       objectReference: {fileID: 0}
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
       propertyPath: m_LocalRotation.w
-      value: 1
+      value: 0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
       propertyPath: m_LocalRotation.x
-      value: -0
+      value: -0.7071068
       objectReference: {fileID: 0}
     - target: {fileID: 7437246396354269798, guid: 97e0aa7564c8afe40b8d90b983cea778,
         type: 3}
