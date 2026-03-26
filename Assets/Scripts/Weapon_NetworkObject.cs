@@ -1,5 +1,6 @@
 using System.Collections;
 using Fusion;
+using RetroArsenal;
 using UnityEngine;
 
 namespace Projectiles.NetworkObjectExample
@@ -18,7 +19,7 @@ namespace Projectiles.NetworkObjectExample
         [SerializeField] private NetworkObjectBuffer _projectileBuffer;
 
         [Networked] private int _fireCount { get; set; }
-
+        
         public WeaponScriptableObject WeaponSO;
 
         private int _visibleFireCount;
@@ -32,6 +33,14 @@ namespace Projectiles.NetworkObjectExample
         private bool _isBoundToOwner;
 
         // WeaponBase INTERFACE
+
+        private void Start()
+        {
+            if(VisualEffect)
+                VisualEffect.Stop();
+            if(attackScope)
+                attackScope.SetActive(false);
+        }
 
         public override void Fire(float damage, float criticalDamage)
         {
@@ -52,21 +61,162 @@ namespace Projectiles.NetworkObjectExample
                     _fireCount++;
                     break;
                 case WeaponType.Laser:
-                    StartCoroutine(FireLaser());
+                    FireLaserLogic();
+                    _fireCount++;
                     break;
                 case WeaponType.Area:
-                    StartCoroutine(AreaAttack());
+                    AreaAttackLogic();
+                    _fireCount++;
                     break;
                 case WeaponType.Strike:
+                    StrikeAttackLogic();
+                    _fireCount++;
                     break;
             }
         }
 
+        private void FireLaserLogic()
+        {
+            Ray ray = new Ray(FireTransform.position, transform.forward);
+            Vector3 endPoint;
+            float hitDistance = 50f;
+
+            if (Physics.Raycast(ray, out RaycastHit hit, 50f, raycastLayerMask))
+            {
+                endPoint = hit.point;
+                hitDistance = hit.distance;
+                if (HasStateAuthority && hit.collider != null && hit.collider.transform.root.gameObject != originParent.root.gameObject)
+                {
+                    if (hit.collider.GetComponentInParent<IDamageable>() != null)
+                    {
+                        hit.collider.GetComponentInParent<IDamageable>().TakeHit(damage + WeaponSO.weaponDamage, hit); // 데미지 입히기
+                    }
+                }
+            }
+            else
+            {
+                endPoint = FireTransform.position + transform.forward * 50;
+            }
+            
+            Rpc_PlayLaserEffect(endPoint, hitDistance);
+        }
+
+        private void AreaAttackLogic()
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Plane groundPlane = new Plane(Vector3.up, transform.root.position);
+            Vector3 mouseWorldPos = Vector3.zero;
+            if (groundPlane.Raycast(ray, out float distance))
+            {
+                mouseWorldPos = ray.GetPoint(distance);
+            }
+
+            mouseWorldPos.y = originParent.position.y;
+            
+            if (HasStateAuthority)
+            {
+                StartCoroutine(DealAreaDamage(mouseWorldPos));
+            }
+
+            Rpc_PlayAreaEffect(mouseWorldPos, WeaponSO.tileSize);
+        }
+
+        private void StrikeAttackLogic()
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            Plane groundPlane = new Plane(Vector3.up, transform.root.position);
+            Vector3 mouseWorldPos = Vector3.zero;
+            if (groundPlane.Raycast(ray, out float distance))
+            {
+                mouseWorldPos = ray.GetPoint(distance);
+            }
+
+            mouseWorldPos.y = originParent.position.y;
+            
+            if (HasStateAuthority)
+            {
+                StartCoroutine(DealStrikeDamage(mouseWorldPos));
+            }
+
+            // 스코프 크기도 함께 넘겨주기 위해 Rpc 파라미터 수정
+            Rpc_PlayStrikeEffect(mouseWorldPos, WeaponSO.tileSize);
+        }
+
+        private IEnumerator DealAreaDamage(Vector3 targetPos)
+        {
+            // 이펙트가 터지는 시간에 맞춰 1초 대기
+            yield return new WaitForSeconds(1f);
+
+            // attackScope의 크기가 tileSize이므로, 반지름은 절반인 tileSize * 0.5f
+            float radius = WeaponSO.tileSize * 0.5f;
+            float lifeTime = WeaponSO.projectileSpeed * .08f;
+            float tickRate = 0.5f; // 데미지를 입히는 간격 (예: 0.5초마다 데미지)
+            float timer = 0f;
+
+            while (timer < lifeTime)
+            {
+                Collider[] hitColliders = Physics.OverlapSphere(targetPos, radius, raycastLayerMask);
+                
+                foreach (var hitCollider in hitColliders)
+                {
+                    if (hitCollider.transform.root.gameObject == originParent.root.gameObject) continue;
+
+                    IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
+                    if (damageableObject != null)
+                    {
+                        damageableObject.TakeHit(damage + WeaponSO.weaponDamage, new RaycastHit());
+                    }
+                }
+
+                // 다음 데미지 틱까지 대기
+                yield return new WaitForSeconds(tickRate);
+                timer += tickRate;
+            }
+        }
+
+        private IEnumerator DealStrikeDamage(Vector3 targetPos)
+        {
+            // 투사체가 땅에 떨어져서 터지기까지의 시간 대기 (VisualStrikeAttack 시간과 동일하게 맞춤)
+            yield return new WaitForSeconds(1.5f);
+
+            // attackScope의 크기 기반 반경
+            float radius = WeaponSO.tileSize * 0.5f;
+
+            Collider[] hitColliders = Physics.OverlapSphere(targetPos, radius, raycastLayerMask);
+            
+            foreach (var hitCollider in hitColliders)
+            {
+                if (hitCollider.transform.root.gameObject == originParent.root.gameObject) continue;
+
+                IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
+                if (damageableObject != null)
+                {
+                    damageableObject.TakeHit(damage + WeaponSO.weaponDamage, new RaycastHit());
+                }
+            }
+        }
+
+        [Rpc(RpcSources.All, RpcTargets.All)]
+        private void Rpc_PlayLaserEffect(Vector3 endPoint, float hitDistance)
+        {
+            StartCoroutine(VisualFireLaser(endPoint, hitDistance));
+        }
+
+        [Rpc(RpcSources.All, RpcTargets.All)]
+        private void Rpc_PlayAreaEffect(Vector3 targetPos, float scopeSize)
+        {
+            StartCoroutine(VisualAreaAttack(targetPos, scopeSize));
+        }
+
+        // 스코프 크기를 매개변수로 추가
+        [Rpc(RpcSources.All, RpcTargets.All)]
+        private void Rpc_PlayStrikeEffect(Vector3 targetPos, float scopeSize)
+        {
+            StartCoroutine(VisualStrikeAttack(targetPos, scopeSize));
+        }
+
         public override void Spawned()
         {
-            // In case of late join (and other scenarios) this object can be spawned
-            // with fire count larger than zero. To prevent unwanted fire effects triggered in Render method
-            // we consider all fire that happened before the Spawn as already visible.
             _visibleFireCount = _fireCount;
             originParent = transform.parent;
             _isBoundToOwner = BindToOwnerWeaponHold();
@@ -113,7 +263,6 @@ namespace Projectiles.NetworkObjectExample
 
         private void FireSimple()
         {
-            // Spawn can be called only on state authority
             if (HasStateAuthority == false)
                 return;
 
@@ -124,8 +273,6 @@ namespace Projectiles.NetworkObjectExample
 
         private void FireWithBuffer()
         {
-            // In Fusion 2 there is no longer a predicted spawn. We can go around this to have a buffer of pre-spawned
-            // objects that are already living inside simulation but inactive. Check NetworkObjectBuffer component for more info.
             var projectile = _projectileBuffer.Get<PhysicsProjectile>(FireTransform.position, FireTransform.rotation,
                 Object.InputAuthority);
             if (projectile != null)
@@ -134,35 +281,160 @@ namespace Projectiles.NetworkObjectExample
             }
         }
 
-        private IEnumerator AreaAttack()
+        private IEnumerator VisualAreaAttack(Vector3 mouseWorldPos, float scopeSize)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            Plane groundPlane = new Plane(Vector3.up, transform.root.position);
-            Vector3 mouseWorldPos = Vector3.zero;
-            if (groundPlane.Raycast(ray, out float distance))
+            Quaternion scopeOriginalRot = Quaternion.identity;
+            Quaternion vfxOriginalRot = Quaternion.identity;
+
+            if (attackScope != null)
             {
-                mouseWorldPos = ray.GetPoint(distance);
+                scopeOriginalRot = attackScope.transform.localRotation;
+                attackScope.transform.parent = null;
+                attackScope.transform.position = mouseWorldPos;
+                attackScope.SetActive(true);
+                
+                // Rpc로 전달받은 크기를 그대로 적용
+                attackScope.transform.localScale = new Vector3(scopeSize, scopeSize, scopeSize);
             }
 
-            mouseWorldPos.y = originParent.position.y;
-            transform.parent = null;
-            transform.position = mouseWorldPos;
-            float scopeSize = WeaponSO.tileSize;
-            attackScope.transform.localScale = new Vector3(scopeSize, scopeSize, scopeSize);
+            if (VisualEffect != null)
+            {
+                vfxOriginalRot = VisualEffect.transform.localRotation;
+                VisualEffect.transform.parent = null;
+                VisualEffect.transform.position = mouseWorldPos;
+            }
+
+
+            if (ParticleEffect != null)
+            {
+                vfxOriginalRot = ParticleEffect.transform.localRotation;
+                ParticleEffect.transform.parent = null;
+                ParticleEffect.transform.position = mouseWorldPos;
+            }
+
             yield return new WaitForSeconds(1f);
-            attackScope.transform.localScale = Vector3.zero;
-            float lifeTime = WeaponSO.projectileSpeed * .08f;
-            VisualEffect.SetFloat("Size", WeaponSO.tileSize * 0.1f);
-            VisualEffect.SetFloat("LifeTime", lifeTime);
-            VisualEffect.Play();
+            
+            if (attackScope != null)
+            {
+                attackScope.SetActive(false);
+                attackScope.transform.localScale = Vector3.zero;
+            }
+            
+            float lifeTime = 1f;
+            if (WeaponSO != null)
+            {
+                lifeTime = WeaponSO.projectileSpeed * 0.08f;
+                if (VisualEffect != null)
+                {
+                    VisualEffect.SetFloat("Size", scopeSize * 0.1f);
+                }
+            }
+
+            if (VisualEffect != null)
+            {
+                VisualEffect.SetFloat("LifeTime", lifeTime);
+                VisualEffect.Stop(); 
+                VisualEffect.Play();
+            }
+            
+            if (ParticleEffect != null)
+            {
+                if (ParticleEffect.transform.childCount > 0 && ParticleEffect.transform.GetChild(0).GetComponent<SpriteRenderer>())
+                {
+                    ParticleEffect.transform.GetChild(0).gameObject.SetActive(true);
+                }
+                ParticleEffect.transform.localScale = Vector3.one * scopeSize; // WeaponSO가 null일 수 있으므로 scopeSize를 사용
+                ParticleEffect.Play();
+            }
+            
             yield return new WaitForSeconds(lifeTime);
-            VisualEffect.enabled = false;
-            transform.parent = originParent;
-            transform.localPosition = Vector3.zero;
-            yield return null;
+            
+            if (VisualEffect != null)
+            {
+                VisualEffect.Stop();
+                VisualEffect.transform.parent = transform;
+                VisualEffect.transform.localPosition = Vector3.zero;
+                VisualEffect.transform.localRotation = vfxOriginalRot;
+            }
+
+            if (ParticleEffect != null)
+            {
+                if (ParticleEffect.transform.childCount > 0 && ParticleEffect.transform.GetChild(0).GetComponent<SpriteRenderer>())
+                {
+                    ParticleEffect.transform.GetChild(0).gameObject.SetActive(false);
+                }
+
+                ParticleEffect.Stop();
+                ParticleEffect.transform.parent = transform;
+                ParticleEffect.transform.localPosition = Vector3.zero;
+                ParticleEffect.transform.localRotation = vfxOriginalRot;
+            }
+
+            if (attackScope != null)
+            {
+                attackScope.transform.parent = transform;
+                attackScope.transform.localPosition = Vector3.zero;
+                attackScope.transform.localRotation = scopeOriginalRot;
+            }
         }
 
-        private IEnumerator FireLaser()
+        private IEnumerator VisualStrikeAttack(Vector3 targetPos, float scopeSize)
+        {
+            Quaternion scopeOriginalRot = Quaternion.identity;
+
+            if (attackScope != null)
+            {
+                scopeOriginalRot = attackScope.transform.localRotation;
+                attackScope.transform.parent = null;
+                attackScope.transform.position = targetPos;
+                attackScope.SetActive(true);
+                
+                // Rpc로 전달받은 크기를 그대로 적용
+                attackScope.transform.localScale = new Vector3(scopeSize, scopeSize, scopeSize);
+            }
+
+            // 투사체가 땅에 떨어질 때까지 걸리는 대략적인 시간 대기 (적절히 조정 가능)
+            yield return new WaitForSeconds(1.5f);
+
+            if (attackScope != null)
+            {
+                attackScope.SetActive(false);
+                attackScope.transform.localScale = Vector3.zero;
+                attackScope.transform.parent = transform;
+                attackScope.transform.localPosition = Vector3.zero;
+                attackScope.transform.localRotation = scopeOriginalRot;
+            }
+
+            // 스코프가 사라졌을 때 파티클 재생
+            if (ParticleEffect != null)
+            {
+                ParticleEffect.transform.parent = null; // 타겟 위치로 보내기 위해 부모 해제
+                ParticleEffect.transform.position = targetPos;
+                ParticleEffect.transform.rotation = Quaternion.LookRotation(Vector3.right);
+
+                // 스코프 크기만큼 파티클 크기 키우기 (Strike)
+                ParticleEffect.transform.localScale = new Vector3(scopeSize, scopeSize, scopeSize);
+
+                ParticleEffect.Play();
+            }
+
+            // 파티클 지속 시간 대기
+            // 현재 Area와 비슷하게 LifeTime과 관련된 값이 없으므로 임의의 파티클 지속시간 1초 대기
+            yield return new WaitForSeconds(1f);
+
+            if (ParticleEffect != null)
+            {
+                ParticleEffect.Stop();
+                ParticleEffect.transform.parent = transform; // 다시 무기 밑으로 복귀
+                ParticleEffect.transform.localPosition = Vector3.zero;
+                ParticleEffect.transform.localRotation = Quaternion.identity;
+                
+                // 줄였던 크기 원상 복귀
+                ParticleEffect.transform.localScale = Vector3.one;
+            }
+        }
+
+        private IEnumerator VisualFireLaser(Vector3 endPoint, float hitDistance)
         {
             if (LineRenderer != null)
             {
@@ -172,22 +444,6 @@ namespace Projectiles.NetworkObjectExample
                 LineRenderer.positionCount = 2;
                 LineRenderer.SetPosition(0, FireTransform.position);
                 LineRenderer.SetPosition(1, FireTransform.position);
-
-                Ray ray = new Ray(FireTransform.position, transform.forward);
-                Vector3 endPoint;
-
-                if (Physics.Raycast(ray, out RaycastHit hit))
-                {
-                    endPoint = hit.point;
-                    if (hit.collider != null && hit.collider.TryGetComponent<IDamageable>(out IDamageable damageableObject))
-                    {
-                        damageableObject.TakeHit(damage + WeaponSO.weaponDamage, hit); // 데미지 입히기
-                    }
-                }
-                else
-                {
-                    endPoint = FireTransform.position + transform.forward * 50;
-                }
 
                 float timer = 0f;
                 float duration = .5f;
@@ -213,16 +469,10 @@ namespace Projectiles.NetworkObjectExample
                 VisualEffect.Play();
                 if (ParticleEffect != null)
                     ParticleEffect.Play();
-                Ray ray = new Ray(FireTransform.position, transform.forward);
-                if (Physics.Raycast(ray, out RaycastHit hit))
+                
+                if (hitDistance < 50f)
                 {
-                    Debug.DrawRay(FireTransform.position, transform.forward * hit.distance, Color.red, 5f);
-                    VisualEffect.SetVector3("TargetPosition", new Vector3(0, hit.distance * 0.5f, 0));
-                    
-                    if (hit.collider != null && hit.collider.TryGetComponent<IDamageable>(out IDamageable damageableObject))
-                    {
-                        damageableObject.TakeHit(damage + WeaponSO.weaponDamage, hit); // 데미지 입히기
-                    }
+                    VisualEffect.SetVector3("TargetPosition", new Vector3(0, hitDistance * 0.5f, 0));
                 }
                 else
                 {
@@ -237,3 +487,4 @@ namespace Projectiles.NetworkObjectExample
         }
     }
 }
+

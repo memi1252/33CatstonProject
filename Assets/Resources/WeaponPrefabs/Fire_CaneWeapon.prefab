@@ -54,6 +54,9 @@ VisualEffect:
       - m_Value: 0.5
         m_Name: Size
         m_Overridden: 1
+      - m_Value: 3
+        m_Name: LifeTime
+        m_Overridden: 1
     m_Vector2f:
       m_Array: []
     m_Vector3f:
@@ -431,8 +434,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 4456342224105129039}
-  - component: {fileID: 9085656982817572121}
   - component: {fileID: 8828225339365680580}
+  - component: {fileID: 6712133823524720216}
+  - component: {fileID: 9108333147693381742}
   m_Layer: 0
   m_Name: Fire_CaneWeapon
   m_TagString: Untagged
@@ -458,22 +462,6 @@ Transform:
   - {fileID: 4400442546277949519}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &9085656982817572121
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6870260640496897606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c81e7b55de52b8c40b7ebc18d2238e49, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Weapon
-  WeaponSO: {fileID: 0}
-  fireTransform: {fileID: 0}
-  attackScope: {fileID: 8069932826129485148}
-  damage: 0
 --- !u!114 &8828225339365680580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -491,8 +479,50 @@ MonoBehaviour:
   Flags: 1
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 9085656982817572121}
+  - {fileID: 6712133823524720216}
+  - {fileID: 9108333147693381742}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &6712133823524720216
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6870260640496897606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ff01dd5e7309f846a6c3659987e13fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectExample.Weapon_NetworkObject
+  _fireTransform: {fileID: 0}
+  _fireClip: {fileID: 0}
+  _fireSoundSourcesRoot: {fileID: 0}
+  attackScope: {fileID: 8069932826129485148}
+  Animator: {fileID: 0}
+  LineRenderer: {fileID: 0}
+  ParticleEffect: {fileID: 0}
+  VisualEffect: {fileID: 8739885147481167946}
+  _projectilePrefab: {fileID: 0}
+  _useBuffer: 0
+  _projectileBuffer: {fileID: 9108333147693381742}
+  WeaponSO: {fileID: 0}
+  raycastLayerMask:
+    serializedVersion: 2
+    m_Bits: 320
+--- !u!114 &9108333147693381742
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6870260640496897606}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 081165ad89451c443967130a0e54f8a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectBuffer
+  _prefab: {fileID: 0}
+  _bufferSize: 8
 --- !u!1 &7605276268703199881
 GameObject:
   m_ObjectHideFlags: 0
@@ -593,7 +623,7 @@ GameObject:
   - component: {fileID: 4400442546277949519}
   - component: {fileID: 8628900587826084948}
   m_Layer: 0
-  m_Name: Circle
+  m_Name: AttackScope
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -137,7 +137,7 @@ MonoBehaviour:
   WeaponSO: {fileID: 0}
   raycastLayerMask:
     serializedVersion: 2
-    m_Bits: 256
+    m_Bits: 320
 --- !u!114 &2007203797061847985
 MonoBehaviour:
   m_ObjectHideFlags: 0

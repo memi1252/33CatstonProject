@@ -10,6 +10,8 @@ public class WeaponController : NetworkBehaviour
     //private Weapon equippedWeapon;
     private Weapon_NetworkObject equippedWeapon;
 
+    [Networked] private TickTimer attackCooldownTimer { get; set; }
+
     public override void Spawned()
     {
         if (HasStateAuthority == false)
@@ -42,6 +44,9 @@ public class WeaponController : NetworkBehaviour
         equippedWeapon.transform.parent = weaponHold;
         equippedWeapon.transform.localPosition = Vector3.zero;
         equippedWeapon.transform.localRotation = Quaternion.identity;
+
+        // 무기를 장착할 때 쿨타임 초기화
+        attackCooldownTimer = TickTimer.None;
     }
 
     public void Attack(Vector3 Look, float damage, float criticalDamage)
@@ -51,8 +56,15 @@ public class WeaponController : NetworkBehaviour
         
         if (equippedWeapon != null && equippedWeapon.Object != null)
         {
-            //equippedWeapon.Attack(Look, damage, criticalDamage );
-            equippedWeapon.Fire(damage, criticalDamage);
+            // 공격 쿨타임 체크 (TickTimer가 만료되었거나 설정되지 않은 경우만 공격 허용)
+            if (attackCooldownTimer.ExpiredOrNotRunning(Runner))
+            {
+                //equippedWeapon.Attack(Look, damage, criticalDamage );
+                equippedWeapon.Fire(damage, criticalDamage);
+
+                // 무기의 attackSpeed (쿨타임)만큼 타이머 설정
+                attackCooldownTimer = TickTimer.CreateFromSeconds(Runner, equippedWeapon.WeaponSO.attackSpeed);
+            }
         }
     }
 }

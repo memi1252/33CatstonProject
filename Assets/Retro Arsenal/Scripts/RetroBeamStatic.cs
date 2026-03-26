@@ -33,15 +33,16 @@ public class RetroBeamStatic : MonoBehaviour
 	public float pulseSpeed = 1.0f;
 	private bool pulseExpanding = true;
 
+	private bool isSpawn = false;
+
     void Start()
     {
-		SpawnBeam();
-		originalWidth = line.startWidth;
-		customWidth = originalWidth * widthMultiplier;
+		
     }
 
     void FixedUpdate()
 	{
+		if (!isSpawn) return;
 		if (beam) 
 		{
 			line.SetPosition(0, transform.position);
@@ -98,9 +99,12 @@ public class RetroBeamStatic : MonoBehaviour
 	}
 
     public void SpawnBeam()
-	{
+    {
+	    isSpawn = true;
 		if (beamLineRendererPrefab)
 		{
+			originalWidth = line.startWidth;
+			customWidth = originalWidth * widthMultiplier;
 			beam = Instantiate(beamLineRendererPrefab);
 			beam.transform.position = transform.position;
 			beam.transform.parent = transform;
@@ -123,6 +127,30 @@ public class RetroBeamStatic : MonoBehaviour
 			Debug.LogError("A prefab with a line renderer must be assigned to the `beamLineRendererPrefab` field in the RetroArsenalBeamStatic script on " + gameObject.name);
 		}
 	}
+
+	public void RemoveBeam()
+    {
+	    isSpawn = false;
+        if (beam != null)
+        {
+            Destroy(beam);
+            beam = null;
+        }
+
+        if (beamStart != null)
+        {
+            Destroy(beamStart);
+            beamStart = null;
+        }
+
+        if (beamEnd != null)
+        {
+            Destroy(beamEnd);
+            beamEnd = null;
+        }
+
+        line = null;
+    }
 
 }
 }

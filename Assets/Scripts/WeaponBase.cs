@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using Fusion;
+using RetroArsenal;
 using UnityEngine.VFX;
 
 namespace Projectiles
@@ -32,7 +33,6 @@ namespace Projectiles
 			Animator = GetComponent<Animator>();
 			TryGetComponent(out LineRenderer);
 			TryGetComponentInChildren(gameObject, out ParticleEffect);
-			TryGetComponentInChildren(gameObject, out VisualEffect);
 			if (attackScope != null)
 			{
 				attackScope.transform.localPosition = Vector3.zero;

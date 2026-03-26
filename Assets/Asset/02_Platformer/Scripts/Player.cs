@@ -8,7 +8,7 @@ namespace Starter.Platformer
 	/// <summary>
 	/// Main player scrip - controls player movement and animations.
 	/// </summary>
-	public sealed class Player : NetworkBehaviour
+	public sealed class Player : NetworkBehaviour, IDamageable
 	{
 		[Header("References")]
 		public SimpleKCC KCC;
@@ -62,6 +62,7 @@ namespace Starter.Platformer
 		[Networked] public float damageReceived { get; set; } = 1f;
 		[Networked] public float criticalChance { get; set; } = 0.1f;
 		[Networked] public float criticalDamage { get; set; } = .5f; // damage * criticalDamage%
+		[Networked] public NetworkBool dead { get; set; }
 
 		// Animation IDs
 		private int _animIDSpeed;
@@ -245,9 +246,39 @@ namespace Starter.Platformer
 			}
 		}
 
-		public void TakeDamage(float damage)
+		public void TakeHit(float _damage, RaycastHit hit)
 		{
-			hp -= damageReceived * damage;
+			if (Object.HasStateAuthority)
+			{
+				TakeDamage(_damage);
+			}
+			else
+			{
+				Rpc_TakeDamage(_damage);
+			}
+		}
+
+		[Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+		public void Rpc_TakeDamage(float _damage)
+		{
+			TakeDamage(_damage);
+		}
+
+		public void TakeDamage(float _damage)
+		{
+			if (dead) return;
+
+			float actualDamage = damageReceived * _damage;
+			hp -= actualDamage;
+
+			Debug.Log($"[Player 피격] 유저({Nickname})가 {actualDamage}의 데미지를 입었습니다. (남은 HP : {hp}/{maxHp})");
+
+			if (hp <= 0)
+			{
+				dead = true;
+				Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
+				// 본래라면 여기서 부활 로직, 혹은 쓰러짐 애니메이션 등을 호출합니다.
+			}
 		}
 
 		private void AssignAnimationIDs()
