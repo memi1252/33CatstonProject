@@ -150,7 +150,7 @@ namespace Projectiles.NetworkObjectExample
             // attackScope의 크기가 tileSize이므로, 반지름은 절반인 tileSize * 0.5f
             float radius = WeaponSO.tileSize * 0.5f;
             float lifeTime = WeaponSO.projectileSpeed * .08f;
-            float tickRate = 0.5f; // 데미지를 입히는 간격 (예: 0.5초마다 데미지)
+            float tickRate = 1.2f; // 데미지를 입히는 간격 (예: 1.2초마다 데미지)
             float timer = 0f;
 
             while (timer < lifeTime)

@@ -268,7 +268,7 @@ namespace Starter.Platformer
 		{
 			if (dead) return;
 
-			float actualDamage = damageReceived * _damage;
+			float actualDamage = damageReceived * 0.01f * _damage;
 			hp -= actualDamage;
 
 			Debug.Log($"[Player 피격] 유저({Nickname})가 {actualDamage}의 데미지를 입었습니다. (남은 HP : {hp}/{maxHp})");
