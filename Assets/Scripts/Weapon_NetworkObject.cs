@@ -8,6 +8,9 @@ namespace Projectiles.NetworkObjectExample
     public class Weapon_NetworkObject : WeaponBase
     {
         // PRIVATE MEMBERS
+        
+        [HideInInspector]
+        public Starter.Platformer.Player ownerPlayer; // Player 참조 추가
 
         [SerializeField] private PhysicsProjectile _projectilePrefab;
 
@@ -268,6 +271,7 @@ namespace Projectiles.NetworkObjectExample
 
             var projectile = Runner.Spawn(_projectilePrefab, FireTransform.position, FireTransform.rotation,
                 Object.InputAuthority);
+            projectile.ownerPlayer = this.ownerPlayer; // 주인을 투사체에 전달
             projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask);
         }
 
@@ -277,6 +281,7 @@ namespace Projectiles.NetworkObjectExample
                 Object.InputAuthority);
             if (projectile != null)
             {
+                projectile.ownerPlayer = this.ownerPlayer; // 주인을 투사체에 전달
                 projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask);
             }
         }

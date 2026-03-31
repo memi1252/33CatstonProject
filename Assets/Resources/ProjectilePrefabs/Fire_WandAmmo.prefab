@@ -13,8 +13,9 @@ GameObject:
   - component: {fileID: 6049279314072060195}
   - component: {fileID: 4614013358710334695}
   - component: {fileID: 2852850018172844721}
-  - component: {fileID: 791290653626071114}
   - component: {fileID: 9040228084321473463}
+  - component: {fileID: -8730661247559811025}
+  - component: {fileID: 205563779502532445}
   m_Layer: 0
   m_Name: Fire_WandAmmo
   m_TagString: Untagged
@@ -141,26 +142,6 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 0
   m_CollisionDetection: 0
---- !u!114 &791290653626071114
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4705942470810935141}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fbb2261fb3b279045b91691affc66dee, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Ammo
-  collisionMask:
-    serializedVersion: 2
-    m_Bits: 256
-  speed: 0
-  projectileDis: 3
-  weaponTransform: {fileID: 0}
-  projectileParticles: {fileID: 0}
-  projectileVisualEffect: {fileID: 0}
 --- !u!114 &9040228084321473463
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -178,5 +159,46 @@ MonoBehaviour:
   Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 791290653626071114}
+  - {fileID: -8730661247559811025}
+  - {fileID: 205563779502532445}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &-8730661247559811025
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4705942470810935141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0a591d221a634417e9827eb58e17de84, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Addons.Physics::Fusion.Addons.Physics.NetworkRigidbody3D
+  _stateAuthorityChangeErrorCorrectionDelta: 0
+  SyncScale: 0
+  SyncParent: 1
+  _interpolationTarget: {fileID: 0}
+  UsePreciseRotation: 0
+  UseRenderSleepThresholds: 1
+  RenderThresholds:
+    UseEnergy: 1
+    Position: 0.01
+    Rotation: 0.01
+    Scale: 0.01
+--- !u!114 &205563779502532445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4705942470810935141}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 557cae761425cb14889fd6727e77f8ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectExample.PhysicsProjectile
+  _initialImpulse: 100
+  _lifeTime: 4
+  _visualsRoot: {fileID: 0}
+  _hitEffect: {fileID: 0}
+  _lifeTimeAfterHit: 2

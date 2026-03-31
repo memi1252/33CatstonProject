@@ -64,6 +64,26 @@ namespace Starter.Platformer
 		[Networked] public float criticalDamage { get; set; } = .5f; // damage * criticalDamage%
 		[Networked] public NetworkBool dead { get; set; }
 
+		[Header("Special Effects")]
+		// 특수 효과 배열: SpecialEffectType의 int 값을 인덱스로 사용하여 확장성을 챙김
+		[Networked, Capacity(64)] public NetworkArray<float> specialEffectValues => default;
+
+		public void AddSpecialEffect(SpecialEffectType type, float value)
+		{
+			if (type == SpecialEffectType.None) return;
+			specialEffectValues.Set((int)type, specialEffectValues[(int)type] + value);
+		}
+
+		public float GetSpecialEffectValue(SpecialEffectType type)
+		{
+			return specialEffectValues[(int)type];
+		}
+
+		public bool HasSpecialEffect(SpecialEffectType type)
+		{
+			return specialEffectValues[(int)type] > 0f;
+		}
+
 		// Animation IDs
 		private int _animIDSpeed;
 		private int _animIDGrounded;

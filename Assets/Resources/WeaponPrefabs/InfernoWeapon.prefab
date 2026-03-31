@@ -217,7 +217,7 @@ MonoBehaviour:
   _fireClip: {fileID: 0}
   _fireSoundSourcesRoot: {fileID: 0}
   attackScope: {fileID: 0}
-  Animator: {fileID: 0}
+  Animator: {fileID: 764932532431815272}
   LineRenderer: {fileID: 0}
   ParticleEffect: {fileID: 0}
   VisualEffect: {fileID: 8505345373508941269}

@@ -33,6 +33,9 @@ namespace Projectiles.NetworkObjectExample
 		private Vector3 moveDirection;
 		private float damageValue;
 		private LayerMask collisionMask;
+
+		[HideInInspector]
+		public Starter.Platformer.Player ownerPlayer; // Player 참조 추가
 		
 		[Networked]
 		private TickTimer _lifeCooldown { get; set; }
@@ -173,6 +176,23 @@ namespace Projectiles.NetworkObjectExample
 				// Save destroyed flag so hit effects can be shown on other clients as well
 				_isDestroyed = true;
 				_lifeCooldown = TickTimer.CreateFromSeconds(Runner, _lifeTimeAfterHit);
+				
+				// 특수 기믹 3번: 투사체가 파괴(Hit)되면 폭발하여 절반의 피해를 입힘
+				if (HasStateAuthority && ownerPlayer != null && ownerPlayer.HasSpecialEffect(SpecialEffectType.ExplosiveProjectiles))
+				{
+					float explosionDamage = damageValue * ownerPlayer.GetSpecialEffectValue(SpecialEffectType.ExplosiveProjectiles);
+					float explosionRadius = 3f; // 임시 폭발 반경
+					
+					Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, collisionMask);
+					foreach (var hitCollider in hitColliders)
+					{
+							IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
+							if (damageableObject != null)
+							{
+									damageableObject.TakeHit(explosionDamage, new RaycastHit());
+							}
+					}
+				}
 			}
 			catch (System.InvalidOperationException)
 			{

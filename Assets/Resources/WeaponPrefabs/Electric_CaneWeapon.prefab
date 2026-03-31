@@ -4992,10 +4992,11 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7215304642832403479}
-  - component: {fileID: 7016560550556559198}
   - component: {fileID: 8878336020959020304}
   - component: {fileID: 2992379853136890157}
   - component: {fileID: -3396783326375852554}
+  - component: {fileID: 4755324445506843623}
+  - component: {fileID: 7626313266696552862}
   m_Layer: 6
   m_Name: Electric_CaneWeapon
   m_TagString: Untagged
@@ -5021,22 +5022,6 @@ Transform:
   - {fileID: 1330628527239619791}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &7016560550556559198
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8317104441977495887}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c81e7b55de52b8c40b7ebc18d2238e49, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Weapon
-  WeaponSO: {fileID: 0}
-  fireTransform: {fileID: 2737075188821834619}
-  attackScope: {fileID: 0}
-  damage: 0
 --- !u!120 &8878336020959020304
 LineRenderer:
   serializedVersion: 2
@@ -5184,8 +5169,50 @@ MonoBehaviour:
   Flags: 1
   NestedObjects: []
   NetworkedBehaviours:
-  - {fileID: 7016560550556559198}
+  - {fileID: 4755324445506843623}
+  - {fileID: 7626313266696552862}
   ForceRemoteRenderTimeframe: 0
+--- !u!114 &4755324445506843623
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8317104441977495887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5ff01dd5e7309f846a6c3659987e13fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectExample.Weapon_NetworkObject
+  _fireTransform: {fileID: 2737075188821834619}
+  _fireClip: {fileID: 0}
+  _fireSoundSourcesRoot: {fileID: 0}
+  attackScope: {fileID: 0}
+  Animator: {fileID: 0}
+  LineRenderer: {fileID: 8878336020959020304}
+  ParticleEffect: {fileID: 8259356298231315590}
+  VisualEffect: {fileID: 0}
+  _projectilePrefab: {fileID: 0}
+  _useBuffer: 0
+  _projectileBuffer: {fileID: 7626313266696552862}
+  WeaponSO: {fileID: 0}
+  raycastLayerMask:
+    serializedVersion: 2
+    m_Bits: 320
+--- !u!114 &7626313266696552862
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8317104441977495887}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 081165ad89451c443967130a0e54f8a2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectBuffer
+  _prefab: {fileID: 0}
+  _bufferSize: 8
 --- !u!1 &8716768347738134392
 GameObject:
   m_ObjectHideFlags: 0

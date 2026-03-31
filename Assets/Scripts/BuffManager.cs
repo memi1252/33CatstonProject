@@ -339,6 +339,11 @@ public class BuffManager : NetworkBehaviour
                                 player.maxHp *= (1 + props.maxHp);
                                 player.maxMp *= (1 + props.maxMp);
                             }
+                            else
+                            {
+                                player.maxHp += props.maxHp;
+                                player.maxMp += props.maxMp;
+                            }
                             player.damage *= props.damage;
                             player.attackSpeed = (player.attackSpeed + props.attackSpeed);
                             player.moveSpeed = player.WalkSpeed * (1 + props.moveSpeed);
@@ -348,6 +353,12 @@ public class BuffManager : NetworkBehaviour
                             player.criticalChance += props.criticalChance;
                         }
                         
+                        // 특수 기믹 일괄 적용 (If-Else 없이 배열 인덱스로 처리)
+                        if (buff.specialEffect != SpecialEffectType.None)
+                        {
+                            player.AddSpecialEffect(buff.specialEffect, buff.specialEffectValue);
+                        }
+
                         Debug.Log($"[Buff] {player.Nickname}에게 {buff.contractName} 적용 완료!");
                     }
                 }

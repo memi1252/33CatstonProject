@@ -22,6 +22,14 @@ public enum TargetAttribute
 }
 
 [System.Serializable]
+public enum SpecialEffectType
+{
+    None,
+    ExplosiveProjectiles,
+    StrikeWeaponSpeedUp
+}
+
+[System.Serializable]
 public class ContractBuffData
 {
     public BuffProperties targetAbilities;
@@ -40,6 +48,10 @@ public class ContractScriptableObject : ScriptableObject
     [Header("타겟 정보")]
     public TargetType targetType = TargetType.None;
     public TargetAttribute targetAttribute = TargetAttribute.None;
+    
+    [Header("특수 기믹")]
+    public SpecialEffectType specialEffect = SpecialEffectType.None;
+    public float specialEffectValue = 1f; // 기믹 관련된 수치 (폭발 데미지 배율, 증폭 수치 등)
     
     [Header("계약 효과")]
     public ContractBuffData[] contractBuffs;  // 여러 버프를 배열로 처리
