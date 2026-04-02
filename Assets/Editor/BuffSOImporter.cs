@@ -415,7 +415,7 @@ public class BuffSOImporter : EditorWindow
             string idStr = data[0]; // ID
             if (string.IsNullOrEmpty(idStr)) continue;
 
-            string prefabName = data[2]; // PrefabName
+            string prefabName = data[2] + "Enemy"; // PrefabName
             string name = data[3]; // Name
             string assetPath = $"{EnemySAVE_PATH}/{idStr}_{name}.asset";
 

@@ -11,6 +11,9 @@ public class WeaponController : NetworkBehaviour
     private Weapon_NetworkObject equippedWeapon;
 
     [Networked] private TickTimer attackCooldownTimer { get; set; }
+    [Networked] private float currentMaxCooldown { get; set; }
+
+    private StatsUI localStatsUI;
 
     public override void Spawned()
     {
@@ -23,6 +26,34 @@ public class WeaponController : NetworkBehaviour
         }
     }
 
+    public override void Render()
+    {
+        // 자신의 무기 쿨타임만 UI에 반영 (로컬 플레이어 검사: 입력 권한이 있는 오브젝트만)
+        if (HasInputAuthority)
+        {
+            if (localStatsUI == null)
+            {
+                localStatsUI = FindAnyObjectByType<StatsUI>();
+            }
+
+            if (localStatsUI != null)
+            {
+                if (attackCooldownTimer.IsRunning)
+                {
+                    float remaining = attackCooldownTimer.RemainingTime(Runner) ?? 0f;
+                    // 남은 시간 비율을 반전시켜 0에서 1로 차오르게 변경
+                    float fillPercentage = currentMaxCooldown > 0f ? 1f - (remaining / currentMaxCooldown) : 1f;
+                    
+                    localStatsUI.AttackCoolTimeView(fillPercentage);
+                }
+                else
+                {
+                    // 쿨타임이 끝났을 경우 (원한다면 1f로 채워진 상태를 유지하게 변경할 수도 있습니다)
+                    localStatsUI.AttackCoolTimeView(0f);
+                }
+            }
+        }
+    }
 
     public void EquipWeapon(WeaponScriptableObject newWeapon)
     {
@@ -41,6 +72,8 @@ public class WeaponController : NetworkBehaviour
         //equippedWeapon = weaponObject.GetComponent<Weapon>();
         equippedWeapon = weaponObject.GetComponent<Weapon_NetworkObject>();
         equippedWeapon.WeaponSO = newWeapon;
+        // 임시
+        FindAnyObjectByType<StatsUI>().Set(newWeapon.weaponType, newWeapon.grade, newWeapon.targetAttribute);
         // 네트워크 객체를 소유한 플레이어를 무기에 연결합니다 (필요 시 Player 참조용)
         equippedWeapon.ownerPlayer = GetComponent<Starter.Platformer.Player>(); 
         equippedWeapon.transform.parent = weaponHold;
@@ -76,6 +109,7 @@ public class WeaponController : NetworkBehaviour
                 }
 
                 attackCooldownTimer = TickTimer.CreateFromSeconds(Runner, calculatedAttackTime);
+                currentMaxCooldown = calculatedAttackTime;
             }
         }
     }
