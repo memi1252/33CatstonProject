@@ -49,7 +49,10 @@ namespace Starter.Platformer
 
 		[Networked, OnChangedRender(nameof(OnJumpingChanged))]
 		private NetworkBool _isJumping { get; set; }
-		
+
+		[Networked, OnChangedRender(nameof(OnDeadChanged))]
+		public NetworkBool dead { get; set; }
+
 		[Header("Stats")]
 		[Networked] public float hp { get; set; } = 100f;
 		[Networked] public float maxHp { get; set; } = 100f;
@@ -62,7 +65,6 @@ namespace Starter.Platformer
 		[Networked] public float damageReceived { get; set; } = 1f;
 		[Networked] public float criticalChance { get; set; } = 0.1f;
 		[Networked] public float criticalDamage { get; set; } = .5f; // damage * criticalDamage%
-		[Networked] public NetworkBool dead { get; set; }
 
 		[Header("Special Effects")]
 		// 특수 효과 배열: SpecialEffectType의 int 값을 인덱스로 사용하여 확장성을 챙김
@@ -87,6 +89,8 @@ namespace Starter.Platformer
 		// Animation IDs
 		private int _animIDSpeed;
 		private int _animIDGrounded;
+		private int _animIDDie;
+		private int _animIDRespawn;
 
 		private Vector3 _moveVelocity;
 
@@ -206,6 +210,8 @@ namespace Starter.Platformer
 
 		private void ProcessInput(GameplayInput input)
 		{
+			if(dead) return; // 죽었을떄 움직이지마
+			
 			float jumpImpulse = 0f;
 
 			if (KCC.IsGrounded && input.Jump)
@@ -284,27 +290,47 @@ namespace Starter.Platformer
 			TakeDamage(_damage);
 		}
 
-		public void TakeDamage(float _damage)
+	public void TakeDamage(float _damage)
+	{
+		if (dead) return;
+
+		float actualDamage = damageReceived * 0.01f * _damage;
+		hp -= actualDamage;
+
+		Debug.Log($"[Player 피격] 유저({Nickname})가 {actualDamage}의 데미지를 입었습니다. (남은 HP : {hp}/{maxHp})");
+
+		if (hp <= 0)
 		{
-			if (dead) return;
-
-			float actualDamage = damageReceived * 0.01f * _damage;
-			hp -= actualDamage;
-
-			Debug.Log($"[Player 피격] 유저({Nickname})가 {actualDamage}의 데미지를 입었습니다. (남은 HP : {hp}/{maxHp})");
-
-			if (hp <= 0)
-			{
-				dead = true;
-				Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
-				// 본래라면 여기서 부활 로직, 혹은 쓰러짐 애니메이션 등을 호출합니다.
-			}
+			dead = true;
+			OnDeadChanged();
+			Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
+			// 본래라면 여기서 부활 로직, 혹은 쓰러짐 애니메이션 등을 호출합니다.
 		}
+	}
+
+	[Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+	public void RPC_Revive(string reviverName, float revivalHpPercent = 0.3f)
+	{
+		Revive(reviverName, revivalHpPercent);
+	}
+
+	public void Revive(string reviverName, float revivalHpPercent = 0.3f)
+	{
+		if (!dead) return;
+
+		dead = false;
+		hp = maxHp * revivalHpPercent;
+		OnDeadChanged();
+
+		Debug.Log($"[Player 부활] 유저({Nickname})가 {reviverName}에 의해 부활했습니다! (HP : {hp}/{maxHp})");
+	}
 
 		private void AssignAnimationIDs()
 		{
 			_animIDSpeed = Animator.StringToHash("Speed");
 			_animIDGrounded = Animator.StringToHash("Grounded");
+			_animIDRespawn = Animator.StringToHash("ReSpawn");
+			_animIDDie = Animator.StringToHash("Die");
 		}
 
 		private void OnTriggerEnter(Collider other)
@@ -332,6 +358,18 @@ namespace Starter.Platformer
 			{
 				AudioSource.PlayClipAtPoint(LandAudioClip, KCC.Position, 1f);
 				ScalingRoot.localScale = new Vector3(1.25f, 0.75f, 1.25f);
+			}
+		}
+
+		private void OnDeadChanged()
+		{
+			if (dead)
+			{
+				Animator.SetTrigger(_animIDDie);
+			}
+			else
+			{
+				Animator.SetTrigger(_animIDRespawn);
 			}
 		}
 

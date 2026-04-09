@@ -19,7 +19,10 @@ public class Enemy : NetworkBehaviour , IDamageable
     [Networked] public float health { get; set; }
     [Networked] public EnemyState CurrentState { get; set; }
     
-    public bool dead;
+    // 네트워크 동기화 속성
+    [Networked] public NetworkBool isDead { get; set; }
+    [Networked, OnChangedRender(nameof(OnPositionChanged))] public Vector3 NetworkPosition { get; set; }
+    [Networked, OnChangedRender(nameof(OnRotationChanged))] public Quaternion NetworkRotation { get; set; }
 
     [Header("탐지 설정")]
     public float detectionMultiplier = 3f; // 감지 범위 배수 (사거리 * detectionMultiplier 반경을 탐지)
@@ -37,6 +40,7 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     // 공격 속도 제어 타이머
     [Networked] protected TickTimer attackCooldown { get; set; }
+
 
     protected virtual void Start()
     {
@@ -62,12 +66,28 @@ public class Enemy : NetworkBehaviour , IDamageable
         {
             health = startingHealth;
             CurrentState = EnemyState.Idle;
+            NetworkPosition = transform.position;
+            NetworkRotation = transform.rotation;
+        }
+    }
+
+    public override void Render()
+    {
+        // State Authority가 아닌 경우 네트워크 동기화된 위치와 회전으로 업데이트
+        if (!HasStateAuthority)
+        {
+            transform.position = Vector3.Lerp(transform.position, NetworkPosition, Time.deltaTime * 10f);
+            transform.rotation = Quaternion.Lerp(transform.rotation, NetworkRotation, Time.deltaTime * 10f);
         }
     }
 
     public override void FixedUpdateNetwork()
     {
-        if (!HasStateAuthority || dead) return;
+        if (!HasStateAuthority || isDead) return;
+
+        // State Authority만이 위치와 상태를 업데이트함
+        NetworkPosition = transform.position;
+        NetworkRotation = transform.rotation;
 
         switch (CurrentState)
         {
@@ -231,7 +251,7 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     protected virtual void PerformSelfDestruct()
     {
-        if (dead) return;
+        if (isDead) return;
         Debug.Log("자폭 공격 수행!");
         // 폭발 이펙트, 주변 데미지 처리 후 사망
         ApplyDamage(health); 
@@ -274,7 +294,7 @@ public class Enemy : NetworkBehaviour , IDamageable
     {
         Debug.Log(damage);
         health -= damage;
-        if (health <= 0 && !dead)
+        if (health <= 0 && !isDead)
         {
             CurrentState = EnemyState.Dead;
             Die();
@@ -285,7 +305,7 @@ public class Enemy : NetworkBehaviour , IDamageable
     {
         if (!Object.HasStateAuthority) return;
 
-        dead = true;
+        isDead = true;
         CurrentState = EnemyState.Dead;
         Runner.Despawn(Object);
     }
@@ -302,5 +322,22 @@ public class Enemy : NetworkBehaviour , IDamageable
         // 탐지 사거리 (노란색 원)
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, currentAttackRange * detectionMultiplier);
+    }
+
+    // 네트워크 동기화 콜백
+    private void OnPositionChanged()
+    {
+        if (HasStateAuthority) return;
+        
+        // State Authority가 아닌 클라이언트에서만 업데이트 (원격 플레이어의 위치 반영)
+        transform.position = Vector3.Lerp(transform.position, NetworkPosition, Time.deltaTime * 10f);
+    }
+
+    private void OnRotationChanged()
+    {
+        if (HasStateAuthority) return;
+        
+        // State Authority가 아닌 클라이언트에서만 업데이트 (원격 플레이어의 회전 반영)
+        transform.rotation = Quaternion.Lerp(transform.rotation, NetworkRotation, Time.deltaTime * 10f);
     }
 }
