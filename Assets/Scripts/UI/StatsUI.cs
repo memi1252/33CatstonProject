@@ -16,6 +16,8 @@ public class StatsUI : MonoBehaviour
     public Image weaponTypemage;
     public Image weaponGradeImage;
     public Image weaponAttributeImage;
+    public Image hpImage;
+    public Image mpImage;
     
     public List<Stats> weaponAttribute = new List<Stats>();
     public List<Stats> weaponGrade = new List<Stats>();
@@ -55,5 +57,15 @@ public class StatsUI : MonoBehaviour
     public void AttackCoolTimeView(float value)
     {
         ringImage.fillAmount = value;
+    }
+    
+    public void hpImageView(float value)
+    {
+        hpImage.fillAmount = value;
+    }
+
+    public void mpImageView(float value)
+    {
+        mpImage.fillAmount = value;
     }
 }

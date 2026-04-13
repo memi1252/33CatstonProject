@@ -1,4 +1,5 @@
-﻿using System;
+﻿	/// 부활 UI를 표시합니다 (가능 상태)
+using System;
 using UnityEngine;
 using UnityEngine.UI;
 using Starter.Platformer;
@@ -12,21 +13,15 @@ using Starter.Platformer;
 		[Header("UI References")]
 		public Image progressBar;
 		public Text revivalHintText;
-		public CanvasGroup canvasGroup;
+		public GameObject keyImage;
 
-		[Header("Settings")]
-		public float fadeSpeed = 5f;
+	
 
 		private bool _isVisible = false;
 		private float _targetAlpha = 0f;
 
 		private void Awake()
 		{
-			if (canvasGroup == null)
-				canvasGroup = GetComponent<CanvasGroup>();
-
-			if (canvasGroup != null)
-				canvasGroup.alpha = 0f;
 		}
 
 		/// <summary>
@@ -36,9 +31,36 @@ using Starter.Platformer;
 		{
 			_isVisible = true;
 			_targetAlpha = 1f;
-
+			keyImage.SetActive(true);
 			if (revivalHintText != null)
+			{
 				revivalHintText.text = $"{deadPlayerName}을(를) 살리려면 E키를 누르세요";
+				revivalHintText.color = Color.white;
+			}
+		}
+
+		public void PlayerDieShow()
+		{
+			_isVisible = true;
+			_targetAlpha = 1f;
+			keyImage.SetActive(false);
+			if (revivalHintText != null)
+			{
+				revivalHintText.text = "혼자서는 부활할수 없습니다!";
+				revivalHintText.color = Color.red;
+			}
+		}
+
+		public void OtherPlayerDie()
+		{
+			_isVisible = true;
+			_targetAlpha = 1f;
+			keyImage.SetActive(false);
+			if (revivalHintText != null)
+			{
+				revivalHintText.text = "죽은 상태로는 살릴수가 없습니다";
+				revivalHintText.color = Color.red;
+			}
 		}
 
 		/// <summary>
@@ -57,15 +79,6 @@ using Starter.Platformer;
 		{
 			if (progressBar != null)
 				progressBar.fillAmount = Mathf.Clamp01(progress);
-		}
-
-		private void Update()
-		{
-			// 페이드 효과
-			if (canvasGroup != null)
-			{
-				canvasGroup.alpha = Mathf.Lerp(canvasGroup.alpha, _targetAlpha, fadeSpeed * Time.deltaTime);
-			}
 		}
 
 		private void LateUpdate()

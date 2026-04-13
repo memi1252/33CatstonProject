@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Fusion;
 using Fusion.Addons.SimpleKCC;
+using Starter.Platformer;
 using UnityEngine.UIElements;
 
 namespace Starter.Platformer
@@ -18,8 +19,7 @@ namespace Starter.Platformer
 		public Transform CameraHandle;
 		public Transform ScalingRoot;
 		public UINameplate Nameplate;
-
-		[Header("Movement Setup")]
+		public GameObject RevivalUI;
 		public float WalkSpeed = 2f;
 		public float SprintSpeed = 5f;
 		public float JumpImpulse = 10f;
@@ -173,8 +173,11 @@ namespace Starter.Platformer
 
         public override void Render()
 		{
+			RevivalUI.SetActive(dead);
+			if (dead) return;
+			
 			Animator.SetFloat(_animIDSpeed, KCC.RealSpeed);
-			Animator.SetBool(_animIDGrounded, KCC.IsGrounded);
+			Animator.SetBool(_animIDGrounded, KCC.IsGrounded);	
 
 			FootstepSound.enabled = KCC.IsGrounded && KCC.RealSpeed > 1f;
 			FootstepSound.pitch = KCC.RealSpeed > moveSpeed + 3 - 1 ? 1.5f : 1f;
@@ -200,11 +203,20 @@ namespace Starter.Platformer
 
 			if (_gameManager.IsGameFinished)
 				return;
-
+		
+			// UI표시
+			UIManager.Instance.statsUI.hpImageView(hp / maxHp);
+			UIManager.Instance.statsUI.mpImageView(mp / maxMp);
+			
+			// 카메라 흔들림 offset 가져오기
+			Vector3 shakeOffset = GameManager.Instance != null && GameManager.Instance.cameraShack != null 
+				? GameManager.Instance.cameraShack.GetShakeOffset() 
+				: Vector3.zero;
+			
 			// Update camera pivot and transfer properties from camera handle to Main Camera.
 			//CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
 			//Camera.main.transform.SetPositionAndRotation(CameraHandle.position, CameraHandle.rotation);
-			Camera.main.transform.position = CameraHandle.position + new Vector3(0f, 0f, -10f);
+			Camera.main.transform.position = CameraHandle.position + new Vector3(0f, 0f, -10f) + shakeOffset;
 			Camera.main.transform.rotation = CameraHandle.localRotation;
 		}
 
@@ -298,6 +310,13 @@ namespace Starter.Platformer
 		hp -= actualDamage;
 
 		Debug.Log($"[Player 피격] 유저({Nickname})가 {actualDamage}의 데미지를 입었습니다. (남은 HP : {hp}/{maxHp})");
+
+		// 로컬 플레이어만 카메라 흔들기
+		if (HasStateAuthority && GameManager.Instance != null && GameManager.Instance.cameraShack != null)
+		{
+			float shakeIntensity = Mathf.Clamp01(actualDamage / maxHp);
+			GameManager.Instance.cameraShack.Shake(0.3f, shakeIntensity * 0.5f);
+		}
 
 		if (hp <= 0)
 		{

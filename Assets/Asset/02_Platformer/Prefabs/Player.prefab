@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 1078232434073364553}
   - component: {fileID: 5216350165377779410}
   - component: {fileID: 4331490114740474277}
+  - component: {fileID: 3274266358339339565}
   m_Layer: 6
   m_Name: Text (Legacy)
   m_TagString: Untagged
@@ -79,6 +80,21 @@ MonoBehaviour:
     m_VerticalOverflow: 1
     m_LineSpacing: 1
   m_Text: "\uD0A4\uB97C \uB20C\uB7EC \uC0B4\uB9AC\uAE30"
+--- !u!114 &3274266358339339565
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 579917236938519274}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
+  m_EffectColor: {r: 0, g: 0, b: 0, a: 1}
+  m_EffectDistance: {x: -5, y: -5}
+  m_UseGraphicAlpha: 1
 --- !u!1 &874733338321156118
 GameObject:
   m_ObjectHideFlags: 0
@@ -219,6 +235,7 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 1526919877228550752}
+  - {fileID: 4309575310966126597}
   - {fileID: 8887271899658672753}
   - {fileID: 8261807108443789817}
   ForceRemoteRenderTimeframe: 0
@@ -254,6 +271,7 @@ MonoBehaviour:
   CameraHandle: {fileID: 8328573696601887576}
   ScalingRoot: {fileID: 7912246800516094496}
   Nameplate: {fileID: 9066350602577507296}
+  RevivalUI: {fileID: 6668947163211969076}
   WalkSpeed: 5
   SprintSpeed: 7
   JumpImpulse: 10
@@ -5827,7 +5845,7 @@ GameObject:
   - component: {fileID: 8096268622407783150}
   - component: {fileID: 4438059599591979666}
   m_Layer: 6
-  m_Name: Canvas
+  m_Name: RevivalUI
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -5842,8 +5860,8 @@ RectTransform:
   m_GameObject: {fileID: 6668947163211969076}
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 3.34, y: 3.34, z: 3.34}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1078232434073364553}
   - {fileID: 8596325298593209061}
@@ -5851,7 +5869,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 1.106}
+  m_AnchoredPosition: {x: 0, y: 1.985}
   m_SizeDelta: {x: 1, y: 1}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!223 &5169694000201757468
@@ -5931,8 +5949,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RevivalUI
   progressBar: {fileID: 7544602458068774199}
   revivalHintText: {fileID: 4331490114740474277}
-  canvasGroup: {fileID: 0}
-  fadeSpeed: 5
+  keyImage: {fileID: 874733338321156118}
 --- !u!1 &6811760387940338879
 GameObject:
   m_ObjectHideFlags: 0

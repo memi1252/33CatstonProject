@@ -7,7 +7,7 @@ using Starter.Platformer;
 	/// 플레이어 부활 상호작용 시스템
 	/// 살아있는 플레이어만 죽은 플레이어를 부활시킬 수 있습니다
 	/// </summary>
-	public class RevivalInteraction : MonoBehaviour
+	public class RevivalInteraction : NetworkBehaviour
 	{
 		[Header("Settings")]
 		public float detectionRange = 5f;
@@ -27,15 +27,65 @@ using Starter.Platformer;
 		{
 			_player = GetComponent<Player>();
 
-			if (revivalUI == null)
-				revivalUI = FindObjectOfType<RevivalUI>();
 		}
 
 		private void Update()
 		{
+			if (!HasInputAuthority)
+				return;
+			if (_player.dead)
+			{
+				if (Input.GetKey(revivalKey))
+				{
+					GameManager.Instance.cameraShack.Shake();
+				}
+				revivalUI = _player.RevivalUI.GetComponent<RevivalUI>();
+				if (revivalUI == _player.RevivalUI.GetComponent<RevivalUI>())
+				{
+					revivalUI.PlayerDieShow();
+				}
+				foreach (Player player in FindObjectsOfType<Player>())
+				{
+					if (player == _player) continue;
+					// UI 표시
+					if (player != null && player.dead)
+					{
+						revivalUI = player.RevivalUI.GetComponent<RevivalUI>();
+						if (revivalUI == player.RevivalUI.GetComponent<RevivalUI>())
+						{
+							revivalUI.OtherPlayerDie();
+						}
+					}
+				}
+			}
+			else
+			{
+				foreach (Player player in FindObjectsOfType<Player>())
+				{
+					// UI 표시
+					if (player != null && player.dead)
+					{
+						revivalUI = player.RevivalUI.GetComponent<RevivalUI>();
+						if (revivalUI == player.RevivalUI.GetComponent<RevivalUI>())
+						{
+							if(player != _player)
+								revivalUI.Show(player.Nickname);
+						}
+					}
+				}
+			}
+
+
+
 			// 죽은 플레이어는 부활시킬 수 없음
 			if (_player.dead)
+			{
 				return;
+			}
+
+
+
+
 
 			// 주변의 죽은 플레이어 감지
 			DetectDeadPlayers();
@@ -120,12 +170,6 @@ using Starter.Platformer;
 					closestDistance = distance;
 					_targetDeadPlayer = player;
 				}
-			}
-
-			// UI 표시
-			if (_targetDeadPlayer != null && revivalUI != null)
-			{
-				revivalUI.Show(_targetDeadPlayer.Nickname);
 			}
 		}
 

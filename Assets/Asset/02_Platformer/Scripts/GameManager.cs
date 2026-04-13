@@ -1,11 +1,11 @@
 ﻿using UnityEngine;
 using Fusion;
+using Starter.Platformer;
 using Fusion.Sockets;
 using System.Collections.Generic;
 using System;
 
-namespace Starter.Platformer
-{
+
 	/// <summary>
 	/// Handles player connections (spawning of Player instances).
 	/// </summary>
@@ -16,6 +16,7 @@ namespace Starter.Platformer
 		public float GameOverTime = 4f;
 		public Player PlayerPrefab;
 		public float SpawnRadius = 3f;
+		public CameraShack cameraShack;
 
 	public Player LocalPlayer { get; private set; }
 	public bool IsGameFinished => GameOverTimer.IsRunning;
@@ -140,4 +141,4 @@ namespace Starter.Platformer
 		Gizmos.DrawWireSphere(transform.position, SpawnRadius);
 	}
 }
-}
+

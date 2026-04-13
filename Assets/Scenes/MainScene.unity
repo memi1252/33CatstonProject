@@ -208,6 +208,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Street lamp.002
       objectReference: {fileID: 0}
+    - target: {fileID: 414532941553572782, guid: 638f89f8e28cb6e4fb6b3d27974b71ee,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3878051928105019504, guid: 638f89f8e28cb6e4fb6b3d27974b71ee,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -286,12 +291,12 @@ PrefabInstance:
     - target: {fileID: 4497056740206053197, guid: c279f04888e3cf24d9d9c5186314239e,
         type: 3}
       propertyPath: m_LocalScale.x
-      value: 7
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 4497056740206053197, guid: c279f04888e3cf24d9d9c5186314239e,
         type: 3}
       propertyPath: m_LocalScale.z
-      value: 7
+      value: 10
       objectReference: {fileID: 0}
     - target: {fileID: 4497056740206053197, guid: c279f04888e3cf24d9d9c5186314239e,
         type: 3}
@@ -393,6 +398,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Vending machine
+      objectReference: {fileID: 0}
+    - target: {fileID: 8048760985154623568, guid: 4e23c8c0717a74a4cae034c4a857c132,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8450360700727397226, guid: 4e23c8c0717a74a4cae034c4a857c132,
         type: 3}
@@ -1359,6 +1369,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Street lamp.001
       objectReference: {fileID: 0}
+    - target: {fileID: 1794156589620400300, guid: 271079c06e7179b48b03c903002208c3,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 2279046929747125119, guid: 271079c06e7179b48b03c903002208c3,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -1476,6 +1491,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Post
+      objectReference: {fileID: 0}
+    - target: {fileID: 7244243418526623449, guid: 8c3a77bce6056f845b0401ffab3f311f,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -1848,6 +1868,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Trash
       objectReference: {fileID: 0}
+    - target: {fileID: 617799500074903364, guid: f200fb28761f58c4087c51900f0c7013,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -2060,6 +2085,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: street lamp
+      objectReference: {fileID: 0}
+    - target: {fileID: 6494670139354868646, guid: c95821f46117d6441b4b8b0f1a357d1e,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7341766386350048445, guid: c95821f46117d6441b4b8b0f1a357d1e,
         type: 3}
@@ -3457,6 +3487,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: Bench.001
       objectReference: {fileID: 0}
+    - target: {fileID: 214980904754818720, guid: 254f6dd202e4ecc4581fb074d443e0e1,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 6308598324917287571, guid: 254f6dd202e4ecc4581fb074d443e0e1,
         type: 3}
       propertyPath: m_LocalPosition.x
@@ -4017,11 +4052,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 1282028943509491997, guid: 72f7a32ac9c7676409eb438757bc6b4a,
+    type: 3}
+  m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
-  m_FillMethod: 4
+  m_FillMethod: 0
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
@@ -4283,11 +4319,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 1282028943509491997, guid: 72f7a32ac9c7676409eb438757bc6b4a,
+    type: 3}
+  m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
-  m_FillMethod: 4
+  m_FillMethod: 0
   m_FillAmount: 1
   m_FillClockwise: 1
   m_FillOrigin: 0
@@ -4357,6 +4394,8 @@ MonoBehaviour:
   weaponTypemage: {fileID: 1452389239}
   weaponGradeImage: {fileID: 1217652589}
   weaponAttributeImage: {fileID: 4012573}
+  hpImage: {fileID: 1337135963}
+  mpImage: {fileID: 1460574863}
   weaponAttribute:
   - Name: Fire
     Sprite: {fileID: -2099498598, guid: 722f2a961018d2742bc2a4999db271ee, type: 3}
@@ -4713,7 +4752,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 118.66882, y: -118.66882}
+  m_AnchoredPosition: {x: 118.668945, y: -118.66882}
   m_SizeDelta: {x: 121.5585, y: 121.5585}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1515790332
@@ -4871,6 +4910,51 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1883734791}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1560189696
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1560189698}
+  - component: {fileID: 1560189697}
+  m_Layer: 0
+  m_Name: UIManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1560189697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1560189696}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ecb6052483ef4fb4c8d2f6c45a6605b8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::UIManager
+  statsUI: {fileID: 1468312488}
+--- !u!4 &1560189698
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1560189696}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1581128258
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -4883,6 +4967,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Bench
+      objectReference: {fileID: 0}
+    - target: {fileID: 6429687782040414947, guid: f6dd76f4c3a185745baa4478d6788e46,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7422181043102252918, guid: f6dd76f4c3a185745baa4478d6788e46,
         type: 3}
@@ -6045,6 +6134,7 @@ MonoBehaviour:
   PlayerPrefab: {fileID: 1526919877228550752, guid: a2b148ba63c99c648b17361069e9e554,
     type: 3}
   SpawnRadius: 2.1
+  cameraShack: {fileID: 8944336656349189701}
   _PlayerNames:
     _items: []
 --- !u!1001 &6477764918762967120
@@ -6074,17 +6164,17 @@ PrefabInstance:
     - target: {fileID: 3863659879473067203, guid: 39deb90ef92a6ec489efe36f7ac1fb0b,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 4.0942
+      value: 15.6
       objectReference: {fileID: 0}
     - target: {fileID: 3863659879473067203, guid: 39deb90ef92a6ec489efe36f7ac1fb0b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.06
+      value: -0.94
       objectReference: {fileID: 0}
     - target: {fileID: 3863659879473067203, guid: 39deb90ef92a6ec489efe36f7ac1fb0b,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.801
+      value: -12.03
       objectReference: {fileID: 0}
     - target: {fileID: 3863659879473067203, guid: 39deb90ef92a6ec489efe36f7ac1fb0b,
         type: 3}
@@ -6479,6 +6569,7 @@ GameObject:
   - component: {fileID: 8944336656349189699}
   - component: {fileID: 8944336656349189698}
   - component: {fileID: 1137000555}
+  - component: {fileID: 8944336656349189701}
   m_Layer: 0
   m_Name: MainCamera
   m_TagString: MainCamera
@@ -6560,6 +6651,18 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8944336656349189701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8944336656349189697}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ccf528c569c0a7b4fb1590b1b87effbc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::CameraShack
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -6568,6 +6671,7 @@ SceneRoots:
   - {fileID: 8944336656349189700}
   - {fileID: 1327619677}
   - {fileID: 5446807034574121354}
+  - {fileID: 1560189698}
   - {fileID: 1315173106}
   - {fileID: 965599160}
   - {fileID: 566763802}
