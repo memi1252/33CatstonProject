@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using Fusion;
+using Starter.Platformer;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -175,6 +176,34 @@ public class Enemy : NetworkBehaviour , IDamageable
         if (target == null)
         {
             CurrentState = EnemyState.Idle;
+            return;
+        }
+
+        if (target.GetComponent<Player>().dead)
+        {
+            float detectRange = attackRange * detectionMultiplier;
+            GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+            
+            float minDistance = float.MaxValue;
+            Transform closestPlayer = null;
+
+            foreach (GameObject p in players)
+            {
+                if (p.GetComponent<Player>().dead) continue;
+                float distance = Vector3.Distance(transform.position, p.transform.position);
+                // 탐지 범위 안에 있고, 가장 가까운 플레이어인지 확인
+                if (distance <= detectRange && distance < minDistance)
+                {
+                    
+                    minDistance = distance;
+                    closestPlayer = p.transform;
+                }
+            }
+
+            if (closestPlayer != null)
+            {
+                target = closestPlayer;
+            }
             return;
         }
 

@@ -453,6 +453,7 @@ public class BuffSOImporter : EditorWindow
             switch (data[5].ToLower())
             {
                 case "none": so.projectileType = ProjectileType.None; break;
+                case "projectile": so.projectileType = ProjectileType.Projectile; break;
                 case "laser": so.projectileType = ProjectileType.Laser; break;
                 case "area": so.projectileType = ProjectileType.Area; break;
                 default: so.projectileType = ProjectileType.None; break;
