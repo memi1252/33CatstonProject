@@ -162,7 +162,6 @@ namespace Projectiles.NetworkObjectExample
                 
                 foreach (var hitCollider in hitColliders)
                 {
-                    if (hitCollider.transform.root.gameObject == originParent.root.gameObject) continue;
 
                     IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
                     if (damageableObject != null)
@@ -189,7 +188,6 @@ namespace Projectiles.NetworkObjectExample
             
             foreach (var hitCollider in hitColliders)
             {
-                if (hitCollider.transform.root.gameObject == originParent.root.gameObject) continue;
 
                 IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
                 if (damageableObject != null)
