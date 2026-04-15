@@ -4357,6 +4357,8 @@ MonoBehaviour:
   weaponTypemage: {fileID: 1452389239}
   weaponGradeImage: {fileID: 1217652589}
   weaponAttributeImage: {fileID: 4012573}
+  hpImage: {fileID: 0}
+  mpImage: {fileID: 0}
   weaponAttribute:
   - Name: Fire
     Sprite: {fileID: -2099498598, guid: 722f2a961018d2742bc2a4999db271ee, type: 3}
@@ -6045,6 +6047,7 @@ MonoBehaviour:
   PlayerPrefab: {fileID: 1526919877228550752, guid: a2b148ba63c99c648b17361069e9e554,
     type: 3}
   SpawnRadius: 2.1
+  cameraShack: {fileID: 0}
   _PlayerNames:
     _items: []
 --- !u!1001 &6477764918762967120
