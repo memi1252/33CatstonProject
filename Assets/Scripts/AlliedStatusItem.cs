@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using Starter.Platformer;
+using TMPro;
 
 /// <summary>
 /// 개별 팀원의 상태를 표시하는 UI 아이템
@@ -9,12 +10,10 @@ using Starter.Platformer;
 public class AlliedStatusItem : MonoBehaviour
 {
     [Header("UI References")]
-    [SerializeField] private Text _nicknameText; // 플레이어 닉네임
+    [SerializeField] private TextMeshProUGUI _nicknameText; // 플레이어 닉네임
     [SerializeField] private Image _hpBarImage; // HP 게이지
-    [SerializeField] private Text _hpText; // HP 텍스트 (예: 100/100)
+    [SerializeField] private TextMeshProUGUI _hpText; // HP 텍스트 (예: 100/100)
     [SerializeField] private Image _statusIndicator; // 상태 표시 이미지 (생존/사망)
-    [SerializeField] private Color _aliveColor = Color.green; // 생존 상태 색상
-    [SerializeField] private Color _deadColor = Color.red; // 사망 상태 색상
     [SerializeField] private Sprite _aliveSprite;
     [SerializeField] private Sprite _deadSprite;
 
@@ -69,7 +68,6 @@ public class AlliedStatusItem : MonoBehaviour
         {
             if (_player.dead)
             {
-                //_statusIndicator.color = _deadColor;
                 _statusIndicator.sprite = _deadSprite;
                 if (_canvasGroup != null)
                 {
@@ -78,7 +76,6 @@ public class AlliedStatusItem : MonoBehaviour
             }
             else
             {
-                //_statusIndicator.color = _aliveColor;
                 _statusIndicator.sprite = _aliveSprite;
                 if (_canvasGroup != null)
                 {

@@ -3,16 +3,17 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using Starter.Platformer;
+using TMPro;
 
 
-	/// <summary>
+/// <summary>
 	/// 플레이어 부활 UI 관리
 	/// </summary>
 	public class RevivalUI : MonoBehaviour
 	{
 		[Header("UI References")]
 		public Image progressBar;
-		public Text revivalHintText;
+		public TextMeshProUGUI revivalHintText;
 		public GameObject keyImage;
 
 	

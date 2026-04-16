@@ -130,6 +130,12 @@ namespace Starter.Platformer
 
 		public override void FixedUpdateNetwork()
 		{
+			if (ChatManager.Instance.inputChat.isFocused)
+			{
+				// 채팅입력중이면 움직임 X
+				return;
+			}
+			
 			if (_gameManager.IsGameFinished)
 			{
 				// Let players fall even when game is finished (KCC.Move is called)
@@ -322,6 +328,7 @@ namespace Starter.Platformer
 		{
 			dead = true;
 			OnDeadChanged();
+			ChatManager.Instance.SendSystemMessage(Nickname + "님이 사망했습니다.", Color.red);
 			Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
 			// 본래라면 여기서 부활 로직, 혹은 쓰러짐 애니메이션 등을 호출합니다.
 		}

@@ -128,7 +128,7 @@ namespace Starter
 		private void Update()
 		{
 			// Enter/Esc key is used for locking/unlocking cursor in game view.
-			if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.Escape))
+			if (Input.GetKeyDown(KeyCode.Escape))
 			{
 				TogglePanelVisibility();
 			}
