@@ -72,7 +72,7 @@ public class ChatManager : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     public void RPC_SendSystemMessage(string msg, Color color)
     {
-        string senderName = "Sysyem";
+        string senderName = "System";
         
         messageText.text += $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{senderName} : {msg}</color> \n";
     }

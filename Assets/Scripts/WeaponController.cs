@@ -49,7 +49,7 @@ public class WeaponController : NetworkBehaviour
                 else
                 {
                     // 쿨타임이 끝났을 경우 (원한다면 1f로 채워진 상태를 유지하게 변경할 수도 있습니다)
-                    localStatsUI.AttackCoolTimeView(0f);
+                    localStatsUI.AttackCoolTimeView(1f);
                 }
             }
         }

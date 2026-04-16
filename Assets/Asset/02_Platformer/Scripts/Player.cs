@@ -334,12 +334,6 @@ namespace Starter.Platformer
 		}
 	}
 
-	[Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-	public void RPC_Revive(string reviverName, float revivalHpPercent = 0.3f)
-	{
-		Revive(reviverName, revivalHpPercent);
-	}
-
 	public void Revive(string reviverName, float revivalHpPercent = 0.3f)
 	{
 		if (!dead) return;

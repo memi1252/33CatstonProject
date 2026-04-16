@@ -65,7 +65,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "\uD0A4\uB97C \uB20C\uB7EC \uC0B4\uB9AC\uAE30"
+  m_text: "\uC0AC\uB9DD\uD558\uC168\uC2B5\uB2C8\uB2E4"
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: f788399e46f73b246abd288668dd3a65, type: 2}
   m_sharedMaterial: {fileID: 666002835345429963, guid: f788399e46f73b246abd288668dd3a65,
@@ -75,8 +75,8 @@ MonoBehaviour:
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+    rgba: 4281611519
+  m_fontColor: {r: 1, g: 0.2028302, b: 0.2028302, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -202,7 +202,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 6245ef681e7d5004ba343f7b05c31754, type: 3}
+  m_Sprite: {fileID: -1464202710, guid: 2e6bbe16df58571478a35fba25699a8e, type: 3}
   m_Type: 3
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -224,7 +224,6 @@ GameObject:
   - component: {fileID: 4155602845998252645}
   - component: {fileID: 731081082244027627}
   - component: {fileID: 1526919877228550752}
-  - component: {fileID: 4309575310966126597}
   - component: {fileID: 8887271899658672753}
   - component: {fileID: 8261807108443789817}
   - component: {fileID: 6744880684058088246}
@@ -278,7 +277,6 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 1526919877228550752}
-  - {fileID: 4309575310966126597}
   - {fileID: 8887271899658672753}
   - {fileID: 8261807108443789817}
   ForceRemoteRenderTimeframe: 0
@@ -347,23 +345,6 @@ MonoBehaviour:
   _criticalChance: 10
   _criticalDamage: 5
   _specialEffectValues: []
---- !u!114 &4309575310966126597
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3123905968297068043}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0d166716a1d544df96c131b704c7577f, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::RevivalInteraction
-  detectionRange: 5
-  revivalDuration: 3
-  revivalKey: 101
-  revivalHpPercent: 0.3
-  revivalUI: {fileID: 4438059599591979666}
 --- !u!114 &8887271899658672753
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5991,9 +5972,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97417f8bdfe346859fc185e4912ec997, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RevivalUI
-  progressBar: {fileID: 7544602458068774199}
-  revivalHintText: {fileID: 819067290288549943}
-  keyImage: {fileID: 874733338321156118}
 --- !u!1 &6811760387940338879
 GameObject:
   m_ObjectHideFlags: 0
