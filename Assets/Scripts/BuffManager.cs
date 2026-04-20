@@ -70,6 +70,26 @@ public class BuffManager : NetworkBehaviour
         BuffUI.SetActive(false);
     }
 
+    private void DisablePlayerInput()
+    {
+        NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
+        if (playerObj != null && playerObj.TryGetComponent(out PlayerInput playerInput))
+        {
+            playerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>().enabled = false;
+            Debug.Log("[BuffManager] Player input disabled");
+        }
+    }
+
+    private void EnablePlayerInput()
+    {
+        NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
+        if (playerObj != null && playerObj.TryGetComponent(out PlayerInput playerInput))
+        {
+            playerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>().enabled = true;
+            Debug.Log("[BuffManager] Player input enabled");
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -121,6 +141,7 @@ public class BuffManager : NetworkBehaviour
                         //Cursor.lockState = CursorLockMode.Locked;
                         //Cursor.visible = false;
                         BuffUI.SetActive(false);
+                        EnablePlayerInput(); // 플레이어 입력 다시 활성화
                     }
                 }
             }
@@ -163,6 +184,7 @@ public class BuffManager : NetworkBehaviour
                     //Cursor.lockState = CursorLockMode.Locked;
                     //Cursor.visible = false;
                     BuffUI.SetActive(false);
+                    EnablePlayerInput(); // 플레이어 입력 다시 활성화
                 }
             }
         }
@@ -541,6 +563,7 @@ public class BuffManager : NetworkBehaviour
         buffSlots.Clear();
 
         BuffUI.SetActive(true);
+        DisablePlayerInput(); // 플레이어 입력 비활성화
         
         // 현재 접속한 플레이어들을 ID 순서대로 정렬하여 리스트로 만듭니다.
         var sortedPlayers = Runner.ActivePlayers.OrderBy(p => p.PlayerId).ToList();
@@ -582,6 +605,7 @@ public class BuffManager : NetworkBehaviour
         buffSlots.Clear();
 
         BuffUI.SetActive(true);
+        DisablePlayerInput(); // 플레이어 입력 비활성화
 
         int Order = 1;
         foreach (int index in buffIndices)
