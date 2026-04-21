@@ -303,6 +303,12 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     public virtual void TakeHit(float damage, RaycastHit hit)
     {
+        // 적이 이미 Despawn되었으면 데미지 적용 무시
+        if (Object == null || !Object.IsValid)
+        {
+            return;
+        }
+
         if (Object.HasStateAuthority)
         {
             ApplyDamage(damage);

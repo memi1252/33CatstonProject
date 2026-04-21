@@ -4786,6 +4786,99 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 1271761603}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1273049125
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1273049127}
+  - component: {fileID: 1273049126}
+  - component: {fileID: 1273049128}
+  m_Layer: 0
+  m_Name: AttributeEffectApplier
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1273049126
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273049125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e27c776db9eb483085b5306f8d2e75f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AttributeEffectApplier
+  fireDoTDuration: 3
+  fireDoTInterval: 0.5
+  fireDoTDamageMultiplier: 0.2
+  fireParticlePrefab: {fileID: 4335182323122487861, guid: 5334360cd0cfad84bbf6855beaf10de4,
+    type: 3}
+  fireColor: {r: 1, g: 0.5, b: 0, a: 1}
+  iceSlowDuration: 2
+  iceSlowAmount: 0.5
+  iceParticlePrefab: {fileID: 1920325297268671249, guid: 889dd67908ff48640a817f0b0074814e,
+    type: 3}
+  iceColor: {r: 0, g: 0.8, b: 1, a: 1}
+  electricChainRadius: 10
+  electricMaxChains: 2
+  electricChainDamageMultiplier: 0.8
+  electricParticlePrefab: {fileID: 5748945079150391416, guid: c50f9e2c685970e4c8ebcd5fc8c7b3e4,
+    type: 3}
+  electricColor: {r: 1, g: 1, b: 0, a: 1}
+  electricChainLinePrefab: {fileID: 0}
+  waterKnockbackForce: 10
+  waterKnockbackDuration: 0.5
+  waterParticlePrefab: {fileID: 5366269438563134495, guid: a500764f1a0d3654db7718249e73c3d3,
+    type: 3}
+  waterColor: {r: 0, g: 0.5, b: 1, a: 1}
+  normalDamageBonus: 0.1
+  normalParticlePrefab: {fileID: 4891440538664600065, guid: 82066d902ed0dd6488ddfd32eb994801,
+    type: 3}
+  normalColor: {r: 1, g: 1, b: 0.8, a: 1}
+  vfxLifetime: 2
+  screenShakeIntensity: 0.2
+--- !u!4 &1273049127
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273049125}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1273049128
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1273049125}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 336076452
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1273049126}
+  ForceRemoteRenderTimeframe: 0
 --- !u!224 &1278892128 stripped
 RectTransform:
   m_CorrespondingSourceObject: {fileID: 1029178573890233617, guid: 8ef8c98852a6f494c97ab4073099c9a6,
@@ -8629,6 +8722,7 @@ SceneRoots:
   - {fileID: 1361029537}
   - {fileID: 1315173106}
   - {fileID: 1397968088}
+  - {fileID: 1273049127}
   - {fileID: 965599160}
   - {fileID: 566763802}
   - {fileID: 310124934}

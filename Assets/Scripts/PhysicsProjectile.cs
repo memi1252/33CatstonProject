@@ -33,6 +33,7 @@ namespace Projectiles.NetworkObjectExample
 		private Vector3 moveDirection;
 		private float damageValue;
 		private LayerMask collisionMask;
+		private TargetAttribute weaponAttribute; // 무기 속성 추가
 
 		[HideInInspector]
 		public Starter.Platformer.Player ownerPlayer; // Player 참조 추가
@@ -44,11 +45,12 @@ namespace Projectiles.NetworkObjectExample
 
 		// PUBLIC METHODS
 
-		public void Fire(Vector3 position, Quaternion rotation, float damageValue, LayerMask collisionMask)
+		public void Fire(Vector3 position, Quaternion rotation, float damageValue, LayerMask collisionMask, TargetAttribute weaponAttribute = TargetAttribute.Normal)
 		{
 			moveDirection = rotation * Vector3.forward;
 			this.damageValue = damageValue;
 			this.collisionMask = collisionMask;
+			this.weaponAttribute = weaponAttribute; // 무기 속성 저장
 			// ✅ null 체크 추가
 			if (_rigidbody == null)
 			{
@@ -250,6 +252,13 @@ namespace Projectiles.NetworkObjectExample
 			if (damageableObject != null)
 			{
 				damageableObject.TakeHit(damageValue, hit); // 데미지 입히기
+				
+				// 무기 속성 효과 적용
+				AttributeEffectApplier effectApplier = FindAnyObjectByType<AttributeEffectApplier>();
+				if (effectApplier != null && ownerPlayer != null)
+				{
+					effectApplier.ApplyAttributeEffect(weaponAttribute, damageableObject, hit.point, damageValue, ownerPlayer);
+				}
 			}
 			
 			ProcessHit(); // 시각 효과와 생명 주기 세팅 (여기서 수명을 Hit 후 지연 시간으로 재설정함)

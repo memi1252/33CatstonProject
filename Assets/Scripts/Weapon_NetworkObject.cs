@@ -90,9 +90,14 @@ namespace Projectiles.NetworkObjectExample
                 hitDistance = hit.distance;
                 if (HasStateAuthority && hit.collider != null && hit.collider.transform.root.gameObject != originParent.root.gameObject)
                 {
-                    if (hit.collider.GetComponentInParent<IDamageable>() != null)
+                    IDamageable damageable = hit.collider.GetComponentInParent<IDamageable>();
+                    if (damageable != null)
                     {
-                        hit.collider.GetComponentInParent<IDamageable>().TakeHit(damage + WeaponSO.weaponDamage, hit); // 데미지 입히기
+                        float totalDamage = damage + WeaponSO.weaponDamage;
+                        damageable.TakeHit(totalDamage, hit);
+                        
+                        // 속성 효과 적용
+                        ApplyWeaponAttributeEffect(damageable, hit.point, totalDamage);
                     }
                 }
             }
@@ -162,11 +167,17 @@ namespace Projectiles.NetworkObjectExample
                 
                 foreach (var hitCollider in hitColliders)
                 {
-
                     IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
                     if (damageableObject != null)
                     {
-                        damageableObject.TakeHit(damage + WeaponSO.weaponDamage, new RaycastHit());
+                        float totalDamage = damage + WeaponSO.weaponDamage;
+                        damageableObject.TakeHit(totalDamage, new RaycastHit());
+                        
+                        // 속성 효과 적용 (첫 틱에만 적용)
+                        if (timer == 0f)
+                        {
+                            ApplyWeaponAttributeEffect(damageableObject, targetPos, totalDamage);
+                        }
                     }
                 }
 
@@ -188,11 +199,14 @@ namespace Projectiles.NetworkObjectExample
             
             foreach (var hitCollider in hitColliders)
             {
-
                 IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
                 if (damageableObject != null)
                 {
-                    damageableObject.TakeHit(damage + WeaponSO.weaponDamage, new RaycastHit());
+                    float totalDamage = damage + WeaponSO.weaponDamage;
+                    damageableObject.TakeHit(totalDamage, new RaycastHit());
+                    
+                    // 속성 효과 적용
+                    ApplyWeaponAttributeEffect(damageableObject, targetPos, totalDamage);
                 }
             }
         }
@@ -270,7 +284,7 @@ namespace Projectiles.NetworkObjectExample
             var projectile = Runner.Spawn(_projectilePrefab, FireTransform.position, FireTransform.rotation,
                 Object.InputAuthority);
             projectile.ownerPlayer = this.ownerPlayer; // 주인을 투사체에 전달
-            projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask);
+            projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask, WeaponSO.targetAttribute);
         }
 
         private void FireWithBuffer()
@@ -280,7 +294,7 @@ namespace Projectiles.NetworkObjectExample
             if (projectile != null)
             {
                 projectile.ownerPlayer = this.ownerPlayer; // 주인을 투사체에 전달
-                projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask);
+                projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask, WeaponSO.targetAttribute);
             }
         }
 
@@ -486,6 +500,18 @@ namespace Projectiles.NetworkObjectExample
                 VisualEffect.Stop();
                 if (ParticleEffect != null)
                     ParticleEffect.Stop();
+            }
+        }
+
+        /// <summary>
+        /// 무기의 속성에 맞는 효과 적용
+        /// </summary>
+        private void ApplyWeaponAttributeEffect(IDamageable target, Vector3 targetPosition, float totalDamage)
+        {
+            AttributeEffectApplier effectApplier = FindAnyObjectByType<AttributeEffectApplier>();
+            if (effectApplier != null && WeaponSO != null)
+            {
+                effectApplier.ApplyAttributeEffect(WeaponSO.targetAttribute, target, targetPosition, totalDamage, ownerPlayer);
             }
         }
     }
