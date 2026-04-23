@@ -2,53 +2,43 @@
 using System.Collections;
 using Fusion;
 
-/// <summary>
-/// 무기 속성별 효과 적용 관리 (네트워크 동기화)
-/// Fire: DoT 데미지 + 불 VFX
-/// Ice: 둔화 + 얼음 VFX
-/// Electric: 체인 공격 + 번개 VFX
-/// Water: 넉백 + 물 VFX
-/// Normal: 추가 데미지 + 기본 VFX
-/// </summary>
 public class AttributeEffectApplier : NetworkBehaviour
 {
     public static AttributeEffectApplier Instance { get; private set; }
 
-    [Header("Fire (불) - DoT 설정")]
+    [Header("Fire (불)")]
     public float fireDoTDuration = 3f;
     public float fireDoTInterval = 0.5f;
-    public float fireDoTDamageMultiplier = 0.2f;
-    public ParticleSystem fireParticlePrefab;
-    public Color fireColor = new Color(1f, 0.5f, 0f, 1f); // 주황색
+    public float fireDoTDamagePerTick = 2f;
+    public GameObject fireParticlePrefab; // 반드시 Inspector에서 확인!
+    public Color fireColor = new Color(1f, 0.5f, 0f, 1f);
 
-    [Header("Ice (얼음) - 둔화 설정")]
+    [Header("Ice (얼음)")]
     public float iceSlowDuration = 2f;
     public float iceSlowAmount = 0.5f;
-    public ParticleSystem iceParticlePrefab;
-    public Color iceColor = new Color(0f, 0.8f, 1f, 1f); // 밝은 파란색
+    public GameObject iceParticlePrefab;
+    public Color iceColor = new Color(0f, 0.8f, 1f, 1f);
 
-    [Header("Electric (번개) - 체인 설정")]
+    [Header("Electric (번개)")]
     public float electricChainRadius = 10f;
     public int electricMaxChains = 2;
     public float electricChainDamageMultiplier = 0.8f;
-    public ParticleSystem electricParticlePrefab;
-    public Color electricColor = new Color(1f, 1f, 0f, 1f); // 노란색
-    public LineRenderer electricChainLinePrefab;
+    public GameObject electricParticlePrefab;
+    public Color electricColor = new Color(1f, 1f, 0f, 1f);
 
-    [Header("Water (물) - 넉백 설정")]
+    [Header("Water (물)")]
     public float waterKnockbackForce = 10f;
-    public float waterKnockbackDuration = 0.5f;
-    public ParticleSystem waterParticlePrefab;
-    public Color waterColor = new Color(0f, 0.5f, 1f, 1f); // 파란색
+    public GameObject waterParticlePrefab;
+    public Color waterColor = new Color(0f, 0.5f, 1f, 1f);
 
-    [Header("Normal (일반) - 추가 데미지")]
-    public float normalDamageBonus = 0.1f;
-    public ParticleSystem normalParticlePrefab;
-    public Color normalColor = new Color(1f, 1f, 0.8f, 1f); // 밝은 노란색
+    [Header("Normal (일반)")]
+    public float normalDamageBonusMultiplier = 0.1f;
+    public GameObject normalParticlePrefab;
+    public Color normalColor = new Color(1f, 1f, 0.8f, 1f);
 
-    [Header("공통 VFX 설정")]
-    public float vfxLifetime = 2f; // VFX 지속 시간
-    public float screenShakeIntensity = 0.2f; // 스크린 셰이크 강도
+    [Header("공통 설정")]
+    public float vfxLifetime = 2f;
+    public float screenShakeIntensity = 0.2f;
 
     private LayerMask raycastLayerMask;
 
@@ -62,230 +52,144 @@ public class AttributeEffectApplier : NetworkBehaviour
         Instance = this;
     }
 
-    private void Start()
+    public override void Spawned()
     {
         raycastLayerMask = LayerMask.GetMask("Enemy");
     }
 
-    /// <summary>
-    /// 속성별 효과 적용
-    /// </summary>
     public void ApplyAttributeEffect(TargetAttribute attribute, IDamageable target, Vector3 targetPosition, float baseDamage, Starter.Platformer.Player owner)
     {
-        if (target == null) return;
+        // 1. 기본 널 체크
+        if (target == null || Runner == null) return;
 
-        Transform targetTransform = (target is MonoBehaviour mb) ? mb.transform : null;
+        // 2. 서버 로직 처리
+        if (Object.HasStateAuthority)
+        {
+            ApplyLogicOnServer(attribute, target, baseDamage, owner, targetPosition);
+        }
 
+        // 3. RPC 호출 (target이 NetworkBehaviour인지 확실히 체크)
+        if (target is NetworkBehaviour targetNB && targetNB.Object != null)
+        {
+            RPC_PlayAttributeVFX(attribute, targetNB.Object.Id, targetPosition);
+        }
+    }
+
+    private void ApplyLogicOnServer(TargetAttribute attribute, IDamageable target, float baseDamage, Starter.Platformer.Player owner, Vector3 position)
+    {
         switch (attribute)
         {
             case TargetAttribute.Fire:
-                ApplyFireEffect(target, baseDamage, targetTransform);
+                StartCoroutine(FireDoTDamage(target));
                 break;
             case TargetAttribute.Ice:
-                ApplyIceEffect(target, targetTransform);
+                if (target is MonoBehaviour mb && mb.TryGetComponent<Starter.Platformer.Player>(out var p))
+                    StartCoroutine(SlowPlayer(p));
                 break;
             case TargetAttribute.Electric:
-                ApplyElectricEffect(targetPosition, baseDamage, owner, targetTransform);
+                ApplyElectricChainLogic(position, baseDamage, owner);
                 break;
             case TargetAttribute.Water:
-                ApplyWaterEffect(target, targetTransform);
+                ApplyWaterKnockbackLogic(target, position);
                 break;
             case TargetAttribute.Normal:
-                ApplyNormalEffect(target, baseDamage, targetTransform);
+                target.TakeHit(baseDamage * normalDamageBonusMultiplier, new RaycastHit());
                 break;
         }
     }
 
-    /// <summary>
-    /// 불 속성: DoT 데미지 + 불 이펙트
-    /// </summary>
-    private void ApplyFireEffect(IDamageable target, float baseDamage, Transform targetTransform)
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RPC_PlayAttributeVFX(TargetAttribute attribute, NetworkId targetId, Vector3 hitPos)
     {
-        if (target is MonoBehaviour targetMB)
+        // Runner가 유효하지 않으면 중단
+        if (Runner == null) return;
+
+        NetworkObject targetObj = Runner.FindObject(targetId);
+        Transform targetT = targetObj != null ? targetObj.transform : null;
+
+        switch (attribute)
         {
-            targetMB.StartCoroutine(FireDoTDamage(target, baseDamage));
+            case TargetAttribute.Fire: PlayParticle(fireParticlePrefab, targetT, fireColor, hitPos); break;
+            case TargetAttribute.Ice: PlayParticle(iceParticlePrefab, targetT, iceColor, hitPos); break;
+            case TargetAttribute.Electric: PlayParticle(electricParticlePrefab, targetT, electricColor, hitPos); break;
+            case TargetAttribute.Water: PlayParticle(waterParticlePrefab, targetT, waterColor, hitPos); break;
+            case TargetAttribute.Normal: PlayParticle(normalParticlePrefab, targetT, normalColor, hitPos); break;
         }
-        
-        // VFX: 불 파티클 생성 (적의 자식으로)
-        PlayAttributeParticle(fireParticlePrefab, targetTransform, fireColor);
-        ScreenShake(screenShakeIntensity * 0.5f);
     }
 
-    private IEnumerator FireDoTDamage(IDamageable target, float baseDamage)
+    private void PlayParticle(GameObject prefab, Transform parent, Color color, Vector3 fallbackPos)
+    {
+        // 핵심 해결책: 프리팹이 진짜 있는지, 그리고 GameObject가 맞는지 체크
+        if (prefab == null) 
+        {
+            Debug.LogWarning($"[AttributeEffect] 프리팹이 할당되지 않았습니다!");
+            return;
+        }
+
+        Vector3 spawnPos = (parent != null) ? parent.position : fallbackPos;
+        
+        // 캐스팅 오류 방지를 위해 명시적으로 GameObject로 생성
+        GameObject go = Instantiate(prefab, spawnPos, Quaternion.identity) as GameObject;
+        
+        if (go == null) return;
+
+        if (parent != null) go.transform.SetParent(parent);
+
+        if (go.TryGetComponent<ParticleSystem>(out var ps))
+        {
+            var main = ps.main;
+            main.startColor = color;
+            ps.Play();
+        }
+
+        Destroy(go, vfxLifetime);
+    }
+
+    // --- 나머지 서버 로직 함수들 ---
+    private IEnumerator FireDoTDamage(IDamageable target)
     {
         float elapsed = 0f;
-        float dotDamagePerTick = 1f;
-
-        while (elapsed < fireDoTDuration)
+        while (elapsed < fireDoTDuration && target != null)
         {
-            // 적이 죽었거나 없어졌으면 코루틴 종료
-            if (target == null)
-            {
-                yield break;
-            }
-
-            target.TakeHit(dotDamagePerTick, new RaycastHit());
+            target.TakeHit(fireDoTDamagePerTick, new RaycastHit());
             elapsed += fireDoTInterval;
             yield return new WaitForSeconds(fireDoTInterval);
         }
     }
 
-    /// <summary>
-    /// 얼음 속성: 둔화 + 얼음 이펙트
-    /// </summary>
-    private void ApplyIceEffect(IDamageable target, Transform targetTransform)
-    {
-        if (target is MonoBehaviour targetMB && targetMB.TryGetComponent<Starter.Platformer.Player>(out var player))
-        {
-            targetMB.StartCoroutine(SlowPlayer(player));
-        }
-        
-        // VFX: 얼음 파티클 생성 (적의 자식으로)
-        PlayAttributeParticle(iceParticlePrefab, targetTransform, iceColor);
-    }
-
     private IEnumerator SlowPlayer(Starter.Platformer.Player player)
     {
+        if (player == null) yield break;
         float originalSpeed = player.moveSpeed;
         player.moveSpeed *= (1f - iceSlowAmount);
-
         yield return new WaitForSeconds(iceSlowDuration);
-
-        player.moveSpeed = originalSpeed;
+        if (player != null) player.moveSpeed = originalSpeed;
     }
 
-    /// <summary>
-    /// 번개 속성: 체인 공격 + 번개 이펙트
-    /// </summary>
-    private void ApplyElectricEffect(Vector3 position, float baseDamage, Starter.Platformer.Player owner, Transform targetTransform)
+    private void ApplyElectricChainLogic(Vector3 origin, float baseDamage, Starter.Platformer.Player owner)
     {
-        if (owner == null) return;
-
-        Collider[] nearbyEnemies = Physics.OverlapSphere(position, electricChainRadius, raycastLayerMask);
-
-        int chainCount = 0;
-        foreach (var enemyCollider in nearbyEnemies)
+        Collider[] enemies = Physics.OverlapSphere(origin, electricChainRadius, raycastLayerMask);
+        int count = 0;
+        foreach (var col in enemies)
         {
-            if (chainCount >= electricMaxChains) break;
-
-            IDamageable damageable = enemyCollider.GetComponentInParent<IDamageable>();
-            if (damageable != null && enemyCollider.transform.root.gameObject != owner.gameObject)
+            if (count >= electricMaxChains) break;
+            if (col.transform.root.gameObject == owner.gameObject) continue;
+            if (col.TryGetComponent<IDamageable>(out var damageable))
             {
-                float chainDamage = baseDamage * electricChainDamageMultiplier;
-                damageable.TakeHit(chainDamage, new RaycastHit());
-                chainCount++;
-                
-                // VFX: 체인 라인 그리기
-                DrawElectricChain(position, enemyCollider.transform.position);
+                damageable.TakeHit(baseDamage * electricChainDamageMultiplier, new RaycastHit());
+                count++;
             }
         }
-        
-        // VFX: 번개 파티클 생성 (적의 자식으로)
-        PlayAttributeParticle(electricParticlePrefab, targetTransform, electricColor);
-        ScreenShake(screenShakeIntensity * 0.7f);
     }
 
-    private void DrawElectricChain(Vector3 start, Vector3 end)
+    private void ApplyWaterKnockbackLogic(IDamageable target, Vector3 hitPos)
     {
-        if (electricChainLinePrefab == null) return;
-        
-        LineRenderer line = Instantiate(electricChainLinePrefab);
-        line.SetPosition(0, start);
-        line.SetPosition(1, end);
-        
-        Destroy(line.gameObject, vfxLifetime);
-    }
-
-    /// <summary>
-    /// 물 속성: 넉백 + 물 이펙트
-    /// </summary>
-    private void ApplyWaterEffect(IDamageable target, Transform targetTransform)
-    {
-        if (target is MonoBehaviour targetMB && targetMB.TryGetComponent<Rigidbody>(out var rb))
+        if (target is MonoBehaviour mb && mb.TryGetComponent<Rigidbody>(out var rb))
         {
-            Vector3 knockbackDirection = (targetMB.transform.position - targetMB.transform.position).normalized;
+            Vector3 dir = (mb.transform.position - hitPos).normalized;
+            dir.y = 0.3f;
             rb.linearVelocity = Vector3.zero;
-            rb.AddForce(knockbackDirection * waterKnockbackForce, ForceMode.Impulse);
-            
-            // VFX: 물 파티클을 넉백 방향으로 생성 (적의 자식으로)
-            PlayDirectionalParticle(waterParticlePrefab, targetTransform, knockbackDirection, waterColor);
-        }
-    }
-
-    /// <summary>
-    /// 일반 속성: 추가 데미지 + 기본 이펙트
-    /// </summary>
-    private void ApplyNormalEffect(IDamageable target, float baseDamage, Transform targetTransform)
-    {
-        if (target is MonoBehaviour targetMB && targetMB.TryGetComponent<IDamageable>(out var damageable))
-        {
-            float bonusDamage = baseDamage * normalDamageBonus;
-            damageable.TakeHit(bonusDamage, new RaycastHit());
-        }
-        
-        // VFX: 일반 파티클 생성 (적의 자식으로)
-        PlayAttributeParticle(normalParticlePrefab, targetTransform, normalColor);
-    }
-
-    /// <summary>
-    /// 속성 파티클 생성 및 색상 적용 (적의 자식으로 설정)
-    /// </summary>
-    private void PlayAttributeParticle(ParticleSystem prefab, Transform targetTransform, Color color)
-    {
-        if (prefab == null) return;
-        
-        ParticleSystem particle = Instantiate(prefab, targetTransform != null ? targetTransform.position : Vector3.zero, Quaternion.identity);
-        
-        // 적의 자식으로 설정
-        if (targetTransform != null)
-        {
-            particle.transform.SetParent(targetTransform);
-            particle.transform.localPosition = Vector3.zero; // 적의 중심에 위치
-        }
-        
-        // 파티클 색상 변경
-        var main = particle.main;
-        main.startColor = color;
-        
-        particle.Play();
-        Destroy(particle.gameObject, vfxLifetime);
-    }
-
-    /// <summary>
-    /// 방향이 있는 파티클 생성 (적의 자식으로 설정)
-    /// </summary>
-    private void PlayDirectionalParticle(ParticleSystem prefab, Transform targetTransform, Vector3 direction, Color color)
-    {
-        if (prefab == null) return;
-        
-        ParticleSystem particle = Instantiate(prefab, targetTransform != null ? targetTransform.position : Vector3.zero, Quaternion.FromToRotation(Vector3.forward, direction));
-        
-        // 적의 자식으로 설정
-        if (targetTransform != null)
-        {
-            particle.transform.SetParent(targetTransform);
-            particle.transform.localPosition = Vector3.zero; // 적의 중심에 위치
-        }
-        
-        var main = particle.main;
-        main.startColor = color;
-        
-        particle.Play();
-        Destroy(particle.gameObject, vfxLifetime);
-    }
-
-    /// <summary>
-    /// 스크린 셰이크 효과
-    /// </summary>
-    private void ScreenShake(float intensity)
-    {
-        GameManager gameManager = FindAnyObjectByType<GameManager>();
-        if (gameManager != null)
-        {
-            // GameManager에 카메라 셰이크 기능이 있다면 호출
-            // gameManager.ShakeCamera(intensity);
+            rb.AddForce(dir * waterKnockbackForce, ForceMode.Impulse);
         }
     }
 }
-
-
