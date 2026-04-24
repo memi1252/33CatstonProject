@@ -37,6 +37,8 @@ namespace Projectiles.NetworkObjectExample
 
 		[HideInInspector]
 		public Starter.Platformer.Player ownerPlayer; // Player 참조 추가
+		[HideInInspector]
+		public Enemy ownerEnemy; // Enemy 참조 추가
 		
 		[Networked]
 		private TickTimer _lifeCooldown { get; set; }
@@ -175,26 +177,41 @@ namespace Projectiles.NetworkObjectExample
 		{
 			try
 			{
-				// Save destroyed flag so hit effects can be shown on other clients as well
-				_isDestroyed = true;
-				_lifeCooldown = TickTimer.CreateFromSeconds(Runner, _lifeTimeAfterHit);
-				
-				// 특수 기믹 3번: 투사체가 파괴(Hit)되면 폭발하여 절반의 피해를 입힘
-				if (HasStateAuthority && ownerPlayer != null && ownerPlayer.HasSpecialEffect(SpecialEffectType.ExplosiveProjectiles))
-				{
-					float explosionDamage = damageValue * ownerPlayer.GetSpecialEffectValue(SpecialEffectType.ExplosiveProjectiles);
-					float explosionRadius = 3f; // 임시 폭발 반경
-					
-					Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, collisionMask);
-					foreach (var hitCollider in hitColliders)
-					{
-							IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
-							if (damageableObject != null)
-							{
-									damageableObject.TakeHit(explosionDamage, new RaycastHit());
-							}
-					}
-				}
+                _isDestroyed = true;
+                _lifeCooldown = TickTimer.CreateFromSeconds(Runner, _lifeTimeAfterHit);
+
+                if (HasStateAuthority)
+                {
+                    float explosionDamage = 0f;
+                    float explosionRadius = 3f;
+                    bool shouldExplode = false;
+
+                    // 1. 플레이어의 폭발 특성 체크
+                    if (ownerPlayer != null && ownerPlayer.HasSpecialEffect(SpecialEffectType.ExplosiveProjectiles))
+                    {
+                        explosionDamage = damageValue * ownerPlayer.GetSpecialEffectValue(SpecialEffectType.ExplosiveProjectiles);
+                        shouldExplode = true;
+                    }
+                    // 2. 적(Enemy) 자체가 폭발 속성을 가지고 있는 경우 (필요 시 추가)
+                    else if (ownerEnemy != null) // 예시: Enemy 클래스에 관련 변수가 있다면
+                    {
+                        explosionDamage = damageValue * 0.5f; // 적은 기본 50% 폭발 데미지 등
+                        shouldExplode = true;
+                    }
+
+                    if (shouldExplode)
+                    {
+                        Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, collisionMask);
+                        foreach (var hitCollider in hitColliders)
+                        {
+                            IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
+                            if (damageableObject != null)
+                            {
+                                damageableObject.TakeHit(explosionDamage, new RaycastHit());
+                            }
+                        }
+                    }
+                }
 			}
 			catch (System.InvalidOperationException)
 			{
@@ -243,26 +260,35 @@ namespace Projectiles.NetworkObjectExample
 			}
 		}
 
-		private void OnHitObject(RaycastHit hit)
-		{
-			if (HasStateAuthority == false)
-				return;
+        private void OnHitObject(RaycastHit hit)
+        {
+            if (HasStateAuthority == false)
+                return;
 
-			IDamageable damageableObject = hit.collider.GetComponent<IDamageable>();
-			if (damageableObject != null)
-			{
-				damageableObject.TakeHit(damageValue, hit); // 데미지 입히기
-				
-				// 무기 속성 효과 적용
-				AttributeEffectApplier effectApplier = FindAnyObjectByType<AttributeEffectApplier>();
-				if (effectApplier != null && ownerPlayer != null)
-				{
-					effectApplier.ApplyAttributeEffect(weaponAttribute, damageableObject, hit.point, damageValue, ownerPlayer);
-				}
-			}
-			
-			ProcessHit(); // 시각 효과와 생명 주기 세팅 (여기서 수명을 Hit 후 지연 시간으로 재설정함)
-			// Runner.Despawn(Object); // ❌ 즉시 없애면 이펙트가 안 보이므로 삭제!
-		}
-	}
+            IDamageable damageableObject = hit.collider.GetComponent<IDamageable>();
+            if (damageableObject != null)
+            {
+                damageableObject.TakeHit(damageValue, hit); // 기본 데미지
+
+                // 속성 효과 적용 (플레이어/적 공용 로직)
+                if (AttributeEffectApplier.Instance != null)
+                {
+                    // [수정 포인트] 누가 쐈는지(Player 또는 Enemy) GameObject를 추출
+                    GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
+                                          (ownerEnemy != null ? ownerEnemy.gameObject : null);
+
+                    // 통합된 ApplyAttributeEffect 호출
+                    AttributeEffectApplier.Instance.ApplyAttributeEffect(
+                        weaponAttribute,
+                        damageableObject,
+                        hit.point,
+                        damageValue,
+                        attacker
+                    );
+                }
+            }
+
+            ProcessHit();
+        }
+    }
 }
