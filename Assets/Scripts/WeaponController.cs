@@ -49,7 +49,7 @@ public class WeaponController : NetworkBehaviour
                 else
                 {
                     // 쿨타임이 끝났을 경우 (원한다면 1f로 채워진 상태를 유지하게 변경할 수도 있습니다)
-                    localStatsUI.AttackCoolTimeView(0f);
+                    localStatsUI.AttackCoolTimeView(1f);
                 }
             }
         }
@@ -60,14 +60,30 @@ public class WeaponController : NetworkBehaviour
         if (HasStateAuthority == false)
             return;
 
+        if (newWeapon == null)
+        {
+            Debug.LogWarning("[WeaponController] newWeapon is null!");
+            return;
+        }
+
+        // 현재 무기 제거
         if (equippedWeapon != null)
         {
             if (equippedWeapon.Object != null)
             {
                 Runner.Despawn(equippedWeapon.Object);
             }
+            equippedWeapon = null;
         }
 
+        // 프리팹이 없으면 무기 없음 상태로 반환 (맨손 상태)
+        if (newWeapon.weaponPrefab == null)
+        {
+            Debug.LogWarning($"[WeaponController] weaponPrefab is null for weapon: {newWeapon.weaponName} - No weapon equipped");
+            return;
+        }
+
+        // 새로운 무기 생성
         NetworkObject weaponObject = Runner.Spawn(newWeapon.weaponPrefab, weaponHold.position, weaponHold.rotation, Object.InputAuthority);
         //equippedWeapon = weaponObject.GetComponent<Weapon>();
         equippedWeapon = weaponObject.GetComponent<Weapon_NetworkObject>();
@@ -82,6 +98,21 @@ public class WeaponController : NetworkBehaviour
 
         // 무기를 장착하면 쿨타임 초기화
         attackCooldownTimer = TickTimer.None;
+    }
+
+    [Rpc(RpcSources.InputAuthority, RpcTargets.StateAuthority)]
+    public void RPC_EquipWeapon(int weaponIndex)
+    {
+        // WeaponManager에서 보낸 무기 인덱스로 무기를 장착
+        if (WeaponManager.Instance != null && weaponIndex >= 0 && weaponIndex < WeaponManager.Instance.weaponSOs.Length)
+        {
+            EquipWeapon(WeaponManager.Instance.weaponSOs[weaponIndex]);
+            Debug.Log($"[WeaponController] RPC_EquipWeapon called with index {weaponIndex}");
+        }
+        else
+        {
+            Debug.LogWarning($"[WeaponController] Invalid weapon index: {weaponIndex}");
+        }
     }
 
     public void Attack(Vector3 Look, float damage, float criticalDamage)

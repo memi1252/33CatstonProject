@@ -1,5 +1,3 @@
-using System;
-using System.Collections;
 using Fusion;
 using Starter.Platformer;
 using UnityEngine;
@@ -32,7 +30,7 @@ public class Enemy : NetworkBehaviour , IDamageable
     public EnemyScriptableObject enemyData;
     protected EnemyType enemyType;
     
-    protected NavMeshAgent agent;
+    public NavMeshAgent agent;
     protected Transform target;
 
     // 무빙 어택을 위한 변수
@@ -42,11 +40,17 @@ public class Enemy : NetworkBehaviour , IDamageable
     // 공격 속도 제어 타이머
     [Networked] protected TickTimer attackCooldown { get; set; }
 
+    public bool dontMove = false;
+
 
     protected virtual void Start()
     {
-        agent = GetComponent<NavMeshAgent>();
-        agent.updateRotation = false; // NavMeshAgent의 자동 회전을 끄고 수동으로 타겟을 바라보게 설정
+        if (!dontMove)
+        {
+            agent = GetComponent<NavMeshAgent>();
+            agent.updateRotation = false; // NavMeshAgent의 자동 회전을 끄고 수동으로 타겟을 바라보게 설정
+        }
+        
 
         if (enemyData != null)
         {
@@ -144,6 +148,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         if (target == null)
         {
             CurrentState = EnemyState.Idle;
+            if (dontMove) return;
             agent.ResetPath();
             return;
         }
@@ -155,6 +160,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         {
             target = null;
             CurrentState = EnemyState.Idle;
+            if (dontMove) return;
             agent.ResetPath();
             return;
         }
@@ -166,7 +172,11 @@ public class Enemy : NetworkBehaviour , IDamageable
         else
         {
             Vector3 targetPosition = new Vector3(target.position.x, transform.position.y, target.position.z);
-            agent.SetDestination(targetPosition);
+            if (!dontMove)
+            {
+                agent.SetDestination(targetPosition);
+            }
+           
             FaceTarget(); // 추적 중일 때 타겟 바라보기
         }
     }
@@ -219,6 +229,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         switch (enemyType)
         {
             case EnemyType.Melee:
+                if (dontMove) break;
                 // 근거리는 타겟과 살짝 거리를 유지하며 멈추거나 조금 다가가기
                 float meleeStoppingDistance = attackRange * 0.85f; // 사거리의 85% 정도에서 멈춤
                 if (distanceToTarget > meleeStoppingDistance)
@@ -232,6 +243,7 @@ public class Enemy : NetworkBehaviour , IDamageable
                 }
                 break;
             case EnemyType.Ranged:
+                if (dontMove) break;
                 // 원거리는 사거리 내에서 거리를 유지하며 횡이동(Strafing)
                 strafeTimer -= Runner.DeltaTime;
                 if (strafeTimer <= 0)
@@ -249,6 +261,7 @@ public class Enemy : NetworkBehaviour , IDamageable
                 agent.SetDestination(targetPosition);
                 break;
             case EnemyType.destruct:
+                if (dontMove) break;
                 // 자폭형: 목표를 향해 돌진 (무빙 필요 없음)
                 agent.SetDestination(target.position);
                 // 자폭 처리 로직은 자폭 사거리 내에 들어오면 실행
@@ -303,6 +316,12 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     public virtual void TakeHit(float damage, RaycastHit hit)
     {
+        // 적이 이미 Despawn되었으면 데미지 적용 무시
+        if (Object == null || !Object.IsValid)
+        {
+            return;
+        }
+
         if (Object.HasStateAuthority)
         {
             ApplyDamage(damage);

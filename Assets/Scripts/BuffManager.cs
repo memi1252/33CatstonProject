@@ -70,6 +70,26 @@ public class BuffManager : NetworkBehaviour
         BuffUI.SetActive(false);
     }
 
+    private void DisablePlayerInput()
+    {
+        NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
+        if (playerObj != null && playerObj.TryGetComponent(out PlayerInput playerInput))
+        {
+            playerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>().enabled = false;
+            Debug.Log("[BuffManager] Player input disabled");
+        }
+    }
+
+    private void EnablePlayerInput()
+    {
+        NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
+        if (playerObj != null && playerObj.TryGetComponent(out PlayerInput playerInput))
+        {
+            playerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>().enabled = true;
+            Debug.Log("[BuffManager] Player input enabled");
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -115,10 +135,13 @@ public class BuffManager : NetworkBehaviour
                             isContractBuffActive  = false;
                         }
                         playerVotes.Clear();
+                        contractChosenBuff.Clear();  // 투표 완료 후 초기화
+                        isContractBuffTransmission = false;  // 다음 투표를 위해 리셋
                         contractVoteTime = contractVoteTimeMax;
                         //Cursor.lockState = CursorLockMode.Locked;
                         //Cursor.visible = false;
                         BuffUI.SetActive(false);
+                        EnablePlayerInput(); // 플레이어 입력 다시 활성화
                     }
                 }
             }
@@ -161,6 +184,7 @@ public class BuffManager : NetworkBehaviour
                     //Cursor.lockState = CursorLockMode.Locked;
                     //Cursor.visible = false;
                     BuffUI.SetActive(false);
+                    EnablePlayerInput(); // 플레이어 입력 다시 활성화
                 }
             }
         }
@@ -437,11 +461,13 @@ public class BuffManager : NetworkBehaviour
 
     public override void FixedUpdateNetwork()
     {
-        //계약 증강 시작 임시
-        if (Input.GetKeyDown(KeyCode.N))
+        //계약 증강 시작 임시 - StateAuthority만 처리
+        if (Input.GetKeyDown(KeyCode.N) && Runner.IsSceneAuthority)
         {
             if (!isContractBuffActive)
             {
+                isContractBuffActive = true;  // 먼저 true로 설정하여 중복 호출 방지
+                
                 int neededBuffCount = Runner.ActivePlayers.Count() * 3;
                 int[] buffIndices = new int[neededBuffCount];
                 
@@ -459,7 +485,7 @@ public class BuffManager : NetworkBehaviour
                 if (availableIndices.Count < neededBuffCount)
                 {
                     Debug.Log($"[BuffManager] 계약 버프 풀 초기화 (필요: {neededBuffCount}, 남음: {availableIndices.Count})");
-                    //archiveBuffs.Clear();
+                    archiveContractBuffs.Clear();
                     availableIndices.Clear();
                     for (int j = 0; j < contractAvailableBuffs.Length; j++)
                     {
@@ -470,6 +496,8 @@ public class BuffManager : NetworkBehaviour
                 // 랜덤하게 선택
                 for (int i = 0; i < neededBuffCount; i++)
                 {
+                    if (availableIndices.Count == 0) break;
+                    
                     int randomListIndex = Random.Range(0, availableIndices.Count);
                     int randomIndex = availableIndices[randomListIndex];
                     buffIndices[i] = randomIndex;
@@ -480,13 +508,15 @@ public class BuffManager : NetworkBehaviour
             }
         }
         
-        //각인 증강 시작 임시
-        if (Input.GetKeyDown(KeyCode.B))
+        //각인 증강 시작 임시 - StateAuthority만 처리
+        if (Input.GetKeyDown(KeyCode.B) && Runner.IsSceneAuthority)
         {
             if (imprintAvailableBuffs.Length == 0)
                 return;
             if (!isImprintBuffActive)
             {
+                isImprintBuffActive = true;  // 먼저 true로 설정
+                
                 int[] buffIndices = new int[3];
                 
                 // 사용 가능한 버프 인덱스 리스트 생성
@@ -503,7 +533,7 @@ public class BuffManager : NetworkBehaviour
                 if (availableIndices.Count < 3)
                 {
                     Debug.Log($"[BuffManager] 각인 버프 풀 초기화 (필요: 3, 남음: {availableIndices.Count})");
-                    //archiveBuffs.Clear();
+                    archiveImprintBuffs.Clear();
                     availableIndices.Clear();
                     for (int j = 0; j < imprintAvailableBuffs.Length; j++)
                     {
@@ -528,76 +558,42 @@ public class BuffManager : NetworkBehaviour
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_ContractBuffVote(int[] buffIndices)
     {
-        isContractBuffActive = true;
+        myContractBuff.Clear(); // 기존 UI 데이터만 초기화
         if (buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
         buffSlots.Clear();
 
         BuffUI.SetActive(true);
+        DisablePlayerInput(); // 플레이어 입력 비활성화
         
         // 현재 접속한 플레이어들을 ID 순서대로 정렬하여 리스트로 만듭니다.
         var sortedPlayers = Runner.ActivePlayers.OrderBy(p => p.PlayerId).ToList();
 
-        // 전체 인원수
-        int totalCount = sortedPlayers.Count;
-
         // 내 현재 순서 (0부터 시작하므로 +1)
         int myCurrentOrder = sortedPlayers.IndexOf(Runner.LocalPlayer) + 1;
         
+        // 각 플레이어가 보여줄 3개 버프의 시작 인덱스
+        int startIndex = (myCurrentOrder - 1) * 3;
+        int endIndex = startIndex + 3;
+        
+        Debug.Log($"[BuffManager] 플레이어 {myCurrentOrder}: buffIndices[{startIndex}:{endIndex}]");
+        
         int Order = 1;
-        switch (myCurrentOrder)
+        for (int i = startIndex; i < endIndex && i < buffIndices.Length; i++)
         {
-            case 1:
-                for(int i = 0; i < 3; i++)
-                {
-                    ContractScriptableObject buff = contractAvailableBuffs[i];
-                    var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
-                    BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
-                    buffSlot.UpdateVotePlayer("");
-                    buffSlots.Add(buffSlot);
-                    myContractBuff.Add(buff, Order);
-                    buffSlot.Set(buff);
-                    buffSlot.Order = Order++;
-                }
-                break;
-            case 2:
-                for(int i = 3; i < 6; i++)
-                {
-                    ContractScriptableObject buff = contractAvailableBuffs[i];
-                    var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
-                    BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
-                    buffSlot.UpdateVotePlayer("");
-                    buffSlots.Add(buffSlot);
-                    myContractBuff.Add(buff, Order);
-                    buffSlot.Set(buff);
-                    buffSlot.Order = Order++;
-                }
-                break;
-            case 3:
-                for(int i = 6; i < 9; i++)
-                {
-                    ContractScriptableObject buff = contractAvailableBuffs[i];
-                    var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
-                    BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
-                    buffSlot.UpdateVotePlayer("");
-                    buffSlots.Add(buffSlot);
-                    myContractBuff.Add(buff, Order);
-                    buffSlot.Set(buff);
-                    buffSlot.Order = Order++;
-                }
-                break;
-            case 4:
-                for(int i = 9; i < 12; i++)
-                {
-                    ContractScriptableObject buff = contractAvailableBuffs[i];
-                    var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
-                    BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
-                    buffSlot.UpdateVotePlayer("");
-                    buffSlots.Add(buffSlot);
-                    myContractBuff.Add(buff, Order);
-                    buffSlot.Set(buff);
-                    buffSlot.Order = Order++;
-                }
-                break;
+            int buffIndex = buffIndices[i];
+            if (buffIndex >= 0 && buffIndex < contractAvailableBuffs.Length)
+            {
+                ContractScriptableObject buff = contractAvailableBuffs[buffIndex];
+                var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
+                BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
+                buffSlot.UpdateVotePlayer("");
+                buffSlots.Add(buffSlot);
+                myContractBuff[buff] = Order;  // Add 대신 직접 할당 (중복 키 자동 처리)
+                buffSlot.Set(buff);
+                buffSlot.Order = Order++;
+                
+                Debug.Log($"[BuffManager] 버프 표시: {buff.contractName} (Order: {buffSlot.Order})");
+            }
         }
     }
 
@@ -609,6 +605,7 @@ public class BuffManager : NetworkBehaviour
         buffSlots.Clear();
 
         BuffUI.SetActive(true);
+        DisablePlayerInput(); // 플레이어 입력 비활성화
 
         int Order = 1;
         foreach (int index in buffIndices)
