@@ -148,6 +148,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         if (target == null)
         {
             CurrentState = EnemyState.Idle;
+            if (dontMove) return;
             agent.ResetPath();
             return;
         }
@@ -171,8 +172,11 @@ public class Enemy : NetworkBehaviour , IDamageable
         else
         {
             Vector3 targetPosition = new Vector3(target.position.x, transform.position.y, target.position.z);
-            if (dontMove) return;
-            agent.SetDestination(targetPosition);
+            if (!dontMove)
+            {
+                agent.SetDestination(targetPosition);
+            }
+           
             FaceTarget(); // 추적 중일 때 타겟 바라보기
         }
     }
@@ -225,7 +229,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         switch (enemyType)
         {
             case EnemyType.Melee:
-                if (dontMove) return;
+                if (dontMove) break;
                 // 근거리는 타겟과 살짝 거리를 유지하며 멈추거나 조금 다가가기
                 float meleeStoppingDistance = attackRange * 0.85f; // 사거리의 85% 정도에서 멈춤
                 if (distanceToTarget > meleeStoppingDistance)
@@ -239,7 +243,7 @@ public class Enemy : NetworkBehaviour , IDamageable
                 }
                 break;
             case EnemyType.Ranged:
-                if (dontMove) return;
+                if (dontMove) break;
                 // 원거리는 사거리 내에서 거리를 유지하며 횡이동(Strafing)
                 strafeTimer -= Runner.DeltaTime;
                 if (strafeTimer <= 0)
@@ -257,7 +261,7 @@ public class Enemy : NetworkBehaviour , IDamageable
                 agent.SetDestination(targetPosition);
                 break;
             case EnemyType.destruct:
-                if (dontMove) return;
+                if (dontMove) break;
                 // 자폭형: 목표를 향해 돌진 (무빙 필요 없음)
                 agent.SetDestination(target.position);
                 // 자폭 처리 로직은 자폭 사거리 내에 들어오면 실행
