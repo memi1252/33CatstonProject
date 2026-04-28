@@ -10,7 +10,7 @@ public class AttributeEffectApplier : NetworkBehaviour
     public float fireDoTDuration = 3f;
     public float fireDoTInterval = 0.5f;
     public float fireDoTDamagePerTick = 2f;
-    public GameObject fireParticlePrefab; // 반드시 Inspector에서 확인!
+    public GameObject fireParticlePrefab;
     public Color fireColor = new Color(1f, 0.5f, 0f, 1f);
 
     [Header("Ice (얼음)")]
@@ -38,9 +38,7 @@ public class AttributeEffectApplier : NetworkBehaviour
 
     [Header("공통 설정")]
     public float vfxLifetime = 2f;
-    public float screenShakeIntensity = 0.2f;
-
-    private LayerMask raycastLayerMask;
+    public LayerMask targetLayerMask; // Inspector에서 Player와 Enemy 레이어를 모두 체크하세요!
 
     private void Awake()
     {
@@ -52,30 +50,23 @@ public class AttributeEffectApplier : NetworkBehaviour
         Instance = this;
     }
 
-    public override void Spawned()
+    // [변경점] owner를 GameObject로 받아 플레이어/적 모두 대응 가능하게 함
+    public void ApplyAttributeEffect(TargetAttribute attribute, IDamageable target, Vector3 targetPosition, float baseDamage, GameObject owner)
     {
-        raycastLayerMask = LayerMask.GetMask("Enemy");
-    }
-
-    public void ApplyAttributeEffect(TargetAttribute attribute, IDamageable target, Vector3 targetPosition, float baseDamage, Starter.Platformer.Player owner)
-    {
-        // 1. 기본 널 체크
         if (target == null || Runner == null) return;
 
-        // 2. 서버 로직 처리
         if (Object.HasStateAuthority)
         {
             ApplyLogicOnServer(attribute, target, baseDamage, owner, targetPosition);
         }
 
-        // 3. RPC 호출 (target이 NetworkBehaviour인지 확실히 체크)
         if (target is NetworkBehaviour targetNB && targetNB.Object != null)
         {
             RPC_PlayAttributeVFX(attribute, targetNB.Object.Id, targetPosition);
         }
     }
 
-    private void ApplyLogicOnServer(TargetAttribute attribute, IDamageable target, float baseDamage, Starter.Platformer.Player owner, Vector3 position)
+    private void ApplyLogicOnServer(TargetAttribute attribute, IDamageable target, float baseDamage, GameObject owner, Vector3 position)
     {
         switch (attribute)
         {
@@ -83,8 +74,15 @@ public class AttributeEffectApplier : NetworkBehaviour
                 StartCoroutine(FireDoTDamage(target));
                 break;
             case TargetAttribute.Ice:
-                if (target is MonoBehaviour mb && mb.TryGetComponent<Starter.Platformer.Player>(out var p))
-                    StartCoroutine(SlowPlayer(p));
+                if (target is MonoBehaviour mb)
+                {
+                    // 타겟이 플레이어인 경우
+                    if (mb.TryGetComponent<Starter.Platformer.Player>(out var p))
+                        StartCoroutine(SlowPlayer(p));
+                    // 타겟이 적인 경우
+                    else if (mb.TryGetComponent<Enemy>(out var e))
+                        StartCoroutine(SlowEnemy(e));
+                }
                 break;
             case TargetAttribute.Electric:
                 ApplyElectricChainLogic(position, baseDamage, owner);
@@ -101,7 +99,6 @@ public class AttributeEffectApplier : NetworkBehaviour
     [Rpc(RpcSources.All, RpcTargets.All)]
     private void RPC_PlayAttributeVFX(TargetAttribute attribute, NetworkId targetId, Vector3 hitPos)
     {
-        // Runner가 유효하지 않으면 중단
         if (Runner == null) return;
 
         NetworkObject targetObj = Runner.FindObject(targetId);
@@ -119,20 +116,12 @@ public class AttributeEffectApplier : NetworkBehaviour
 
     private void PlayParticle(GameObject prefab, Transform parent, Color color, Vector3 fallbackPos)
     {
-        // 핵심 해결책: 프리팹이 진짜 있는지, 그리고 GameObject가 맞는지 체크
-        if (prefab == null) 
-        {
-            Debug.LogWarning($"[AttributeEffect] 프리팹이 할당되지 않았습니다!");
-            return;
-        }
+        if (prefab == null) return;
 
         Vector3 spawnPos = (parent != null) ? parent.position : fallbackPos;
-        
-        // 캐스팅 오류 방지를 위해 명시적으로 GameObject로 생성
-        GameObject go = Instantiate(prefab, spawnPos, Quaternion.identity) as GameObject;
-        
-        if (go == null) return;
+        GameObject go = Instantiate(prefab, spawnPos, Quaternion.identity);
 
+        if (go == null) return;
         if (parent != null) go.transform.SetParent(parent);
 
         if (go.TryGetComponent<ParticleSystem>(out var ps))
@@ -141,11 +130,9 @@ public class AttributeEffectApplier : NetworkBehaviour
             main.startColor = color;
             ps.Play();
         }
-
         Destroy(go, vfxLifetime);
     }
 
-    // --- 나머지 서버 로직 함수들 ---
     private IEnumerator FireDoTDamage(IDamageable target)
     {
         float elapsed = 0f;
@@ -166,14 +153,25 @@ public class AttributeEffectApplier : NetworkBehaviour
         if (player != null) player.moveSpeed = originalSpeed;
     }
 
-    private void ApplyElectricChainLogic(Vector3 origin, float baseDamage, Starter.Platformer.Player owner)
+    private IEnumerator SlowEnemy(Enemy enemy)
     {
-        Collider[] enemies = Physics.OverlapSphere(origin, electricChainRadius, raycastLayerMask);
+        if (enemy == null) yield break;
+        float originalSpeed = enemy.agent.speed;
+        enemy.agent.speed *= (1f - iceSlowAmount);
+        yield return new WaitForSeconds(iceSlowDuration);
+        if (enemy != null) enemy.agent.speed = originalSpeed;
+    }
+
+    private void ApplyElectricChainLogic(Vector3 origin, float baseDamage, GameObject owner)
+    {
+        Collider[] hits = Physics.OverlapSphere(origin, electricChainRadius, targetLayerMask);
         int count = 0;
-        foreach (var col in enemies)
+        foreach (var col in hits)
         {
             if (count >= electricMaxChains) break;
-            if (col.transform.root.gameObject == owner.gameObject) continue;
+            // 공격자 본인 제외
+            if (owner != null && col.transform.root.gameObject == owner) continue;
+
             if (col.TryGetComponent<IDamageable>(out var damageable))
             {
                 damageable.TakeHit(baseDamage * electricChainDamageMultiplier, new RaycastHit());
