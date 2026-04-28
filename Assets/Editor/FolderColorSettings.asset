@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c611faf8a2d55f3439ab3fa76f82d04b, type: 3}
+  m_Name: FolderColorSettings
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::FolderAssetTool.FolderColorSettings
+  folderColors:
+  - folderPath: Assets/Prefabs
+    color: {r: 0.13, g: 0.59, b: 0.95, a: 0.6}
+    emoji: d_Prefab Icon
+    isFavorite: 0
+    showColor: 1
+    showHighlight: 1
+    showEmoji: 1
+  - folderPath: Assets/Resources
+    color: {r: 1, g: 0.6, b: 0, a: 0.6}
+    emoji: "\U0001F4C1"
+    isFavorite: 0
+    showColor: 1
+    showHighlight: 1
+    showEmoji: 1
+  - folderPath: Assets/ScriptableObject
+    color: {r: 0, g: 0.59, b: 0.53, a: 0.6}
+    emoji: d_ScriptableObject Icon
+    isFavorite: 0
+    showColor: 1
+    showHighlight: 1
+    showEmoji: 1
+  globalShowColors: 1
+  globalShowHighlight: 1
+  globalShowEmojis: 1

@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: c1b98654f64a58248aef06deb7f02cda
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359890
+  packageName: Folder Asset Tool
+  packageVersion: 1.0.0
+  assetPath: Assets/FolderAssetTools/Editor/FolderColorizer.cs
+  uploadId: 858172

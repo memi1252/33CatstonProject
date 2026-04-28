@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 7db52f2efd065934490a893c267c16e5
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359890
+  packageName: Folder Asset Tool
+  packageVersion: 1.0.0
+  assetPath: Assets/FolderAssetTools/Editor/FOLDER_ASSET_TOOL_GUIDE.pdf
+  uploadId: 858172

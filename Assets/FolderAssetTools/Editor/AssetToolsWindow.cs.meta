@@ -1,0 +1,9 @@
+fileFormatVersion: 2
+guid: 0d39b10d626a1dd47a53ca912027180b
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359890
+  packageName: Folder Asset Tool
+  packageVersion: 1.0.0
+  assetPath: Assets/FolderAssetTools/Editor/AssetToolsWindow.cs
+  uploadId: 858172

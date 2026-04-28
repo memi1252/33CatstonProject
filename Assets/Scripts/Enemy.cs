@@ -149,19 +149,22 @@ public class Enemy : NetworkBehaviour , IDamageable
         {
             CurrentState = EnemyState.Idle;
             if (dontMove) return;
-            agent.ResetPath();
+            // 안전 검사 추가
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh) 
+                agent.ResetPath();
             return;
         }
 
         float distanceToTarget = Vector3.Distance(transform.position, target.position);
-        
-        // 탐지 거리 밖으로 플레이어가 도망가면 타겟을 포기하고 Idle로 돌아감
+    
         if (distanceToTarget > attackRange * detectionMultiplier)
         {
             target = null;
             CurrentState = EnemyState.Idle;
             if (dontMove) return;
-            agent.ResetPath();
+            // 안전 검사 추가
+            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh) 
+                agent.ResetPath();
             return;
         }
 
@@ -174,10 +177,14 @@ public class Enemy : NetworkBehaviour , IDamageable
             Vector3 targetPosition = new Vector3(target.position.x, transform.position.y, target.position.z);
             if (!dontMove)
             {
-                agent.SetDestination(targetPosition);
+                // 핵심 수정 부분: SetDestination 전 상태 확인
+                if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                {
+                    agent.SetDestination(targetPosition);
+                }
             }
-           
-            FaceTarget(); // 추적 중일 때 타겟 바라보기
+       
+            FaceTarget();
         }
     }
 

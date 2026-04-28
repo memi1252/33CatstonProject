@@ -1,0 +1,14 @@
+fileFormatVersion: 2
+guid: 553edefea62ed7b4db3b9f4e8ce1b371
+DefaultImporter:
+  externalObjects: {}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
+AssetOrigin:
+  serializedVersion: 1
+  productId: 359890
+  packageName: Folder Asset Tool
+  packageVersion: 1.0.0
+  assetPath: Assets/FolderAssetTools/Demo/FolderAssetTools_Demo.unity
+  uploadId: 858172
