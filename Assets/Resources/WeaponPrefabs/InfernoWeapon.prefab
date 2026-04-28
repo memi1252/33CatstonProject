@@ -221,7 +221,6 @@ MonoBehaviour:
   LineRenderer: {fileID: 0}
   ParticleEffect: {fileID: 0}
   VisualEffect: {fileID: 8505345373508941269}
-  ownerPlayer: {fileID: 0}
   _projectilePrefab: {fileID: 0}
   _useBuffer: 0
   _projectileBuffer: {fileID: 882295628300712362}
@@ -285,8 +284,8 @@ VisualEffect:
   m_GameObject: {fileID: 7060161666597554576}
   m_Enabled: 1
   m_Asset: {fileID: 8926484042661614526, guid: 6fbab6f50347a19468196ffc624cefe6, type: 3}
-  m_InitialEventName: 
-  m_InitialEventNameOverriden: 1
+  m_InitialEventName: OnPlay
+  m_InitialEventNameOverriden: 0
   m_StartSeed: 0
   m_ResetSeedOnPlay: 1
   m_AllowInstancing: 1

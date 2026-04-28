@@ -1,5 +1,6 @@
 using System.Collections;
 using Fusion;
+using RetroArsenal;
 using UnityEngine;
 
 namespace Projectiles.NetworkObjectExample
@@ -7,11 +8,9 @@ namespace Projectiles.NetworkObjectExample
     public class Weapon_NetworkObject : WeaponBase
     {
         // PRIVATE MEMBERS
-
+        
         [HideInInspector]
         public Starter.Platformer.Player ownerPlayer; // Player 참조 추가
-        [HideInInspector]
-        public Enemy ownerEnemy; // 적 참조 추가
 
         [SerializeField] private PhysicsProjectile _projectilePrefab;
 
@@ -23,7 +22,7 @@ namespace Projectiles.NetworkObjectExample
         [SerializeField] private NetworkObjectBuffer _projectileBuffer;
 
         [Networked] private int _fireCount { get; set; }
-
+        
         public WeaponScriptableObject WeaponSO;
 
         private int _visibleFireCount;
@@ -38,13 +37,11 @@ namespace Projectiles.NetworkObjectExample
 
         // WeaponBase INTERFACE
 
-
-
         private void Start()
         {
-            if (VisualEffect)
+            if(VisualEffect)
                 VisualEffect.Stop();
-            if (attackScope)
+            if(attackScope)
                 attackScope.SetActive(false);
         }
 
@@ -98,7 +95,7 @@ namespace Projectiles.NetworkObjectExample
                     {
                         float totalDamage = damage + WeaponSO.weaponDamage;
                         damageable.TakeHit(totalDamage, hit);
-
+                        
                         // 속성 효과 적용
                         ApplyWeaponAttributeEffect(damageable, hit.point, totalDamage);
                     }
@@ -108,7 +105,7 @@ namespace Projectiles.NetworkObjectExample
             {
                 endPoint = FireTransform.position + transform.forward * 50;
             }
-
+            
             Rpc_PlayLaserEffect(endPoint, hitDistance);
         }
 
@@ -123,7 +120,7 @@ namespace Projectiles.NetworkObjectExample
             }
 
             mouseWorldPos.y = originParent.position.y;
-
+            
             if (HasStateAuthority)
             {
                 StartCoroutine(DealAreaDamage(mouseWorldPos));
@@ -143,7 +140,7 @@ namespace Projectiles.NetworkObjectExample
             }
 
             mouseWorldPos.y = originParent.position.y;
-
+            
             if (HasStateAuthority)
             {
                 StartCoroutine(DealStrikeDamage(mouseWorldPos));
@@ -167,7 +164,7 @@ namespace Projectiles.NetworkObjectExample
             while (timer < lifeTime)
             {
                 Collider[] hitColliders = Physics.OverlapSphere(targetPos, radius, raycastLayerMask);
-
+                
                 foreach (var hitCollider in hitColliders)
                 {
                     IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
@@ -175,7 +172,7 @@ namespace Projectiles.NetworkObjectExample
                     {
                         float totalDamage = damage + WeaponSO.weaponDamage;
                         damageableObject.TakeHit(totalDamage, new RaycastHit());
-
+                        
                         // 속성 효과 적용 (첫 틱에만 적용)
                         if (timer == 0f)
                         {
@@ -199,7 +196,7 @@ namespace Projectiles.NetworkObjectExample
             float radius = WeaponSO.tileSize * 0.5f;
 
             Collider[] hitColliders = Physics.OverlapSphere(targetPos, radius, raycastLayerMask);
-
+            
             foreach (var hitCollider in hitColliders)
             {
                 IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
@@ -207,7 +204,7 @@ namespace Projectiles.NetworkObjectExample
                 {
                     float totalDamage = damage + WeaponSO.weaponDamage;
                     damageableObject.TakeHit(totalDamage, new RaycastHit());
-
+                    
                     // 속성 효과 적용
                     ApplyWeaponAttributeEffect(damageableObject, targetPos, totalDamage);
                 }
@@ -281,25 +278,22 @@ namespace Projectiles.NetworkObjectExample
 
         private void FireSimple()
         {
-            if (HasStateAuthority == false) return;
+            if (HasStateAuthority == false)
+                return;
 
-            var projectile = Runner.Spawn(_projectilePrefab, FireTransform.position, FireTransform.rotation, Object.InputAuthority);
-
-            // 주인 정보 전달 (둘 중 있는 것을 전달)
-            projectile.ownerPlayer = this.ownerPlayer;
-            projectile.ownerEnemy = this.ownerEnemy;
-
+            var projectile = Runner.Spawn(_projectilePrefab, FireTransform.position, FireTransform.rotation,
+                Object.InputAuthority);
+            projectile.ownerPlayer = this.ownerPlayer; // 주인을 투사체에 전달
             projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask, WeaponSO.targetAttribute);
         }
 
         private void FireWithBuffer()
         {
-            var projectile = _projectileBuffer.Get<PhysicsProjectile>(FireTransform.position, FireTransform.rotation, Object.InputAuthority);
+            var projectile = _projectileBuffer.Get<PhysicsProjectile>(FireTransform.position, FireTransform.rotation,
+                Object.InputAuthority);
             if (projectile != null)
             {
-                projectile.ownerPlayer = this.ownerPlayer;
-                projectile.ownerEnemy = this.ownerEnemy; // 적 주인 전달
-
+                projectile.ownerPlayer = this.ownerPlayer; // 주인을 투사체에 전달
                 projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask, WeaponSO.targetAttribute);
             }
         }
@@ -315,7 +309,7 @@ namespace Projectiles.NetworkObjectExample
                 attackScope.transform.parent = null;
                 attackScope.transform.position = mouseWorldPos;
                 attackScope.SetActive(true);
-
+                
                 // Rpc로 전달받은 크기를 그대로 적용
                 attackScope.transform.localScale = new Vector3(scopeSize, scopeSize, scopeSize);
             }
@@ -336,13 +330,13 @@ namespace Projectiles.NetworkObjectExample
             }
 
             yield return new WaitForSeconds(1f);
-
+            
             if (attackScope != null)
             {
                 attackScope.SetActive(false);
                 attackScope.transform.localScale = Vector3.zero;
             }
-
+            
             float lifeTime = 1f;
             if (WeaponSO != null)
             {
@@ -356,10 +350,10 @@ namespace Projectiles.NetworkObjectExample
             if (VisualEffect != null)
             {
                 VisualEffect.SetFloat("LifeTime", lifeTime);
-                VisualEffect.Stop();
+                VisualEffect.Stop(); 
                 VisualEffect.Play();
             }
-
+            
             if (ParticleEffect != null)
             {
                 if (ParticleEffect.transform.childCount > 0 && ParticleEffect.transform.GetChild(0).GetComponent<SpriteRenderer>())
@@ -369,9 +363,9 @@ namespace Projectiles.NetworkObjectExample
                 ParticleEffect.transform.localScale = Vector3.one * scopeSize; // WeaponSO가 null일 수 있으므로 scopeSize를 사용
                 ParticleEffect.Play();
             }
-
+            
             yield return new WaitForSeconds(lifeTime);
-
+            
             if (VisualEffect != null)
             {
                 VisualEffect.Stop();
@@ -411,7 +405,7 @@ namespace Projectiles.NetworkObjectExample
                 attackScope.transform.parent = null;
                 attackScope.transform.position = targetPos;
                 attackScope.SetActive(true);
-
+                
                 // Rpc로 전달받은 크기를 그대로 적용
                 attackScope.transform.localScale = new Vector3(scopeSize, scopeSize, scopeSize);
             }
@@ -451,7 +445,7 @@ namespace Projectiles.NetworkObjectExample
                 ParticleEffect.transform.parent = transform; // 다시 무기 밑으로 복귀
                 ParticleEffect.transform.localPosition = Vector3.zero;
                 ParticleEffect.transform.localRotation = Quaternion.identity;
-
+                
                 // 줄였던 크기 원상 복귀
                 ParticleEffect.transform.localScale = Vector3.one;
             }
@@ -492,7 +486,7 @@ namespace Projectiles.NetworkObjectExample
                 VisualEffect.Play();
                 if (ParticleEffect != null)
                     ParticleEffect.Play();
-
+                
                 if (hitDistance < 50f)
                 {
                     VisualEffect.SetVector3("TargetPosition", new Vector3(0, hitDistance * 0.5f, 0));
@@ -514,14 +508,10 @@ namespace Projectiles.NetworkObjectExample
         /// </summary>
         private void ApplyWeaponAttributeEffect(IDamageable target, Vector3 targetPosition, float totalDamage)
         {
-            AttributeEffectApplier effectApplier = AttributeEffectApplier.Instance;
+            AttributeEffectApplier effectApplier = FindAnyObjectByType<AttributeEffectApplier>();
             if (effectApplier != null && WeaponSO != null)
             {
-                // 공격자(GameObject) 판별
-                GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
-                                      (ownerEnemy != null ? ownerEnemy.gameObject : null);
-
-                effectApplier.ApplyAttributeEffect(WeaponSO.targetAttribute, target, targetPosition, totalDamage, attacker);
+                effectApplier.ApplyAttributeEffect(WeaponSO.targetAttribute, target, targetPosition, totalDamage, ownerPlayer);
             }
         }
     }
