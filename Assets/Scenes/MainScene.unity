@@ -3414,7 +3414,7 @@ MonoBehaviour:
   agent: {fileID: 1125297021}
   dontMove: 0
   firePoint: {fileID: 1287157772}
-  bulletPrefab: {fileID: 4705942470810935141, guid: f0854f29768a1574f95d2a690c7b3e46,
+  bulletPrefab: {fileID: 4687868615844180753, guid: f58f94e726fd397459123d8a7d898986,
     type: 3}
   fireParticles: {fileID: 1883954990}
   targetAttribute: 1
