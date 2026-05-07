@@ -45,6 +45,7 @@ GameObject:
   - component: {fileID: 7060907366637257561}
   - component: {fileID: 3909686316953358487}
   - component: {fileID: 2579691457689040925}
+  - component: {fileID: 5329771116143945703}
   m_Layer: 0
   m_Name: Sphere.watercane
   m_TagString: Untagged
@@ -100,7 +101,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: -1295472828290296070, guid: 69a4ddd9cb95c0940ac841c66d44cc3f, type: 3}
+  - {fileID: 2100000, guid: 13ad680d9706d4e45bfb043bb2b49c24, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -124,6 +125,21 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &5329771116143945703
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4093581664200219633}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: cb6d48ab99dde844690f99d381d5555b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Wobble
+  MaxWobble: 0.03
+  WobbleSpeed: 1
+  Recovery: 2
 --- !u!1 &4370048835768243752
 GameObject:
   m_ObjectHideFlags: 0
