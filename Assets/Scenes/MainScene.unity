@@ -3413,6 +3413,7 @@ MonoBehaviour:
   enemyData: {fileID: 11400000, guid: c038e696122bd9b4f9b272d96a2d3e7a, type: 2}
   agent: {fileID: 1125297021}
   dontMove: 0
+  attackCount: 4
   firePoint: {fileID: 1287157772}
   bulletPrefab: {fileID: 4687868615844180753, guid: f58f94e726fd397459123d8a7d898986,
     type: 3}
