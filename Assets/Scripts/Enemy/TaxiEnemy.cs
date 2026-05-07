@@ -128,11 +128,34 @@ public class TaxiEnemy : Enemy
         CurrentState = EnemyState.Chase;
     }
 
+    private void OnCollisionEnter(Collision other)
+    {
+        if (!isCharging || !HasStateAuthority || hitObjects.Contains(other.gameObject)) return;
+        if (other.gameObject == this.gameObject) return;
+        Debug.Log($"[TaxiEnemy] 충돌 감지: {other.gameObject.name}");   
+        IDamageable damageable = other.transform.GetComponent<IDamageable>();
+        if (damageable != null)
+        {
+            damageable.TakeHit(chargeDamage, new RaycastHit());
+            hitObjects.Add(other.gameObject);
+
+            // [추가] 충돌 이펙트 생성
+            if (collisionEffectPrefab != null)
+            {
+                // 충돌 지점 계산 (가장 가까운 점)
+                Vector3 contactPoint = other.contacts[0].point;
+                // 이펙트 생성 (네트워크 동기화가 필요한 중요한 이펙트라면 Runner.Spawn, 단순 시각용이면 Instantiate)
+                GameObject effect = Instantiate(collisionEffectPrefab, contactPoint, Quaternion.identity);
+                Destroy(effect, 2.0f); // 2초 뒤 삭제
+            }
+        }
+    }
+    
     private void OnTriggerEnter(Collider other)
     {
         if (!isCharging || !HasStateAuthority || hitObjects.Contains(other.gameObject)) return;
         if (other.gameObject == this.gameObject) return;
-
+        Debug.Log($"[TaxiEnemy] 충돌 감지: {other.gameObject.name}");   
         IDamageable damageable = other.GetComponent<IDamageable>();
         if (damageable != null)
         {
