@@ -55,6 +55,7 @@ namespace Projectiles.NetworkObjectExample
             switch (WeaponSO.weaponType)
             {
                 case WeaponType.Projectile:
+                    Animator.SetTrigger("Attack");
                     if (_useBuffer == true)
                     {
                         FireWithBuffer();

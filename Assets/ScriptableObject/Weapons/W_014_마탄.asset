@@ -18,7 +18,8 @@ MonoBehaviour:
   description: "\uC9C1\uC120\uC0C1\uC758 \uBAA8\uB4E0 \uAC83\uC744 \uB6AB\uC2B5\uB2C8\uB2E4.
     \uC544\uAD70\uC774 \uC788\uB2E4\uBA74 '\uC0AC\uACE0'\uB77C\uACE0 \uC6B0\uAE30\uC138\uC694.
     \uC5D0\uD53D \uBB34\uAE30\uC778\uB370 \uADF8\uB7F4 \uC218 \uC788\uC8E0."
-  weaponPrefab: {fileID: 0}
+  weaponPrefab: {fileID: 7025232152382283817, guid: 40ea3c216dcc1c9448894f870fa0520d,
+    type: 3}
   projectilePrefab: {fileID: 0}
   weaponType: 1
   targetAttribute: 5

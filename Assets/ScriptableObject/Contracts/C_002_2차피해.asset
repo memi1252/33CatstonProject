@@ -20,6 +20,8 @@ MonoBehaviour:
     DMG / 2 )"
   targetType: 0
   targetAttribute: 0
+  specialEffect: 0
+  specialEffectValue: 1
   contractBuffs:
   - targetAbilities:
       maxHp: 0

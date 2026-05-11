@@ -103,7 +103,7 @@ GameObject:
   - component: {fileID: 8724714962028053319}
   - component: {fileID: 3912722137872053422}
   m_Layer: 6
-  m_Name: Fire_WandWeapon
+  m_Name: FireWandWeapon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

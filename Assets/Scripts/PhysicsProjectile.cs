@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using Fusion;
 using Fusion.Addons.Physics;
+using Hovl;
 
 namespace Projectiles.NetworkObjectExample
 {
@@ -166,10 +167,17 @@ namespace Projectiles.NetworkObjectExample
           // ✅ 0.2초가 지나지 않았다면 물리 엔진 충돌 무시
           if (!_ignoreCollisionTimer.ExpiredOrNotRunning(Runner)) return;
 
-          if (collision.rigidbody != null)
+          if (collision.contactCount > 0)
           {
-             ProcessHit();
+             var mover = GetComponentInChildren<HS_ProjectileMover>();
+             if (mover != null)
+             {
+                ContactPoint contact = collision.GetContact(0);
+                mover.TriggerHit(contact.point, contact.normal);
+             }
           }
+
+          ProcessHit();
        }
 
        // PRIVATE METHODS
@@ -197,7 +205,7 @@ namespace Projectiles.NetworkObjectExample
                         explosionDamage = damageValue * 0.5f;
                         shouldExplode = true;
                     }
-
+                  
                     if (shouldExplode)
                     {
                         Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, collisionMask);
@@ -211,6 +219,7 @@ namespace Projectiles.NetworkObjectExample
                         }
                     }
                 }
+                Destroy(gameObject, 5);
           }
           catch (System.InvalidOperationException) { }
 
@@ -237,7 +246,7 @@ namespace Projectiles.NetworkObjectExample
           Vector3 startPos = transform.position - (moveDirection.normalized * moveDistance);
           Ray ray = new Ray(startPos, moveDirection.normalized);
           RaycastHit hit;
-          
+
           if (Physics.Raycast(ray, out hit, moveDistance * 2f, collisionMask, QueryTriggerInteraction.Collide))
           {
              OnHitObject(hit);
@@ -268,7 +277,11 @@ namespace Projectiles.NetworkObjectExample
                     );
                 }
             }
-            
+            var mover = GetComponentInChildren<HS_ProjectileMover>();
+            if (mover != null)
+            {
+               mover.TriggerHit(hit.point, hit.normal);
+            }
             // 레이캐스트 충돌 시에도 폭발 효과 등을 위해 ProcessHit 호출
             ProcessHit();
         }

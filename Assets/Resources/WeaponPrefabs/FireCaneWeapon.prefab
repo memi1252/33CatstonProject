@@ -438,7 +438,7 @@ GameObject:
   - component: {fileID: 6712133823524720216}
   - component: {fileID: 9108333147693381742}
   m_Layer: 0
-  m_Name: Fire_CaneWeapon
+  m_Name: FireCaneWeapon
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

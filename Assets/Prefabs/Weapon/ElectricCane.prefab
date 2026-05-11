@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 4110987292343079411}
   - component: {fileID: 8030493457146867927}
   m_Layer: 0
-  m_Name: lightning_Spear
+  m_Name: ElectricCane
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

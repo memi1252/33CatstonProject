@@ -1,0 +1,140 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b569635e83597354c89702686fbec0cc, type: 3}
+  m_Name: "I_010_\uC544\uB2C8\uBB54\uB370"
+  m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
+  buffID: I_010
+  buffName: "\uC544\uB2C8\uBB54\uB370"
+  buffIcon: {fileID: 0}
+  buffDescription: "\uBCF4\uC2A4\uC5D0 \uC804\uCCB4 \uC2A4\uD15F\uC774 {Ratio:0}
+    \uC99D\uAC00\uD569\uB2C8\uB2E4 \uADF8\uB7FC \uBCF4\uC2A4\uC5D0\uAC8C \uD504\uB85C\uD2F4\uC774\uB77C\uB3C4
+    \uAC00\uC838\uB2E4 \uC8FC\uC138\uC694"
+  isSpecial: 0
+  buffProperties:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0.5
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0.5
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0
+  isVotingCondition: 0
+  Condition: 3
+  VotingCondition: 2
+  votingValue: 4
+  applyType: 0
+  votingAbility:
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0.5
+    ratio: 0.5
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0
+  - targetAbilities:
+      maxHp: 0
+      maxMp: 0
+      damage: 0
+      attackSpeed: 0
+      moveSpeed: 0
+      allDamage: 0
+      damageReceived: 0
+      criticalChance: 0
+      criticalDamage: 0
+      enemiesDamage: 0
+      enemiesSpeed: 0
+      enemiesReceived: 0
+      enemiesHp: 0
+      boosDamage: 0
+      boosReceived: 0
+      boosHp: 0
+    ratio: 0
+  VotingVType: 4
+  voteDesc: "\uD300\uC6D0 \uC804\uCCB4\uAC00 \uD22C\uD45C\uD558\uBA74 \uBCF4\uC2A4\uAC00
+    \uB354 \uBC8C\uD06C\uC5C5\uC744 \uD569\uB2C8\uB2E4"
+  minPlayer: 2

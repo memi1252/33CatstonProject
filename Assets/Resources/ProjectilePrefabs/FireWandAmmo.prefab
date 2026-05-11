@@ -17,7 +17,7 @@ GameObject:
   - component: {fileID: -8730661247559811025}
   - component: {fileID: 205563779502532445}
   m_Layer: 0
-  m_Name: Fire_WandAmmo
+  m_Name: FireWandAmmo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

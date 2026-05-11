@@ -266,11 +266,16 @@ namespace Hovl
 
         protected virtual void SpawnHit(ContactPoint contact)
         {
+            SpawnHit(contact.point, contact.normal);
+        }
+
+        protected virtual void SpawnHit(Vector3 point, Vector3 normal)
+        {
             if (hit == null)
                 return;
 
-            Vector3 pos = contact.point + contact.normal * hitOffset;
-            Quaternion rot = Quaternion.FromToRotation(Vector3.up, contact.normal);
+            Vector3 pos = point + normal * hitOffset;
+            Quaternion rot = Quaternion.FromToRotation(Vector3.up, normal);
 
             hit.transform.position = pos;
             hit.transform.rotation = rot;
@@ -280,13 +285,36 @@ namespace Hovl
             else if (rotationOffset != Vector3.zero)
                 hit.transform.rotation = Quaternion.Euler(rotationOffset);
             else
-                hit.transform.LookAt(contact.point + contact.normal);
+                hit.transform.LookAt(point + normal);
 
             if (hitPS != null)
             {
                 hitPS.Clear(true);
                 hitPS.Play(true);
             }
+        }
+
+        // 외부(예: PhysicsProjectile의 raycast 충돌)에서 호출하는 진입점.
+        // 비주얼 폭발 시퀀스만 수행하고, 발사체 GameObject 파괴는 호출자가 담당.
+        public virtual void TriggerHit(Vector3 point, Vector3 normal)
+        {
+            if (collided)
+                return;
+            collided = true;
+
+            StopRunningCoroutines();
+
+            if (lightSourse != null)
+                lightSourse.enabled = false;
+
+            if (col != null)
+                col.enabled = false;
+
+            if (projectilePS != null)
+                projectilePS.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+            SpawnHit(point, normal);
+            ReleaseDetachedObjects();
         }
 
         protected virtual void ReleaseDetachedObjects()

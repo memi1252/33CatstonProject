@@ -175,7 +175,8 @@ public class BuffSOImporter : EditorWindow
 
             string prefabName = data[1]; // PrefabName
             string name = data[3]; // Name
-            string assetPath = $"{WeaponSAVE_PATH}/{idStr}_{name}.asset";
+            string safeName = Regex.Replace(name, @"[<>:""/\\|?*\x00-\x1F]", string.Empty);
+            string assetPath = $"{WeaponSAVE_PATH}/{idStr}_{safeName}.asset";
 
             WeaponScriptableObject so = AssetDatabase.LoadAssetAtPath<WeaponScriptableObject>(assetPath);
 
@@ -274,9 +275,9 @@ public class BuffSOImporter : EditorWindow
             if (string.IsNullOrEmpty(idStr)) continue;
 
             string name = data[1];
-            
-            
-            string assetPath = $"{ImprintSAVE_PATH}/{idStr}_{name}.asset";
+
+            string safeName = Regex.Replace(name, @"[<>:""/\\|?*\x00-\x1F]", string.Empty);
+            string assetPath = $"{ImprintSAVE_PATH}/{idStr}_{safeName}.asset";
             BuffScripableObject so = AssetDatabase.LoadAssetAtPath<BuffScripableObject>(assetPath);
 
             if (so == null)
@@ -417,7 +418,8 @@ public class BuffSOImporter : EditorWindow
 
             string prefabName = data[2] + "Enemy"; // PrefabName
             string name = data[3]; // Name
-            string assetPath = $"{EnemySAVE_PATH}/{idStr}_{name}.asset";
+            string safeName = Regex.Replace(name, @"[<>:""/\\|?*\x00-\x1F]", string.Empty);
+            string assetPath = $"{EnemySAVE_PATH}/{idStr}_{safeName}.asset";
 
             EnemyScriptableObject so = AssetDatabase.LoadAssetAtPath<EnemyScriptableObject>(assetPath);
 
@@ -513,7 +515,8 @@ public class BuffSOImporter : EditorWindow
 
             string iconName = data[1]; // IconName
             string name = data[2]; // Name
-            string assetPath = $"{SkillSAVE_PATH}/{idStr}_{name}.asset";
+            string safeName = Regex.Replace(name, @"[<>:""/\\|?*\x00-\x1F]", string.Empty);
+            string assetPath = $"{SkillSAVE_PATH}/{idStr}_{safeName}.asset";
 
             SkillScriptableObject so = AssetDatabase.LoadAssetAtPath<SkillScriptableObject>(assetPath);
 
@@ -608,7 +611,8 @@ public class BuffSOImporter : EditorWindow
             string imageName = data[1]; // ImageName  
             string name = data[2]; // Name
             
-            string assetPath = $"{ContractSAVE_PATH}/{idStr}_{Regex.Replace(name, @"[^a-zA-Z0-9가-힣]", string.Empty, RegexOptions.Singleline)}.asset";
+            string safeName = Regex.Replace(name, @"[<>:""/\\|?*\x00-\x1F]", string.Empty);
+            string assetPath = $"{ContractSAVE_PATH}/{idStr}_{safeName}.asset";
 
             ContractScriptableObject so = AssetDatabase.LoadAssetAtPath<ContractScriptableObject>(assetPath);
 

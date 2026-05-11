@@ -1,0 +1,34 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c6d217c060421042b2dcf8b2aebdb7f, type: 3}
+  m_Name: "W_008_\uBB3C\uC758 \uC794\uD5A5"
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponScriptableObject
+  weaponID: W_008
+  weaponName: "\uBB3C\uC758 \uC794\uD5A5"
+  weaponIcon: {fileID: 0}
+  description: "\uC2DC\uC6D0\uD558\uAC8C \uBB3C\uC744 \uBFCC\uB9AC\uC138\uC694! \uC544\uAD70\uC774
+    \uAC08\uC99D\uC744 \uB290\uB084 \uB54C, \uB2F9\uC2E0\uC740 \uD63C\uC790 \uC2DC\uC6D0\uD55C
+    \uD654\uB825\uC744 \uBF50\uB0BC \uC218 \uC788\uC2B5\uB2C8\uB2E4."
+  weaponPrefab: {fileID: 4943887032486661099, guid: b82767cff9dc10544b7b50dff0d5c63e,
+    type: 3}
+  projectilePrefab: {fileID: 8651655320744493464, guid: 80890d86ceceb7248be9acd20e19d5b5,
+    type: 3}
+  weaponType: 0
+  targetAttribute: 4
+  grade: 1
+  damageRatio: 0.5
+  weaponDamage: 5
+  tileSize: 5
+  attackSpeed: 0.75
+  playerSpeed: 12
+  projectileSpeed: 18
+  projectileDis: 15
