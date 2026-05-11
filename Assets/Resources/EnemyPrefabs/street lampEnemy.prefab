@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 8494020081945462430}
   - component: {fileID: 4168648336917408603}
   m_Layer: 8
-  m_Name: streetlampEnemy
+  m_Name: street lampEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

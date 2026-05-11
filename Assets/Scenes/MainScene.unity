@@ -4258,6 +4258,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: AbandonedMachine
       objectReference: {fileID: 0}
+    - target: {fileID: 8420317928886775645, guid: d134e57aa8bed314c93333a368799898,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -6022,6 +6027,8 @@ GameObject:
   - component: {fileID: 2094933662}
   - component: {fileID: 2094933661}
   - component: {fileID: 2094933660}
+  - component: {fileID: 2094933664}
+  - component: {fileID: 2094933663}
   m_Layer: 0
   m_Name: Noise_Drone
   m_TagString: Untagged
@@ -6094,6 +6101,51 @@ Transform:
   - {fileID: 377956937}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2094933663
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094933659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 1841233047
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 2094933664}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &2094933664
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2094933659}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7a63e8d766858a741ad061649752517d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NoiseDroneEnemy
+  startingHealth: 0
+  attackRange: 2
+  _health: 0
+  _CurrentState: 0
+  _isDead:
+    _value: 0
+  _NetworkPosition: {x: 0, y: 0, z: 0}
+  _NetworkRotation: {x: 0, y: 0, z: 0, w: 0}
+  detectionMultiplier: 3
+  enemyData: {fileID: 11400000, guid: cb8054a10c10a294aad6ec40fddd0229, type: 2}
+  agent: {fileID: 2094933660}
+  dieEffect: {fileID: 7133298800578810401, guid: 1eb899d11cb9cc942933e65f220fd41c,
+    type: 3}
+  dontMove: 0
 --- !u!1001 &1592802966084198590
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -6443,6 +6495,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Taxi2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8026912551533530393, guid: a6e3ff39693bc114baf23d90f2671aad,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -6822,7 +6879,7 @@ PrefabInstance:
     - target: {fileID: 2698375624744255262, guid: 09d05ccd6acda3846acf21c213131514,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 18.1
+      value: 30.22
       objectReference: {fileID: 0}
     - target: {fileID: 2698375624744255262, guid: 09d05ccd6acda3846acf21c213131514,
         type: 3}
@@ -6832,7 +6889,7 @@ PrefabInstance:
     - target: {fileID: 2698375624744255262, guid: 09d05ccd6acda3846acf21c213131514,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: -2.7
+      value: -23.64
       objectReference: {fileID: 0}
     - target: {fileID: 2698375624744255262, guid: 09d05ccd6acda3846acf21c213131514,
         type: 3}
@@ -6883,6 +6940,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_Name
       value: Taxi1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8691212453320968904, guid: 09d05ccd6acda3846acf21c213131514,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

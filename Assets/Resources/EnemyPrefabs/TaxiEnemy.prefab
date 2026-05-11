@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 2877374165304480372}
   - component: {fileID: 2255696540955108772}
   m_Layer: 8
-  m_Name: Taxi1
+  m_Name: TaxiEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

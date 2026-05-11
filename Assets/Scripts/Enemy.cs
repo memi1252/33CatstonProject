@@ -1,3 +1,4 @@
+using System.Collections;
 using Fusion;
 using Starter.Platformer;
 using UnityEngine;
@@ -32,6 +33,7 @@ public class Enemy : NetworkBehaviour , IDamageable
     
     public NavMeshAgent agent;
     protected Transform target;
+    public GameObject dieEffect;
 
     // 무빙 어택을 위한 변수
     protected float strafeTimer;
@@ -272,7 +274,7 @@ public class Enemy : NetworkBehaviour , IDamageable
                 // 자폭형: 목표를 향해 돌진 (무빙 필요 없음)
                 agent.SetDestination(target.position);
                 // 자폭 처리 로직은 자폭 사거리 내에 들어오면 실행
-                if (distanceToTarget <= 1.5f)
+                if (distanceToTarget <= 3f)
                 {
                     PerformSelfDestruct();
                 }
@@ -300,16 +302,27 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     protected virtual void PerformSelfDestruct()
     {
-        if (isDead) return;
+        if (!HasStateAuthority || isDead) return;
         Debug.Log("자폭 공격 수행!");
         // 폭발 이펙트, 주변 데미지 처리 후 사망
+        Instantiate(dieEffect, transform.position, Quaternion.identity);
+        Collider[] cols = Physics.OverlapSphere(transform.position, enemyData.range);
+        foreach (Collider c in cols)
+        {
+            if (c.transform.parent == transform) continue;
+            if (c.transform.parent.TryGetComponent<IDamageable>(out var damageable))
+            {
+                damageable.TakeHit(enemyData.damage, new RaycastHit());
+            }
+        }
         ApplyDamage(health); 
     }
+    
 
     protected void FaceTarget()
     {
         if (target == null) return;
-
+        if (isDead) return;
         Vector3 dirToTarget = (target.position - transform.position).normalized;
         dirToTarget.y = 0;
 

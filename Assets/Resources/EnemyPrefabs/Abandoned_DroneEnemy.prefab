@@ -14,7 +14,7 @@ GameObject:
   - component: {fileID: 5202818310514570323}
   - component: {fileID: 3418127211393421465}
   m_Layer: 8
-  m_Name: AbandonedMachine
+  m_Name: Abandoned_DroneEnemy
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -10,10 +10,10 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4adcd431372e4a678b0f5a8f6cd5aae1, type: 3}
-  m_Name: "E_003_\uD3ED\uBC1C\uC131 \uC2AC\uB77C\uC784"
+  m_Name: "E_003_\uB178\uC774\uC988 \uB4DC\uB860"
   m_EditorClassIdentifier: Assembly-CSharp::EnemyScriptableObject
   enemyID: E_003
-  enemyName: "\uD3ED\uBC1C\uC131 \uC2AC\uB77C\uC784"
+  enemyName: "\uB178\uC774\uC988 \uB4DC\uB860"
   appeared: 1
   enemyIcon: {fileID: 0}
   enemyPrefab: {fileID: 0}
