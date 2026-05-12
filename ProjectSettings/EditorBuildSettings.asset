@@ -7,6 +7,12 @@ EditorBuildSettings:
   m_Scenes:
   - enabled: 1
     path: Assets/Scenes/MainScene.unity
+    guid: 9e4dbde371004e140a66fccd934b5fb6
+  - enabled: 1
+    path: Assets/Scenes/LobbyScene.unity
+    guid: 99c9720ab356a0642a771bea13969a05
+  - enabled: 1
+    path: Assets/Scenes/GameScene.unity
     guid: 8106325ec9c7a3e49882d567bda38c74
   m_configObjects:
     com.unity.dt.app-ui: {fileID: 11400000, guid: 1b1c20d82303e4b5781c3ef50ac1449f,

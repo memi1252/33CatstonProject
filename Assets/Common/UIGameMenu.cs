@@ -1,9 +1,11 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Fusion;
 using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Random = UnityEngine.Random;
 
 namespace Starter
 {
@@ -33,7 +35,26 @@ namespace Starter
 		private NetworkRunner _runnerInstance;
 		private static string _shutdownStatus;
 
+		private void Awake()
+		{
+			DontDestroyOnLoad(gameObject.transform.parent.gameObject);
+		}
+
 		public async void StartGame()
+		{
+			await StartGameAsync(null);
+		}
+
+		/// <summary>외부(룸 리스트 등)에서 특정 세션 이름으로 바로 입장.</summary>
+		public async void JoinRoom(string sessionName)
+		{
+			if (!string.IsNullOrEmpty(sessionName) && RoomText != null)
+				RoomText.text = sessionName;
+
+			await StartGameAsync(sessionName);
+		}
+
+		private async Task StartGameAsync(string overrideSessionName)
 		{
 			await Disconnect();
 
@@ -48,10 +69,24 @@ namespace Starter
 			var sceneInfo = new NetworkSceneInfo();
 			sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex));
 
+			// 외부에서 특정 세션 이름이 지정되면 그걸로, 아니면 닉네임 기반 자동 생성
+			string sessionName;
+			if (!string.IsNullOrEmpty(overrideSessionName))
+			{
+				sessionName = overrideSessionName;
+			}
+			else
+			{
+				var nick = !string.IsNullOrWhiteSpace(NicknameText.text) ? NicknameText.text.Trim() : "Player";
+				sessionName = $"{nick}'s Room";
+				if (RoomText != null)
+					RoomText.text = sessionName;
+			}
+
 			var startArguments = new StartGameArgs()
 			{
 				GameMode = Application.isEditor && ForceSinglePlayer ? GameMode.Single : GameMode.Shared,
-				SessionName = RoomText.text,
+				SessionName = sessionName,
 				PlayerCount = MaxPlayerCount,
 				// We need to specify a session property for matchmaking to decide where the player wants to join.
 				// Otherwise players from Platformer scene could connect to ThirdPersonCharacter game etc.
@@ -67,7 +102,7 @@ namespace Starter
 
 			var startTask = _runnerInstance.StartGame(startArguments);
 			await startTask;
-
+			
 			if (startTask.Result.Ok)
 			{
 				StatusText.text = "";
@@ -87,7 +122,7 @@ namespace Starter
 		public async void BackToMenu()
 		{
 			await Disconnect();
-
+			Destroy(gameObject.transform.parent.gameObject);
 			SceneManager.LoadScene(0);
 		}
 
