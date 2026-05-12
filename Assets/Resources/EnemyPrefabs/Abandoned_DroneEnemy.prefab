@@ -109,6 +109,7 @@ MonoBehaviour:
   detectionMultiplier: 3
   enemyData: {fileID: 11400000, guid: c038e696122bd9b4f9b272d96a2d3e7a, type: 2}
   agent: {fileID: 460641359858703900}
+  dieEffect: {fileID: 0}
   dontMove: 0
   attackCount: 4
   firePoint: {fileID: 1205674729344947471}
@@ -364,7 +365,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 9826a8c5f2d6c234eb5a37936f3ca9c8,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 1.143
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9826a8c5f2d6c234eb5a37936f3ca9c8,
         type: 3}
@@ -548,8 +549,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.6174088, y: 1.7795482, z: 1}
-  m_Center: {x: 0.012685776, y: -0.1699518, z: 0}
+  m_Size: {x: 1.6174088, y: 1.7795482, z: 1.3797925}
+  m_Center: {x: 0.012685776, y: -0.1699518, z: 0.02773735}
 --- !u!4 &3112487755456637717 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 9826a8c5f2d6c234eb5a37936f3ca9c8,

@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using Fusion;
 using Starter.Platformer;
@@ -43,6 +44,13 @@ public class Enemy : NetworkBehaviour , IDamageable
     [Networked] protected TickTimer attackCooldown { get; set; }
 
     public bool dontMove = false;
+    
+    private Rigidbody rb;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody>();
+    }
 
 
     protected virtual void Start()
@@ -341,7 +349,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         {
             return;
         }
-
+        rb.linearVelocity = Vector3.zero; // 피격 시 순간적으로 이동 멈춤 (넉백 효과 제거)
         if (Object.HasStateAuthority)
         {
             ApplyDamage(damage);

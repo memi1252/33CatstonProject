@@ -76,6 +76,7 @@ namespace Projectiles.NetworkObjectExample
           }
 
           _rigidbody.Rigidbody.isKinematic = false;
+          _rigidbody.Rigidbody.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
           _rigidbody.Rigidbody.linearVelocity = Vector3.zero;
           _rigidbody.Rigidbody.angularVelocity = Vector3.zero;
           transform.rotation = rotation;
@@ -94,6 +95,36 @@ namespace Projectiles.NetworkObjectExample
 
           // ✅ 발사 시 0.2초 충돌 무시 타이머 설정
           _ignoreCollisionTimer = TickTimer.CreateFromSeconds(Runner, 0.2f);
+
+          // ⭐ 씬에 있는 모든 IDamageable의 콜라이더와 물리 충돌을 미리 무시 → 적/플레이어를 밀어내지 않음
+          // (벽/땅과는 그대로 충돌)
+          IgnorePhysicsWithDamageables();
+       }
+
+       private void IgnorePhysicsWithDamageables()
+       {
+          if (_collider == null) return;
+
+          // 자식 콜라이더가 여러 개 있을 수 있으니 모두 수집
+          Collider[] myColliders = GetComponentsInChildren<Collider>(true);
+
+          // 씬에 있는 모든 IDamageable을 찾음
+          var damageables = UnityEngine.Object.FindObjectsByType<MonoBehaviour>(FindObjectsInactive.Exclude);
+          foreach (var mb in damageables)
+          {
+             if (mb is not IDamageable) continue;
+
+             Collider[] targetCols = mb.GetComponentsInChildren<Collider>(true);
+             foreach (var myCol in myColliders)
+             {
+                if (myCol == null) continue;
+                foreach (var targetCol in targetCols)
+                {
+                   if (targetCol == null || targetCol == myCol) continue;
+                   Physics.IgnoreCollision(myCol, targetCol, true);
+                }
+             }
+          }
        }
 
        // NetworkBehaviour INTERFACE
@@ -122,11 +153,7 @@ namespace Projectiles.NetworkObjectExample
              return;
           }
 
-          // ✅ 0.2초가 지난 후에만 레이캐스트 충돌 검사 수행
-          if (_ignoreCollisionTimer.ExpiredOrNotRunning(Runner))
-          {
-             CheckCollisions(_rigidbody.Rigidbody.linearVelocity.magnitude * Runner.DeltaTime);
-          }
+          CheckCollisions(_rigidbody.Rigidbody.linearVelocity.magnitude * Runner.DeltaTime);
           
           if (Object == null || !Object.IsValid) return;
 
@@ -165,15 +192,47 @@ namespace Projectiles.NetworkObjectExample
           if (Object == null || !Object.IsValid) return;
 
           // ✅ 0.2초가 지나지 않았다면 물리 엔진 충돌 무시
-          if (!_ignoreCollisionTimer.ExpiredOrNotRunning(Runner)) return;
+          //if (!_ignoreCollisionTimer.ExpiredOrNotRunning(Runner)) return;
 
-          if (collision.contactCount > 0)
+          ContactPoint contactPoint = default;
+          bool hasContact = collision.contactCount > 0;
+          if (hasContact)
           {
+             contactPoint = collision.GetContact(0);
+
              var mover = GetComponentInChildren<HS_ProjectileMover>();
              if (mover != null)
              {
-                ContactPoint contact = collision.GetContact(0);
-                mover.TriggerHit(contact.point, contact.normal);
+                mover.TriggerHit(contactPoint.point, contactPoint.normal);
+             }
+          }
+
+          string colliderName = collision.collider != null ? collision.collider.name : "null";
+          int colliderLayer = collision.collider != null ? collision.collider.gameObject.layer : -1;
+          Debug.Log($"[PhysicsProjectile] OnCollisionEnter -> {colliderName} (layer {colliderLayer}), HasStateAuthority={HasStateAuthority}, owner=Player:{ownerPlayer != null}/Enemy:{ownerEnemy != null}, damageValue={damageValue}");
+
+          if (HasStateAuthority && collision.collider != null)
+          {
+             IDamageable damageableObject = collision.collider.GetComponentInParent<IDamageable>();
+             Debug.Log($"[PhysicsProjectile] Direct hit IDamageable on '{colliderName}': {(damageableObject != null ? damageableObject.GetType().Name : "null")}");
+             if (damageableObject != null)
+             {
+                damageableObject.TakeHit(damageValue, new RaycastHit());
+
+                if (AttributeEffectApplier.Instance != null)
+                {
+                   GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
+                                         (ownerEnemy != null ? ownerEnemy.gameObject : null);
+
+                   Vector3 hitPoint = hasContact ? contactPoint.point : transform.position;
+                   AttributeEffectApplier.Instance.ApplyAttributeEffect(
+                      weaponAttribute,
+                      damageableObject,
+                      hitPoint,
+                      damageValue,
+                      attacker
+                   );
+                }
              }
           }
 
@@ -202,20 +261,30 @@ namespace Projectiles.NetworkObjectExample
                     }
                     else if (ownerEnemy != null)
                     {
+                        // 적 투척물: 떨어진 위치에서 항상 폭발 (반경 키워서 안정적으로 적중)
                         explosionDamage = damageValue * 0.5f;
+                        explosionRadius = 5f;
                         shouldExplode = true;
                     }
-                  
+
                     if (shouldExplode)
                     {
-                        Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, collisionMask);
+                        // collisionMask에 의존하면 prefab 설정에 따라 놓치는 경우가 생기므로 모든 레이어 검사 후 IDamageable로 필터
+                        Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, ~0, QueryTriggerInteraction.Collide);
+                        Debug.Log($"[PhysicsProjectile] Explosion at {transform.position}, radius={explosionRadius}, foundColliders={hitColliders.Length}, dmg={explosionDamage}");
+                        var damaged = new System.Collections.Generic.HashSet<IDamageable>();
                         foreach (var hitCollider in hitColliders)
                         {
                             IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
-                            if (damageableObject != null)
-                            {
-                                damageableObject.TakeHit(explosionDamage, new RaycastHit());
-                            }
+                            if (damageableObject == null) continue;
+                            if (!damaged.Add(damageableObject)) continue; // 같은 타겟 중복 적용 방지
+
+                            // 자기 자신/주인 제외
+                            if (ownerPlayer != null && hitCollider.transform.IsChildOf(ownerPlayer.transform)) continue;
+                            if (ownerEnemy != null && hitCollider.transform.IsChildOf(ownerEnemy.transform)) continue;
+
+                            Debug.Log($"[PhysicsProjectile]   - hit {hitCollider.name} -> {damageableObject.GetType().Name} dmg={explosionDamage}");
+                            damageableObject.TakeHit(explosionDamage, new RaycastHit());
                         }
                     }
                 }
@@ -243,47 +312,72 @@ namespace Projectiles.NetworkObjectExample
        
        private void CheckCollisions(float moveDistance)
        {
-          Vector3 startPos = transform.position - (moveDirection.normalized * moveDistance);
-          Ray ray = new Ray(startPos, moveDirection.normalized);
-          RaycastHit hit;
+          if (HasStateAuthority == false) return;
 
-          if (Physics.Raycast(ray, out hit, moveDistance * 2f, collisionMask, QueryTriggerInteraction.Collide))
+          // 콜라이더 반경 계산
+          float sphereRadius = 0.3f;
+          if (_collider is SphereCollider sc)
+             sphereRadius = sc.radius * Mathf.Max(transform.lossyScale.x, transform.lossyScale.y, transform.lossyScale.z);
+
+          // ⭐ collisionMask는 무시하고 모든 레이어를 검사 — 부모에서 IDamageable을 찾는 방식이라 레이어 필터에 의존하지 않음
+          // (플레이어 capsule이 layer 0(Default)에 있어서 mask 필터가 layer 6/8만 잡으면 놓침)
+          int allLayers = ~0;
+
+          // 1단계: 투척물 주변 OverlapSphere로 IDamageable 직접 탐지
+          Collider[] overlaps = Physics.OverlapSphere(transform.position, sphereRadius * 1.5f, allLayers, QueryTriggerInteraction.Collide);
+          foreach (var col in overlaps)
           {
-             OnHitObject(hit);
+             if (TryHandleHit(col, col.ClosestPoint(transform.position), (transform.position - col.bounds.center).normalized))
+                return;
+          }
+
+          // 2단계: 현재 속도 방향으로 SphereCast (빠른 투척물 터널링 방지)
+          Vector3 currentVelocity = _rigidbody.Rigidbody.linearVelocity;
+          if (currentVelocity.sqrMagnitude < 0.0001f)
+             return;
+
+          Vector3 dir = currentVelocity.normalized;
+          Vector3 startPos = transform.position - (dir * moveDistance);
+
+          RaycastHit[] hits = Physics.SphereCastAll(startPos, sphereRadius, dir, moveDistance * 2f, allLayers, QueryTriggerInteraction.Collide);
+          System.Array.Sort(hits, (a, b) => a.distance.CompareTo(b.distance));
+
+          foreach (var hit in hits)
+          {
+             if (hit.collider == null) continue;
+             if (TryHandleHit(hit.collider, hit.point, hit.normal))
+                return;
           }
        }
 
-        private void OnHitObject(RaycastHit hit)
-        {
-            if (HasStateAuthority == false)
-                return;
+       private bool TryHandleHit(Collider col, Vector3 hitPoint, Vector3 hitNormal)
+       {
+          if (col == null) return false;
+          if (col.transform.IsChildOf(transform)) return false; // 자신 콜라이더
+          if (ownerPlayer != null && col.transform.IsChildOf(ownerPlayer.transform)) return false;
+          if (ownerEnemy != null && col.transform.IsChildOf(ownerEnemy.transform)) return false;
 
-            IDamageable damageableObject = hit.collider.GetComponent<IDamageable>();
-            if (damageableObject != null)
-            {
-                damageableObject.TakeHit(damageValue, hit);
+          IDamageable dmg = col.GetComponentInParent<IDamageable>();
+          if (dmg == null) return false;
 
-                if (AttributeEffectApplier.Instance != null)
-                {
-                    GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
-                                          (ownerEnemy != null ? ownerEnemy.gameObject : null);
+          dmg.TakeHit(damageValue, default);
 
-                    AttributeEffectApplier.Instance.ApplyAttributeEffect(
-                        weaponAttribute,
-                        damageableObject,
-                        hit.point,
-                        damageValue,
-                        attacker
-                    );
-                }
-            }
-            var mover = GetComponentInChildren<HS_ProjectileMover>();
-            if (mover != null)
-            {
-               mover.TriggerHit(hit.point, hit.normal);
-            }
-            // 레이캐스트 충돌 시에도 폭발 효과 등을 위해 ProcessHit 호출
-            ProcessHit();
-        }
+          if (AttributeEffectApplier.Instance != null)
+          {
+             GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
+                                   (ownerEnemy != null ? ownerEnemy.gameObject : null);
+             AttributeEffectApplier.Instance.ApplyAttributeEffect(weaponAttribute, dmg, hitPoint, damageValue, attacker);
+          }
+
+          var mover = GetComponentInChildren<HS_ProjectileMover>();
+          if (mover != null)
+             mover.TriggerHit(hitPoint, hitNormal);
+
+          if (_collider != null)
+             _collider.enabled = false;
+
+          ProcessHit();
+          return true;
+       }
     }
 }
