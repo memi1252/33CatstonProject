@@ -41,11 +41,8 @@ public class LobbyReadyManager : NetworkBehaviour
 
     public override void Spawned()
     {
-        if (HasStateAuthority)
-        {
-            // 본인을 미준비 상태로 등록
-            Ready.Set(Runner.LocalPlayer, false);
-        }
+        // 등록은 FixedUpdateNetwork에서 ActivePlayers 기준으로 일괄 처리.
+        // 여기서 LocalPlayer를 미리 넣으면 클라이언트 입장 타이밍에 PlayerRef.None이 섞이는 경우가 있음.
     }
 
     public override void FixedUpdateNetwork()
