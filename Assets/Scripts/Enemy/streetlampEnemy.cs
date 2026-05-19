@@ -91,7 +91,7 @@ public class streetlampEnemy : Enemy
         }
 
         IDamageable damageable = target.GetComponentInParent<IDamageable>();
-        if (damageable != null) damageable.TakeHit(damage, new RaycastHit());
+        if (damageable != null) damageable.TakeHit(damage, new RaycastHit(), this.gameObject);
     }
 
     private void FireSimple()

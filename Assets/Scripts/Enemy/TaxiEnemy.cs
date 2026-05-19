@@ -136,7 +136,7 @@ public class TaxiEnemy : Enemy
         IDamageable damageable = other.transform.GetComponent<IDamageable>();
         if (damageable != null)
         {
-            damageable.TakeHit(chargeDamage, new RaycastHit());
+            damageable.TakeHit(chargeDamage, new RaycastHit(), this.gameObject);
             hitObjects.Add(other.gameObject);
 
             // [추가] 충돌 이펙트 생성
@@ -159,7 +159,7 @@ public class TaxiEnemy : Enemy
         IDamageable damageable = other.GetComponent<IDamageable>();
         if (damageable != null)
         {
-            damageable.TakeHit(chargeDamage, new RaycastHit());
+            damageable.TakeHit(chargeDamage, new RaycastHit(), this.gameObject);
             hitObjects.Add(other.gameObject);
 
             // [추가] 충돌 이펙트 생성

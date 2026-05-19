@@ -77,7 +77,7 @@ public class LobbyReadyUI : MonoBehaviour
                 playerCount++;
                 if (LobbyReadyManager.Instance.IsReady(p)) readyCount++;
             }
-            StatusText.text = $"{readyCount} / {playerCount} ready (min {LobbyReadyManager.Instance.MinPlayers})";
+            StatusText.text = $"{readyCount} / {playerCount} 준비 (최소 {LobbyReadyManager.Instance.MinPlayers}명 필요)";
         }
     }
 

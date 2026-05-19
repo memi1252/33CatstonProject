@@ -12,7 +12,6 @@ using UnityEngine.Serialization;
 public class BuffManager : NetworkBehaviour
 {
     public static BuffManager Instance { get; private set; }
-    public GameObject BuffUI;
     public GameObject bufffSlotPrefab;
     public Transform buffSlotParent;
 
@@ -67,7 +66,7 @@ public class BuffManager : NetworkBehaviour
 
     void Start()
     {
-        BuffUI.SetActive(false);
+        UIManager.Instance.buffUI.SetActive(false);
     }
 
     private void DisablePlayerInput()
@@ -140,7 +139,7 @@ public class BuffManager : NetworkBehaviour
                         contractVoteTime = contractVoteTimeMax;
                         //Cursor.lockState = CursorLockMode.Locked;
                         //Cursor.visible = false;
-                        BuffUI.SetActive(false);
+                        UIManager.Instance.buffUI.SetActive(false);
                         EnablePlayerInput(); // 플레이어 입력 다시 활성화
                     }
                 }
@@ -183,7 +182,7 @@ public class BuffManager : NetworkBehaviour
                     imprintVoteTime = imprintVoteTimeMax;
                     //Cursor.lockState = CursorLockMode.Locked;
                     //Cursor.visible = false;
-                    BuffUI.SetActive(false);
+                    UIManager.Instance.buffUI.SetActive(false);
                     EnablePlayerInput(); // 플레이어 입력 다시 활성화
                 }
             }
@@ -395,7 +394,7 @@ public class BuffManager : NetworkBehaviour
     {
         // 2. 데이터 변화를 감지하기 위한 디텍터 초기화
         _changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
-        BuffUI.SetActive(false);
+        UIManager.Instance.buffUI.SetActive(false);
         
     }
 
@@ -562,7 +561,7 @@ public class BuffManager : NetworkBehaviour
         if (buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
         buffSlots.Clear();
 
-        BuffUI.SetActive(true);
+        UIManager.Instance.buffUI.SetActive(true);
         DisablePlayerInput(); // 플레이어 입력 비활성화
         
         // 현재 접속한 플레이어들을 ID 순서대로 정렬하여 리스트로 만듭니다.
@@ -604,7 +603,7 @@ public class BuffManager : NetworkBehaviour
         if (buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
         buffSlots.Clear();
 
-        BuffUI.SetActive(true);
+        UIManager.Instance.buffUI.SetActive(true);
         DisablePlayerInput(); // 플레이어 입력 비활성화
 
         int Order = 1;

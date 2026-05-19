@@ -1,8 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using Fusion;
 using Fusion.Addons.SimpleKCC;
 using Starter.Platformer;
 using UnityEngine.UIElements;
+using DamageNumbersPro;
 
 namespace Starter.Platformer
 {
@@ -41,6 +43,12 @@ namespace Starter.Platformer
 
 		[Header("VFX")]
 		public ParticleSystem DustParticles;
+		public DamageNumber damagePopup;
+
+		[Header("Camera Follow")]
+		public float CameraFollowSpeed = 5f;
+		private Vector3 _cameraBasePos;
+		private bool _cameraInitialized;
 
 		[Networked, HideInInspector, Capacity(24), OnChangedRender(nameof(OnNicknameChanged))]
 		public string Nickname { get; set; }
@@ -69,6 +77,38 @@ namespace Starter.Platformer
 		[Header("Special Effects")]
 		// 특수 효과 배열: SpecialEffectType의 int 값을 인덱스로 사용하여 확장성을 챙김
 		[Networked, Capacity(64)] public NetworkArray<float> specialEffectValues => default;
+
+		// === Teleport ===
+		// 텔레포트 중 비주얼 숨김 상태(전 클라이언트 공유). OnChangedRender로 메시 토글.
+		[Networked, OnChangedRender(nameof(OnTeleportVisuallyHiddenChanged))]
+		public NetworkBool TeleportVisuallyHidden { get; set; }
+		// VFX가 재생될 위치(출발 또는 도착). 위치 동기화 지연을 우회.
+		[Networked] public Vector3 TeleportVfxPosition { get; set; }
+		// VFX 트리거: 값이 바뀔 때마다 OnChangedRender로 prefab을 인스턴스화.
+		[Networked, OnChangedRender(nameof(OnTeleportDepartTick))] public int TeleportDepartTick { get; set; }
+		[Networked, OnChangedRender(nameof(OnTeleportArriveTick))] public int TeleportArriveTick { get; set; }
+
+		[Header("Teleport VFX/SFX (선택)")]
+		[Tooltip("출발 효과 GameObject. 트리거 시 해당 위치에 복제 생성되고 잠시 후 자동 파괴.\n프리팹 또는 비활성화된 자식 템플릿 모두 가능.")]
+		public GameObject teleportDepartVfx;
+		[Tooltip("도착 효과 GameObject. 트리거 시 해당 위치에 복제 생성되고 잠시 후 자동 파괴.")]
+		public GameObject teleportArriveVfx;
+		public AudioClip teleportDepartSfx;
+		public AudioClip teleportArriveSfx;
+		[Tooltip("VFX가 생성될 기준 Transform(보통 캐릭터 허리 위치의 빈 자식). 비워두면 Player 루트 위치 사용.")]
+		public Transform teleportVfxAnchor;
+		[Tooltip("기준 위치에서 더할 추가 오프셋(월드 기준)")]
+		public Vector3 teleportVfxOffset = Vector3.zero;
+		[Tooltip("스폰된 VFX 인스턴스가 자동 파괴되기까지의 시간(초)")]
+		public float teleportVfxLifetime = 3f;
+
+		private bool _cameraFollowFrozen;
+		private Coroutine _teleportCoroutine;
+		// KCC.SetPosition은 반드시 FixedUpdateNetwork에서 호출되어야 동기화가 안 풀린다.
+		// 코루틴에서는 아래 플래그만 켜고, FixedUpdateNetwork이 실제 이동을 수행.
+		private bool _hasPendingTeleport;
+		private Vector3 _pendingTeleportPosition;
+		private Quaternion _pendingTeleportRotation;
 
 		public void AddSpecialEffect(SpecialEffectType type, float value)
 		{
@@ -130,12 +170,22 @@ namespace Starter.Platformer
 
 		public override void FixedUpdateNetwork()
 		{
+			// 텔레포트 적용은 FixedUpdateNetwork 안에서 해야 KCC/네트워크 시뮬레이션이 안 풀린다.
+			if (_hasPendingTeleport && HasStateAuthority)
+			{
+				KCC.SetPosition(_pendingTeleportPosition);
+				KCC.SetLookRotation(_pendingTeleportRotation.eulerAngles.y, 0f);
+				_moveVelocity = Vector3.zero;
+				_hasPendingTeleport = false;
+				return; // 같은 틱에 입력 처리하지 않음
+			}
+
 			if (ChatManager.Instance.inputChat.isFocused)
 			{
 				// 채팅입력중이면 움직임 X
 				return;
 			}
-			
+
 			if (_gameManager.IsGameFinished)
 			{
 				// Let players fall even when game is finished (KCC.Move is called)
@@ -209,27 +259,39 @@ namespace Starter.Platformer
 
 			if (_gameManager.IsGameFinished)
 				return;
-		
+
 			// UI표시
 			UIManager.Instance.statsUI.hpImageView(hp / maxHp);
 			UIManager.Instance.statsUI.mpImageView(mp / maxMp);
-			
+
+			// 텔레포트 중에는 카메라를 그대로 정지
+			if (_cameraFollowFrozen)
+				return;
+
 			// 카메라 흔들림 offset 가져오기
-			Vector3 shakeOffset = GameManager.Instance != null && GameManager.Instance.cameraShack != null 
-				? GameManager.Instance.cameraShack.GetShakeOffset() 
+			Vector3 shakeOffset = GameManager.Instance != null && GameManager.Instance.cameraShack != null
+				? GameManager.Instance.cameraShack.GetShakeOffset()
 				: Vector3.zero;
-			
+
 			// Update camera pivot and transfer properties from camera handle to Main Camera.
 			//CameraPivot.rotation = Quaternion.Euler(PlayerInput.CurrentInput.LookRotation);
 			//Camera.main.transform.SetPositionAndRotation(CameraHandle.position, CameraHandle.rotation);
-			Camera.main.transform.position = CameraHandle.position + new Vector3(0f, 0f, -10f) + shakeOffset;
+			Vector3 desiredCameraPos = CameraHandle.position + new Vector3(0f, 0f, -10f);
+			if (!_cameraInitialized)
+			{
+				_cameraBasePos = desiredCameraPos;
+				_cameraInitialized = true;
+			}
+			_cameraBasePos = Vector3.Lerp(_cameraBasePos, desiredCameraPos, CameraFollowSpeed * Time.deltaTime);
+			Camera.main.transform.position = _cameraBasePos + shakeOffset;
 			Camera.main.transform.rotation = CameraHandle.localRotation;
 		}
 
 		private void ProcessInput(GameplayInput input)
 		{
 			if(dead) return; // 죽었을떄 움직이지마
-			
+			if(TeleportVisuallyHidden) return; // 텔레포트 중 입력 차단
+
 			float jumpImpulse = 0f;
 
 			if (KCC.IsGrounded && input.Jump)
@@ -290,7 +352,7 @@ namespace Starter.Platformer
 			}
 		}
 
-		public void TakeHit(float _damage, RaycastHit hit)
+		public void TakeHit(float _damage, RaycastHit hit, GameObject attackerGameObject)
 		{
 			if (Object.HasStateAuthority)
 			{
@@ -308,12 +370,21 @@ namespace Starter.Platformer
 			TakeDamage(_damage);
 		}
 
+		[Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+		private void Rpc_ShowDamagePopup(float _damage)
+		{
+			if (damagePopup == null) return;
+			damagePopup.Spawn(transform.position + Vector3.up, _damage);
+		}
+
 	public void TakeDamage(float _damage)
 	{
 		if (dead) return;
 
 		float actualDamage = damageReceived * 0.01f * _damage;
 		hp -= actualDamage;
+
+		Rpc_ShowDamagePopup(actualDamage);
 
 		Debug.Log($"[Player 피격] 유저({Nickname})가 {actualDamage}의 데미지를 입었습니다. (남은 HP : {hp}/{maxHp})");
 
@@ -412,6 +483,125 @@ namespace Starter.Platformer
 				return; // Do not show nickname for local player
 
 			Nameplate.SetNickname(Nickname);
+		}
+
+		// ===== Teleport =====
+
+		/// <summary>로컬 플레이어가 Portal을 통해 텔레포트를 시작.</summary>
+		public void StartTeleport(Portal portal)
+		{
+			if (portal == null) return;
+			if (_teleportCoroutine != null) return;
+			if (!HasStateAuthority) return; // 본인만 시작 (Shared 모드에서 본인 객체에 StateAuthority)
+			if (TeleportManager.Instance != null) TeleportManager.Instance.BeginTeleport();
+			_teleportCoroutine = StartCoroutine(TeleportSequence(portal));
+		}
+
+		private IEnumerator TeleportSequence(Portal portal)
+		{
+			Vector3 destPos = portal.DestinationPosition;
+			Quaternion destRot = portal.DestinationRotation;
+
+			// 1) 출발 VFX 위치 세팅 후 트리거 증가 → 전 클라이언트 OnTeleportDepartTick 실행
+			TeleportVfxPosition = transform.position;
+			TeleportDepartTick = unchecked(TeleportDepartTick + 1);
+
+			// 2) 캐릭터 비주얼 숨김 (네트워크 동기화)
+			TeleportVisuallyHidden = true;
+
+			// 3) 로컬: 카메라 정지
+			_cameraFollowFrozen = true;
+
+			// 4) 출발 VFX/사운드 보여줄 시간 대기
+			yield return new WaitForSeconds(portal.DepartHoldDuration);
+
+			// 5) 로컬: 페이드아웃
+			if (TeleportManager.Instance != null)
+				yield return TeleportManager.Instance.FadeOut(portal.FadeDuration);
+
+			// 6) 위치 이동 요청 (실제 SetPosition은 FixedUpdateNetwork에서 처리)
+			_pendingTeleportPosition = destPos;
+			_pendingTeleportRotation = destRot;
+			_hasPendingTeleport = true;
+
+			// FixedUpdateNetwork이 한 번 돌아 위치를 적용할 때까지 대기 (최대 30프레임 가드)
+			int guard = 30;
+			while (_hasPendingTeleport && guard-- > 0)
+				yield return null;
+
+			// 7) 카메라 스냅: 다음 LateUpdate가 새 위치로 초기화
+			_cameraInitialized = false;
+			_cameraFollowFrozen = false;
+			yield return null; // LateUpdate가 카메라를 새 위치로 옮길 한 프레임 확보
+
+			// 8) 로컬: 페이드인
+			if (TeleportManager.Instance != null)
+				yield return TeleportManager.Instance.FadeIn(portal.FadeDuration);
+
+			// 9) 캐릭터 비주얼 복원
+			TeleportVisuallyHidden = false;
+
+			// 10) 도착 VFX 트리거
+			TeleportVfxPosition = transform.position;
+			TeleportArriveTick = unchecked(TeleportArriveTick + 1);
+
+			// 11) 도착 VFX/사운드 잠깐 보여줄 시간
+			if (portal.ArriveHoldDuration > 0f)
+				yield return new WaitForSeconds(portal.ArriveHoldDuration);
+
+			// 12) 매니저에 종료 통지
+			if (TeleportManager.Instance != null)
+				TeleportManager.Instance.NotifyTeleportFinished();
+
+			_teleportCoroutine = null;
+		}
+
+		// 모든 클라이언트에서 호출되는 콜백 (Networked 프로퍼티 변경 시)
+		private void OnTeleportVisuallyHiddenChanged()
+		{
+			// ScalingRoot 자체를 SetActive(false) 하면 자식 VFX(ParticleSystem)도 같이 꺼지므로
+			// 메시 렌더러만 토글해서 캐릭터만 보이지 않게 한다.
+			if (ScalingRoot != null)
+			{
+				var renderers = ScalingRoot.GetComponentsInChildren<Renderer>(true);
+				bool show = !TeleportVisuallyHidden;
+				for (int i = 0; i < renderers.Length; i++)
+				{
+					// VFX 파티클 렌더러는 끄지 않음
+					if (renderers[i] is ParticleSystemRenderer) continue;
+					renderers[i].enabled = show;
+				}
+			}
+
+			// 텔레포트 중 부활 UI 표시 방지
+			if (RevivalUI != null && TeleportVisuallyHidden)
+				RevivalUI.SetActive(false);
+		}
+
+		private void OnTeleportDepartTick()
+		{
+			PlayTeleportVfx(teleportDepartVfx, teleportDepartSfx, TeleportVfxPosition);
+		}
+
+		private void OnTeleportArriveTick()
+		{
+			PlayTeleportVfx(teleportArriveVfx, teleportArriveSfx, TeleportVfxPosition);
+		}
+
+		private void PlayTeleportVfx(GameObject vfxPrefab, AudioClip sfx, Vector3 pos)
+		{
+			if (vfxPrefab != null)
+			{
+				// 매번 새 인스턴스 생성 → 부모 없이 월드에 떠 있다가 자동 파괴
+				// (참조 대상이 비활성 자식 템플릿이어도 복제본은 활성화)
+				var go = Instantiate(vfxPrefab, pos, Quaternion.identity);
+				if (!go.activeSelf) go.SetActive(true);
+				Destroy(go, Mathf.Max(0.1f, teleportVfxLifetime));
+			}
+			if (sfx != null)
+			{
+				AudioSource.PlayClipAtPoint(sfx, pos, 1f);
+			}
 		}
 	}
 }

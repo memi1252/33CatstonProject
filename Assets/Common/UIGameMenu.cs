@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Fusion;
@@ -31,9 +32,19 @@ namespace Starter
 		public TextMeshProUGUI StatusText;
 		public GameObject StartGroup;
 		public GameObject DisconnectGroup;
+		public GameObject Connecting;
+		public TextMeshProUGUI ConnectingText;
+
+		[Header("Connecting UI Settings")]
+		[Tooltip("점(.) 한 번 추가되는 간격(초)")]
+		public float ConnectingDotInterval = 0.4f;
+		[Tooltip("접속 실패 메시지 표시 후 창이 닫히기까지의 시간(초)")]
+		public float ConnectFailedHideDelay = 2f;
 
 		private NetworkRunner _runnerInstance;
 		private static string _shutdownStatus;
+		private Coroutine _connectingDotsCoroutine;
+		private Coroutine _hideConnectingCoroutine;
 
 		private void Awake()
 		{
@@ -99,19 +110,93 @@ namespace Starter
 			};
 
 			StatusText.text = startArguments.GameMode == GameMode.Single ? "Starting single-player..." : "Connecting...";
+			ShowConnecting();
 
 			var startTask = _runnerInstance.StartGame(startArguments);
 			await startTask;
-			
+
 			if (startTask.Result.Ok)
 			{
 				StatusText.text = "";
+				HideConnecting();
 				PanelGroup.gameObject.SetActive(false);
 			}
 			else
 			{
 				StatusText.text = $"Connection Failed: {startTask.Result.ShutdownReason}";
+				ShowConnectFailed(ConnectFailedHideDelay);
 			}
+		}
+
+		/// <summary>접속중 표시를 켜고 점(.) 애니메이션을 시작.</summary>
+		private void ShowConnecting()
+		{
+			// 실패 후 자동 닫힘 코루틴이 진행 중이었다면 취소
+			if (_hideConnectingCoroutine != null)
+			{
+				StopCoroutine(_hideConnectingCoroutine);
+				_hideConnectingCoroutine = null;
+			}
+
+			if (Connecting != null) Connecting.SetActive(true);
+
+			StopConnectingDotsAnimation();
+			_connectingDotsCoroutine = StartCoroutine(AnimateConnectingDots());
+		}
+
+		/// <summary>접속중 표시를 즉시 끕니다.</summary>
+		private void HideConnecting()
+		{
+			StopConnectingDotsAnimation();
+			if (_hideConnectingCoroutine != null)
+			{
+				StopCoroutine(_hideConnectingCoroutine);
+				_hideConnectingCoroutine = null;
+			}
+			if (Connecting != null) Connecting.SetActive(false);
+		}
+
+		/// <summary>"접속 실패" 메시지를 표시하고 일정 시간 후 자동으로 창을 닫습니다.</summary>
+		private void ShowConnectFailed(float hideDelay)
+		{
+			StopConnectingDotsAnimation();
+			if (Connecting != null) Connecting.SetActive(true);
+			if (ConnectingText != null) ConnectingText.text = "접속 실패";
+
+			if (_hideConnectingCoroutine != null)
+				StopCoroutine(_hideConnectingCoroutine);
+			_hideConnectingCoroutine = StartCoroutine(HideConnectingAfterDelay(hideDelay));
+		}
+
+		private void StopConnectingDotsAnimation()
+		{
+			if (_connectingDotsCoroutine != null)
+			{
+				StopCoroutine(_connectingDotsCoroutine);
+				_connectingDotsCoroutine = null;
+			}
+		}
+
+		private IEnumerator AnimateConnectingDots()
+		{
+			int dotCount = 0;
+			var wait = new WaitForSeconds(ConnectingDotInterval > 0f ? ConnectingDotInterval : 0.4f);
+			while (true)
+			{
+				if (ConnectingText != null)
+				{
+					ConnectingText.text = "접속중" + new string('.', dotCount);
+				}
+				dotCount = (dotCount + 1) % 4; // 0 ~ 3
+				yield return wait;
+			}
+		}
+
+		private IEnumerator HideConnectingAfterDelay(float seconds)
+		{
+			yield return new WaitForSeconds(seconds);
+			if (Connecting != null) Connecting.SetActive(false);
+			_hideConnectingCoroutine = null;
 		}
 
 		public async void DisconnectClicked()

@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using DamageNumbersPro;
 using Fusion;
 using Starter.Platformer;
 using UnityEngine;
@@ -17,6 +18,8 @@ public class Enemy : NetworkBehaviour , IDamageable
 {
     public float startingHealth;
     public float attackRange = 2f;
+
+    public DamageNumber damagePopup;
     [Networked] public float health { get; set; }
     [Networked] public EnemyState CurrentState { get; set; }
     
@@ -42,6 +45,12 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     // 공격 속도 제어 타이머
     [Networked] protected TickTimer attackCooldown { get; set; }
+
+    [Header("어그로 설정")]
+    [Tooltip("피격으로 어그로 끌린 후, 평소 감지 범위를 무시하고 추격을 유지하는 시간(초)")]
+    public float aggroPersistDuration = 10f;
+    // 피격 어그로가 유지되는 동안에는 detection 범위 밖이어도 타겟을 떨구지 않음
+    [Networked] protected TickTimer aggroPersistTimer { get; set; }
 
     public bool dontMove = false;
     
@@ -166,16 +175,20 @@ public class Enemy : NetworkBehaviour , IDamageable
         }
 
         float distanceToTarget = Vector3.Distance(transform.position, target.position);
-    
+
         if (distanceToTarget > attackRange * detectionMultiplier)
         {
-            target = null;
-            CurrentState = EnemyState.Idle;
-            if (dontMove) return;
-            // 안전 검사 추가
-            if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh) 
-                agent.ResetPath();
-            return;
+            // 피격 어그로가 활성화된 동안에는 거리가 멀어도 계속 추격
+            if (aggroPersistTimer.ExpiredOrNotRunning(Runner))
+            {
+                target = null;
+                CurrentState = EnemyState.Idle;
+                if (dontMove) return;
+                // 안전 검사 추가
+                if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                    agent.ResetPath();
+                return;
+            }
         }
 
         if (distanceToTarget <= attackRange)
@@ -320,7 +333,7 @@ public class Enemy : NetworkBehaviour , IDamageable
             if (c.transform.parent == transform) continue;
             if (c.transform.parent.TryGetComponent<IDamageable>(out var damageable))
             {
-                damageable.TakeHit(enemyData.damage, new RaycastHit());
+                damageable.TakeHit(enemyData.damage, new RaycastHit(), this.gameObject);
             }
         }
         ApplyDamage(health); 
@@ -342,7 +355,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         }
     }
 
-    public virtual void TakeHit(float damage, RaycastHit hit)
+    public virtual void TakeHit(float damage, RaycastHit hit, GameObject attacker = null)
     {
         // 적이 이미 Despawn되었으면 데미지 적용 무시
         if (Object == null || !Object.IsValid)
@@ -350,31 +363,123 @@ public class Enemy : NetworkBehaviour , IDamageable
             return;
         }
         rb.linearVelocity = Vector3.zero; // 피격 시 순간적으로 이동 멈춤 (넉백 효과 제거)
+
+        // attacker의 NetworkObject를 RPC로 전달하기 위해 추출
+        NetworkObject attackerNetObj = null;
+        if (attacker != null)
+        {
+            if (!attacker.TryGetComponent(out attackerNetObj))
+                attackerNetObj = attacker.GetComponentInParent<NetworkObject>();
+        }
+
         if (Object.HasStateAuthority)
         {
-            ApplyDamage(damage);
+            ApplyDamage(damage, attackerNetObj);
         }
         else
         {
-            Rpc_ApplyDamage(damage);
+            Rpc_ApplyDamage(damage, attackerNetObj);
         }
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    public void Rpc_ApplyDamage(float damage)
+    public void Rpc_ApplyDamage(float damage, NetworkObject attackerObj = default)
     {
-        ApplyDamage(damage);
+        ApplyDamage(damage, attackerObj);
     }
 
-    protected virtual void ApplyDamage(float damage)
+    protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = default)
     {
         Debug.Log(damage);
+        Rpc_ShowDamagePopup(damage);
         health -= damage;
         if (health <= 0 && !isDead)
         {
             CurrentState = EnemyState.Dead;
             Die();
+            return;
         }
+
+        // 피격 시 어그로 끌기 - 공격자 우선, 없으면 가장 가까운 생존 플레이어로 폴백
+        if (CurrentState != EnemyState.Dead)
+        {
+            AggroOnHit(attackerObj != null ? attackerObj.gameObject : null);
+        }
+    }
+
+    /// <summary>
+    /// 피격 시 호출. 공격자가 플레이어면 그를 타겟으로 잡고, 아니면 가장 가까운 생존 플레이어로 전환.
+    /// </summary>
+    protected virtual void AggroOnHit(GameObject attacker = null)
+    {
+        // 1순위: 실제로 때린 플레이어
+        if (attacker != null)
+        {
+            Player attackerPlayer = attacker.GetComponent<Player>();
+            if (attackerPlayer == null)
+                attackerPlayer = attacker.GetComponentInParent<Player>();
+
+            if (attackerPlayer != null && !attackerPlayer.dead)
+            {
+                target = attackerPlayer.transform;
+                StartAggroPersist();
+                if (CurrentState == EnemyState.Idle)
+                    CurrentState = EnemyState.Chase;
+                return;
+            }
+        }
+
+        // 2순위: 기존 타겟이 살아있으면 유지
+        if (target != null)
+        {
+            Player currentTargetPlayer = target.GetComponent<Player>();
+            if (currentTargetPlayer != null && !currentTargetPlayer.dead)
+            {
+                StartAggroPersist();
+                if (CurrentState == EnemyState.Idle)
+                    CurrentState = EnemyState.Chase;
+                return;
+            }
+        }
+
+        // 3순위: 가장 가까운 생존 플레이어 (공격자가 적이거나 미상인 경우)
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        float minDistance = float.MaxValue;
+        Transform closestPlayer = null;
+
+        foreach (GameObject p in players)
+        {
+            Player playerComp = p.GetComponent<Player>();
+            if (playerComp == null || playerComp.dead) continue;
+
+            float distance = Vector3.Distance(transform.position, p.transform.position);
+            if (distance < minDistance)
+            {
+                minDistance = distance;
+                closestPlayer = p.transform;
+            }
+        }
+
+        if (closestPlayer != null)
+        {
+            target = closestPlayer;
+            StartAggroPersist();
+            if (CurrentState == EnemyState.Idle)
+                CurrentState = EnemyState.Chase;
+        }
+    }
+
+    private void StartAggroPersist()
+    {
+        if (Runner != null && aggroPersistDuration > 0f)
+            aggroPersistTimer = TickTimer.CreateFromSeconds(Runner, aggroPersistDuration);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_ShowDamagePopup(float damage)
+    {
+        if (damagePopup == null) return;
+        damagePopup.Spawn(transform.position + Vector3.up, damage);
     }
 
     public virtual void Die()

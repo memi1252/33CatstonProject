@@ -100,6 +100,7 @@ public class LobbyReadyManager : NetworkBehaviour
 
         if (sceneRef.IsValid)
         {
+            UIManager.Instance.statsUI.HpUI.SetActive(true);
             Runner.LoadScene(sceneRef, LoadSceneMode.Single);
         }
         else

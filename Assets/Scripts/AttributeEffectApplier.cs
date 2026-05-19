@@ -71,7 +71,7 @@ public class AttributeEffectApplier : NetworkBehaviour
         switch (attribute)
         {
             case TargetAttribute.Fire:
-                StartCoroutine(FireDoTDamage(target));
+                StartCoroutine(FireDoTDamage(target, owner));
                 break;
             case TargetAttribute.Ice:
                 if (target is MonoBehaviour mb)
@@ -91,7 +91,7 @@ public class AttributeEffectApplier : NetworkBehaviour
                 ApplyWaterKnockbackLogic(target, position);
                 break;
             case TargetAttribute.Normal:
-                target.TakeHit(baseDamage * normalDamageBonusMultiplier, new RaycastHit());
+                target.TakeHit(baseDamage * normalDamageBonusMultiplier, new RaycastHit(), owner);
                 break;
         }
     }
@@ -133,12 +133,12 @@ public class AttributeEffectApplier : NetworkBehaviour
         Destroy(go, vfxLifetime);
     }
 
-    private IEnumerator FireDoTDamage(IDamageable target)
+    private IEnumerator FireDoTDamage(IDamageable target, GameObject owner)
     {
         float elapsed = 0f;
         while (elapsed < fireDoTDuration && target != null)
         {
-            target.TakeHit(fireDoTDamagePerTick, new RaycastHit());
+            target.TakeHit(fireDoTDamagePerTick, new RaycastHit(), owner);
             elapsed += fireDoTInterval;
             yield return new WaitForSeconds(fireDoTInterval);
         }
@@ -174,7 +174,7 @@ public class AttributeEffectApplier : NetworkBehaviour
 
             if (col.TryGetComponent<IDamageable>(out var damageable))
             {
-                damageable.TakeHit(baseDamage * electricChainDamageMultiplier, new RaycastHit());
+                damageable.TakeHit(baseDamage * electricChainDamageMultiplier, new RaycastHit(), owner);
                 count++;
             }
         }

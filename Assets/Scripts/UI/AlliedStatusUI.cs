@@ -72,8 +72,8 @@ public class AlliedStatusUI : MonoBehaviour
         {
             if (_alliedUIItems.TryGetValue(player, out var uiItem))
             {
-                Destroy(uiItem.gameObject);
                 _alliedUIItems.Remove(player);
+                Destroy(uiItem.gameObject);
             }
         }
 
@@ -82,6 +82,10 @@ public class AlliedStatusUI : MonoBehaviour
         {
             // 로컬 플레이어 제외 (원하지 않으면)
             if (!_showLocalPlayer && player == _localPlayer)
+                continue;
+
+            // Fusion 네트워크 오브젝트가 Spawn 되기 전엔 [Networked] 프로퍼티 접근 시 예외가 발생
+            if (player.Object == null || !player.Object.IsValid)
                 continue;
 
             // 새로운 플레이어라면 UI 아이템 생성

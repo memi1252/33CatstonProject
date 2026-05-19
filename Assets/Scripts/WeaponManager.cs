@@ -7,8 +7,7 @@ using TMPro;
 public class WeaponManager : NetworkBehaviour
 {
     public static WeaponManager Instance { get; private set; }
-
-    public GameObject weaponUI;
+    
     public GameObject weaponSelectPrefab;
     public Transform weaponSelectPanel;
     
@@ -47,7 +46,7 @@ public class WeaponManager : NetworkBehaviour
 
     void Start()
     {
-        weaponUI.SetActive(false);
+        UIManager.Instance.weaponUI.SetActive(false);
     }
 
     public override void FixedUpdateNetwork()
@@ -102,9 +101,9 @@ public class WeaponManager : NetworkBehaviour
     private void CloseWeaponUI()
     {
         _localUIActive = false;
-        if (weaponUI != null)
+        if (UIManager.Instance.weaponUI != null)
         {
-            weaponUI.SetActive(false);
+            UIManager.Instance.weaponUI.SetActive(false);
         }
         
         // 플레이어 입력 다시 활성화
@@ -129,9 +128,9 @@ public class WeaponManager : NetworkBehaviour
         _localUIActive = true;
         _localWeaponSelectTimer = _weaponSelectVoteTimeMax;
         
-        if (weaponUI != null)
+        if (UIManager.Instance.weaponUI != null)
         {
-            weaponUI.SetActive(true);
+            UIManager.Instance.weaponUI.SetActive(true);
         }
         
         // 플레이어 입력 비활성화

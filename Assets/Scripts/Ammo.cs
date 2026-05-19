@@ -91,7 +91,13 @@ public class Ammo : NetworkBehaviour
         IDamageable damageableObject = hit.collider.GetComponent<IDamageable>();
         if (damageableObject != null)
         {
-            damageableObject.TakeHit(DamageValue, hit); // 데미지 입히기
+            // 발사한 플레이어(InputAuthority의 PlayerObject)를 공격자로 전달 → 어그로 판정
+            GameObject attacker = null;
+            if (Runner != null && Runner.TryGetPlayerObject(Object.InputAuthority, out NetworkObject shooterObj) && shooterObj != null)
+            {
+                attacker = shooterObj.gameObject;
+            }
+            damageableObject.TakeHit(DamageValue, hit, attacker); // 데미지 입히기
         }
         Runner.Despawn(Object);
     }

@@ -98,7 +98,7 @@ namespace Projectiles.NetworkObjectExample
                     if (damageable != null)
                     {
                         float totalDamage = damage + WeaponSO.weaponDamage;
-                        damageable.TakeHit(totalDamage, hit);
+                        damageable.TakeHit(totalDamage, hit, GetAttackerGameObject());
 
                         // 속성 효과 적용
                         ApplyWeaponAttributeEffect(damageable, hit.point, totalDamage);
@@ -175,7 +175,7 @@ namespace Projectiles.NetworkObjectExample
                     if (damageableObject != null)
                     {
                         float totalDamage = damage + WeaponSO.weaponDamage;
-                        damageableObject.TakeHit(totalDamage, new RaycastHit());
+                        damageableObject.TakeHit(totalDamage, new RaycastHit(), GetAttackerGameObject());
 
                         // 속성 효과 적용 (첫 틱에만 적용)
                         if (timer == 0f)
@@ -207,7 +207,7 @@ namespace Projectiles.NetworkObjectExample
                 if (damageableObject != null)
                 {
                     float totalDamage = damage + WeaponSO.weaponDamage;
-                    damageableObject.TakeHit(totalDamage, new RaycastHit());
+                    damageableObject.TakeHit(totalDamage, new RaycastHit(), GetAttackerGameObject());
 
                     // 속성 효과 적용
                     ApplyWeaponAttributeEffect(damageableObject, targetPos, totalDamage);
@@ -508,6 +508,16 @@ namespace Projectiles.NetworkObjectExample
                 if (ParticleEffect != null)
                     ParticleEffect.Stop();
             }
+        }
+
+        /// <summary>
+        /// 이 무기로 공격한 주체(플레이어 또는 적)의 GameObject를 반환. 어그로 등 식별용.
+        /// </summary>
+        private GameObject GetAttackerGameObject()
+        {
+            if (ownerPlayer != null) return ownerPlayer.gameObject;
+            if (ownerEnemy != null) return ownerEnemy.gameObject;
+            return null;
         }
 
         /// <summary>

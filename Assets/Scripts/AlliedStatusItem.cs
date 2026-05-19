@@ -50,6 +50,10 @@ public class AlliedStatusItem : MonoBehaviour
         if (_player == null || player != _player)
             return;
 
+        // Spawned 전이거나 Despawn 직후의 NetworkBehaviour는 [Networked] 접근이 예외를 던짐
+        if (_player.Object == null || !_player.Object.IsValid)
+            return;
+
         // 닉네임도 매 프레임 갱신 (스폰 직후 빈 값 → 동기화 후 채워지는 케이스 대응)
         if (_nicknameText != null && !string.IsNullOrEmpty(_player.Nickname.ToString()))
         {

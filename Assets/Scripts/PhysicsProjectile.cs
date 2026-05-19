@@ -217,12 +217,12 @@ namespace Projectiles.NetworkObjectExample
              Debug.Log($"[PhysicsProjectile] Direct hit IDamageable on '{colliderName}': {(damageableObject != null ? damageableObject.GetType().Name : "null")}");
              if (damageableObject != null)
              {
-                damageableObject.TakeHit(damageValue, new RaycastHit());
+                GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
+                                      (ownerEnemy != null ? ownerEnemy.gameObject : null);
+                damageableObject.TakeHit(damageValue, new RaycastHit(), attacker);
 
                 if (AttributeEffectApplier.Instance != null)
                 {
-                   GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
-                                         (ownerEnemy != null ? ownerEnemy.gameObject : null);
 
                    Vector3 hitPoint = hasContact ? contactPoint.point : transform.position;
                    AttributeEffectApplier.Instance.ApplyAttributeEffect(
@@ -273,6 +273,8 @@ namespace Projectiles.NetworkObjectExample
                         Collider[] hitColliders = Physics.OverlapSphere(transform.position, explosionRadius, ~0, QueryTriggerInteraction.Collide);
                         Debug.Log($"[PhysicsProjectile] Explosion at {transform.position}, radius={explosionRadius}, foundColliders={hitColliders.Length}, dmg={explosionDamage}");
                         var damaged = new System.Collections.Generic.HashSet<IDamageable>();
+                        GameObject explosionAttacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
+                                                       (ownerEnemy != null ? ownerEnemy.gameObject : null);
                         foreach (var hitCollider in hitColliders)
                         {
                             IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
@@ -284,7 +286,7 @@ namespace Projectiles.NetworkObjectExample
                             if (ownerEnemy != null && hitCollider.transform.IsChildOf(ownerEnemy.transform)) continue;
 
                             Debug.Log($"[PhysicsProjectile]   - hit {hitCollider.name} -> {damageableObject.GetType().Name} dmg={explosionDamage}");
-                            damageableObject.TakeHit(explosionDamage, new RaycastHit());
+                            damageableObject.TakeHit(explosionDamage, new RaycastHit(), explosionAttacker);
                         }
                     }
                 }
@@ -360,12 +362,12 @@ namespace Projectiles.NetworkObjectExample
           IDamageable dmg = col.GetComponentInParent<IDamageable>();
           if (dmg == null) return false;
 
-          dmg.TakeHit(damageValue, default);
+          GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
+                                (ownerEnemy != null ? ownerEnemy.gameObject : null);
+          dmg.TakeHit(damageValue, default, attacker);
 
           if (AttributeEffectApplier.Instance != null)
           {
-             GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
-                                   (ownerEnemy != null ? ownerEnemy.gameObject : null);
              AttributeEffectApplier.Instance.ApplyAttributeEffect(weaponAttribute, dmg, hitPoint, damageValue, attacker);
           }
 

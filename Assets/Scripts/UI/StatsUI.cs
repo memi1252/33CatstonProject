@@ -12,6 +12,7 @@ public struct Stats
 
 public class StatsUI : MonoBehaviour
 {
+    public GameObject HpUI;
     public Image ringImage;
     public Image weaponTypemage;
     public Image weaponGradeImage;
