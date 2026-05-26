@@ -3262,6 +3262,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::LobbyReadyManager
   MinPlayers: 2
+  SoloTestMode: 0
   GameSceneBuildIndex: -1
   GameSceneName: GameScene
   StartDelay: 1
