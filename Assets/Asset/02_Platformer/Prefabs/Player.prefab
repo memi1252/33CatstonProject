@@ -360,6 +360,8 @@ MonoBehaviour:
   teleportArriveVfx: {fileID: 2378231986537386704}
   teleportDepartSfx: {fileID: 0}
   teleportArriveSfx: {fileID: 0}
+  teleportVfxAnchor: {fileID: 0}
+  teleportVfxOffset: {x: 0, y: 0, z: 0}
   teleportVfxLifetime: 3
 --- !u!114 &8887271899658672753
 MonoBehaviour:
@@ -374,7 +376,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WeaponController
   weaponHold: {fileID: 4146053014953141876}
-  startWeapon: {fileID: 11400000, guid: c7c0270138bb1084598bb23c33dd0098, type: 2}
+  startWeapon: {fileID: 11400000, guid: 2d208e779f1df4e49a3525739c9da0ac, type: 2}
 --- !u!114 &8261807108443789817
 MonoBehaviour:
   m_ObjectHideFlags: 0
