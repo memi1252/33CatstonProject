@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponScriptableObject
   weaponID: W_000
   weaponName: "\uD654\uC5FC \uC9C0\uD321\uC774"
-  weaponIcon: {fileID: 0}
+  weaponIcon: {fileID: 21300000, guid: 3c3bb46f1c55788439f4daf2cf7613c0, type: 3}
   description: "\uC791\uC740 \uBD88\uAF43\uC774\uC9C0\uB9CC, \uD300\uC6D0\uC758 \uC637\uAE43\uC744
     \uD0DC\uC6B0\uAE30\uC5D0\uB294 \uCDA9\uBD84\uD55C \uD654\uB825\uC785\uB2C8\uB2E4."
   weaponPrefab: {fileID: 5968150836135053750, guid: 0fb09913fa9498e4baa5ab202758f000,
