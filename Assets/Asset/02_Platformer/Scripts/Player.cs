@@ -502,54 +502,42 @@ namespace Starter.Platformer
 			Vector3 destPos = portal.DestinationPosition;
 			Quaternion destRot = portal.DestinationRotation;
 
-			// 1) 출발 VFX 위치 세팅 후 트리거 증가 → 전 클라이언트 OnTeleportDepartTick 실행
-			TeleportVfxPosition = transform.position;
+			// 1) 출발 VFX는 Player의 teleportVfxAnchor(+offset) 위치에서 재생
+			TeleportVfxPosition = GetTeleportVfxSpawnPosition();
 			TeleportDepartTick = unchecked(TeleportDepartTick + 1);
 
 			// 2) 캐릭터 비주얼 숨김 (네트워크 동기화)
 			TeleportVisuallyHidden = true;
 
-			// 3) 로컬: 카메라 정지
-			_cameraFollowFrozen = true;
-
-			// 4) 출발 VFX/사운드 보여줄 시간 대기
+			// 3) 출발 VFX/사운드 보여줄 시간 대기 (카메라는 아직 원래 위치)
 			yield return new WaitForSeconds(portal.DepartHoldDuration);
 
-			// 5) 로컬: 페이드아웃
-			if (TeleportManager.Instance != null)
-				yield return TeleportManager.Instance.FadeOut(portal.FadeDuration);
-
-			// 6) 위치 이동 요청 (실제 SetPosition은 FixedUpdateNetwork에서 처리)
+			// 4) 위치 이동 요청 (실제 SetPosition은 FixedUpdateNetwork에서 처리)
+			//    카메라는 frozen 상태가 아니므로 CameraHandle이 따라간 새 위치로 부드럽게 lerp.
 			_pendingTeleportPosition = destPos;
 			_pendingTeleportRotation = destRot;
 			_hasPendingTeleport = true;
 
-			// FixedUpdateNetwork이 한 번 돌아 위치를 적용할 때까지 대기 (최대 30프레임 가드)
 			int guard = 30;
 			while (_hasPendingTeleport && guard-- > 0)
 				yield return null;
 
-			// 7) 카메라 스냅: 다음 LateUpdate가 새 위치로 초기화
-			_cameraInitialized = false;
-			_cameraFollowFrozen = false;
-			yield return null; // LateUpdate가 카메라를 새 위치로 옮길 한 프레임 확보
+			// 5) 카메라가 새 위치로 이동하는 동안 캐릭터는 계속 숨겨둠
+			if (portal.CameraTravelDuration > 0f)
+				yield return new WaitForSeconds(portal.CameraTravelDuration);
 
-			// 8) 로컬: 페이드인
-			if (TeleportManager.Instance != null)
-				yield return TeleportManager.Instance.FadeIn(portal.FadeDuration);
-
-			// 9) 캐릭터 비주얼 복원
+			// 6) 캐릭터 비주얼 복원
 			TeleportVisuallyHidden = false;
 
-			// 10) 도착 VFX 트리거
-			TeleportVfxPosition = transform.position;
+			// 7) 도착 VFX도 동일한 anchor 기준
+			TeleportVfxPosition = GetTeleportVfxSpawnPosition();
 			TeleportArriveTick = unchecked(TeleportArriveTick + 1);
 
-			// 11) 도착 VFX/사운드 잠깐 보여줄 시간
+			// 8) 도착 VFX/사운드 잠깐 보여줄 시간
 			if (portal.ArriveHoldDuration > 0f)
 				yield return new WaitForSeconds(portal.ArriveHoldDuration);
 
-			// 12) 매니저에 종료 통지
+			// 9) 매니저에 종료 통지
 			if (TeleportManager.Instance != null)
 				TeleportManager.Instance.NotifyTeleportFinished();
 
@@ -586,6 +574,12 @@ namespace Starter.Platformer
 		private void OnTeleportArriveTick()
 		{
 			PlayTeleportVfx(teleportArriveVfx, teleportArriveSfx, TeleportVfxPosition);
+		}
+
+		private Vector3 GetTeleportVfxSpawnPosition()
+		{
+			Vector3 basePos = teleportVfxAnchor != null ? teleportVfxAnchor.position : transform.position;
+			return basePos + teleportVfxOffset;
 		}
 
 		private void PlayTeleportVfx(GameObject vfxPrefab, AudioClip sfx, Vector3 pos)

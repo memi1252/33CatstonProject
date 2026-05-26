@@ -2015,7 +2015,9 @@ MonoBehaviour:
   portalName: "\uC774\uACF3"
   interactKey: 102
   worldPromptObject: {fileID: 2089576070}
+  departVfxAnchor: {fileID: 0}
   fadeDuration: 0.4
+  cameraTravelDuration: 0.6
   departHoldDuration: 0.6
   arriveHoldDuration: 0.2
 --- !u!1 &1443205916 stripped

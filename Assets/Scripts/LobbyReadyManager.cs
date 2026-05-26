@@ -12,6 +12,8 @@ public class LobbyReadyManager : NetworkBehaviour
     [Header("Game Start")]
     [Tooltip("최소 시작 인원")]
     public int MinPlayers = 2;
+    [Tooltip("혼자 테스트할 때 사용. true면 1명이어도 게임 시작 가능")]
+    public bool SoloTestMode = false;
     [Tooltip("게임 씬 빌드 인덱스. -1이면 GameSceneName 사용")]
     public int GameSceneBuildIndex = -1;
     [Tooltip("GameSceneBuildIndex가 -1일 때 사용할 씬 이름")]
@@ -69,15 +71,17 @@ public class LobbyReadyManager : NetworkBehaviour
         }
         foreach (var p in toRemove) Ready.Remove(p);
 
+        int minRequired = SoloTestMode ? 1 : MinPlayers;
+
         // 인원이 줄어들면 시작 취소
-        if (GameStarting && CountActivePlayers() < MinPlayers)
+        if (GameStarting && CountActivePlayers() < minRequired)
         {
             GameStarting = false;
             StartTimer = TickTimer.None;
         }
 
         // 모두 준비 + 최소 인원 만족 → 시작 카운트다운
-        if (!GameStarting && AllReady() && CountActivePlayers() >= MinPlayers)
+        if (!GameStarting && AllReady() && CountActivePlayers() >= minRequired)
         {
             GameStarting = true;
             StartTimer = TickTimer.CreateFromSeconds(Runner, StartDelay);
@@ -134,14 +138,16 @@ public class LobbyReadyManager : NetworkBehaviour
 
     public bool CanReady()
     {
-        return CountActivePlayers() >= MinPlayers;
+        int minRequired = SoloTestMode ? 1 : MinPlayers;
+        return CountActivePlayers() >= minRequired;
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_SetReady(PlayerRef player, NetworkBool ready)
     {
+        int minRequired = SoloTestMode ? 1 : MinPlayers;
         // 인원 부족이면 준비 자체를 막음
-        if (ready && CountActivePlayers() < MinPlayers) return;
+        if (ready && CountActivePlayers() < minRequired) return;
         Ready.Set(player, ready);
     }
 }

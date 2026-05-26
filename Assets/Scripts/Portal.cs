@@ -21,11 +21,13 @@ public class Portal : MonoBehaviour
     [SerializeField] private GameObject worldPromptObject;
 
     [Header("Timing")]
-    [Tooltip("페이드 인/아웃 길이(초)")]
-    [SerializeField] private float fadeDuration = 0.4f;
-    [Tooltip("캐릭터 사라진 뒤 페이드아웃까지 대기 시간(초). 출발 VFX 보여주는 시간.")]
+    [Tooltip("페이드 인/아웃 길이(초). 0이면 페이드를 사용하지 않음.")]
+    [SerializeField] private float fadeDuration = 0f;
+    [Tooltip("캐릭터가 사라진 뒤 카메라가 도착지로 이동할 시간(초). 이 시간 동안 캐릭터는 보이지 않음.")]
+    [SerializeField] private float cameraTravelDuration = 0.6f;
+    [Tooltip("캐릭터 사라진 뒤 카메라 이동 전 출발 VFX 보여주는 시간(초)")]
     [SerializeField] private float departHoldDuration = 0.6f;
-    [Tooltip("도착지 페이드인 후 도착 VFX 재생까지 대기 시간(초)")]
+    [Tooltip("도착 후 도착 VFX 재생까지 대기 시간(초)")]
     [SerializeField] private float arriveHoldDuration = 0.2f;
 
     private Player _localPlayerInRange;
@@ -77,4 +79,5 @@ public class Portal : MonoBehaviour
     public float FadeDuration => Mathf.Max(0f, fadeDuration);
     public float DepartHoldDuration => Mathf.Max(0f, departHoldDuration);
     public float ArriveHoldDuration => Mathf.Max(0f, arriveHoldDuration);
+    public float CameraTravelDuration => Mathf.Max(0f, cameraTravelDuration);
 }

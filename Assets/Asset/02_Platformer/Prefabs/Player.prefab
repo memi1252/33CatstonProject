@@ -360,7 +360,7 @@ MonoBehaviour:
   teleportArriveVfx: {fileID: 2378231986537386704}
   teleportDepartSfx: {fileID: 0}
   teleportArriveSfx: {fileID: 0}
-  teleportVfxAnchor: {fileID: 0}
+  teleportVfxAnchor: {fileID: 3883338834670720258}
   teleportVfxOffset: {x: 0, y: 0, z: 0}
   teleportVfxLifetime: 3
 --- !u!114 &8887271899658672753
@@ -6989,7 +6989,7 @@ PrefabInstance:
     - target: {fileID: 4809876673112620449, guid: efcdd24ca0eaec34da8adcbd99360510,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4809876673112620454, guid: efcdd24ca0eaec34da8adcbd99360510,
         type: 3}
@@ -6999,7 +6999,7 @@ PrefabInstance:
     - target: {fileID: 4809876673112620454, guid: efcdd24ca0eaec34da8adcbd99360510,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0.173
+      value: 0.38
       objectReference: {fileID: 0}
     - target: {fileID: 4809876673112620454, guid: efcdd24ca0eaec34da8adcbd99360510,
         type: 3}

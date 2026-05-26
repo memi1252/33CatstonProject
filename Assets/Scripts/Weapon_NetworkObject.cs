@@ -162,8 +162,11 @@ namespace Projectiles.NetworkObjectExample
             // attackScope의 크기가 tileSize이므로, 반지름은 절반인 tileSize * 0.5f
             float radius = WeaponSO.tileSize * 0.5f;
             float lifeTime = WeaponSO.projectileSpeed * .08f;
-            float tickRate = 1.2f; // 데미지를 입히는 간격 (예: 1.2초마다 데미지)
+            float tickRate = 0.1f; // 도중에 들어온 적도 잡기 위해 짧은 주기로 검사
             float timer = 0f;
+
+            // 이펙트 1회 동안 이미 데미지를 입은 대상은 다시 맞지 않도록 추적
+            var alreadyHit = new System.Collections.Generic.HashSet<IDamageable>();
 
             while (timer < lifeTime)
             {
@@ -172,17 +175,12 @@ namespace Projectiles.NetworkObjectExample
                 foreach (var hitCollider in hitColliders)
                 {
                     IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
-                    if (damageableObject != null)
-                    {
-                        float totalDamage = damage + WeaponSO.weaponDamage;
-                        damageableObject.TakeHit(totalDamage, new RaycastHit(), GetAttackerGameObject());
+                    if (damageableObject == null) continue;
+                    if (!alreadyHit.Add(damageableObject)) continue;
 
-                        // 속성 효과 적용 (첫 틱에만 적용)
-                        if (timer == 0f)
-                        {
-                            ApplyWeaponAttributeEffect(damageableObject, targetPos, totalDamage);
-                        }
-                    }
+                    float totalDamage = damage + WeaponSO.weaponDamage;
+                    damageableObject.TakeHit(totalDamage, new RaycastHit(), GetAttackerGameObject());
+                    ApplyWeaponAttributeEffect(damageableObject, targetPos, totalDamage);
                 }
 
                 // 다음 데미지 틱까지 대기
