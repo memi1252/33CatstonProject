@@ -170,4 +170,6 @@ QualitySettings:
     excludedTargetPlatforms: []
   m_TextureMipmapLimitGroupNames: []
   m_PerPlatformDefaultQuality:
+    Android: 0
+    Nintendo Switch 2: 2
     Standalone: 0
