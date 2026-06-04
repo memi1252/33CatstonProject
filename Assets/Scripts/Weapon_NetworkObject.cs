@@ -32,9 +32,12 @@ namespace Projectiles.NetworkObjectExample
 
         private float damage;
         private float criticalDamage;
+        
         public LayerMask raycastLayerMask;
 
         private bool _isBoundToOwner;
+
+        public float plusDelay;
 
         // WeaponBase INTERFACE
 
@@ -323,7 +326,7 @@ namespace Projectiles.NetworkObjectExample
             {
                 vfxOriginalRot = VisualEffect.transform.localRotation;
                 VisualEffect.transform.parent = null;
-                VisualEffect.transform.position = mouseWorldPos;
+                VisualEffect.transform.position = mouseWorldPos + new Vector3(0, .2f, 0);
             }
 
 
@@ -369,7 +372,7 @@ namespace Projectiles.NetworkObjectExample
                 ParticleEffect.Play();
             }
 
-            yield return new WaitForSeconds(lifeTime);
+            yield return new WaitForSeconds(lifeTime  +plusDelay);
 
             if (VisualEffect != null)
             {
@@ -416,7 +419,7 @@ namespace Projectiles.NetworkObjectExample
             }
 
             // 투사체가 땅에 떨어질 때까지 걸리는 대략적인 시간 대기 (적절히 조정 가능)
-            yield return new WaitForSeconds(1.5f);
+            yield return new WaitForSeconds(1.5f  +plusDelay);
 
             if (attackScope != null)
             {

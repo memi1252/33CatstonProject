@@ -12,7 +12,7 @@ GameObject:
   - component: {fileID: 7456215798306874085}
   - component: {fileID: 7419789430961897182}
   m_Layer: 0
-  m_Name: PUCK_Weapon_Final 1
+  m_Name: WaterWand
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

@@ -17,9 +17,9 @@ MonoBehaviour:
   weaponIcon: {fileID: 21300000, guid: 3c3bb46f1c55788439f4daf2cf7613c0, type: 3}
   description: "\uC791\uC740 \uBD88\uAF43\uC774\uC9C0\uB9CC, \uD300\uC6D0\uC758 \uC637\uAE43\uC744
     \uD0DC\uC6B0\uAE30\uC5D0\uB294 \uCDA9\uBD84\uD55C \uD654\uB825\uC785\uB2C8\uB2E4."
-  weaponPrefab: {fileID: 5968150836135053750, guid: 0fb09913fa9498e4baa5ab202758f000,
+  weaponPrefab: {fileID: 5225327123579800677, guid: b310a5c9ff57a6343a1781351c579e96,
     type: 3}
-  projectilePrefab: {fileID: 4705942470810935141, guid: f0854f29768a1574f95d2a690c7b3e46,
+  projectilePrefab: {fileID: 6268401109606552086, guid: f0854f29768a1574f95d2a690c7b3e46,
     type: 3}
   weaponType: 0
   targetAttribute: 1
