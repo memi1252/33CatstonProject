@@ -200,6 +200,7 @@ MonoBehaviour:
   raycastLayerMask:
     serializedVersion: 2
     m_Bits: 320
+  plusDelay: 0
 --- !u!114 &5344177774838604151
 MonoBehaviour:
   m_ObjectHideFlags: 0
