@@ -99,7 +99,8 @@ MonoBehaviour:
   VisualEffect: {fileID: 0}
   ownerPlayer: {fileID: 0}
   ownerEnemy: {fileID: 0}
-  _projectilePrefab: {fileID: 0}
+  _projectilePrefab: {fileID: 751868103395927731, guid: aab472da5f65189479edd708c4c6c3d5,
+    type: 3}
   _useBuffer: 0
   _projectileBuffer: {fileID: 0}
   WeaponSO: {fileID: 0}

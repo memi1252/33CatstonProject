@@ -23,7 +23,8 @@ MonoBehaviour:
     \uBC84\uD2F0\uC9C0 \uBABB\uD55C \uB098\uC57D\uD568\uC744 \uD0D3\uD558\uC138\uC694!"
   weaponPrefab: {fileID: 2031159978611813974, guid: 0c99d4322d214104ab8f14e23e81fd38,
     type: 3}
-  projectilePrefab: {fileID: 0}
+  projectilePrefab: {fileID: 1388943883317362086, guid: 144fb7e6bb664c04a84e5d92ab8a5240,
+    type: 3}
   weaponType: 2
   targetAttribute: 2
   grade: 2

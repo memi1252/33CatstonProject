@@ -200,10 +200,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectExample.PhysicsProjectile
   _initialImpulse: 30
-  _lifeTime: 4
+  _lifeTime: 0.5
   _visualsRoot: {fileID: 0}
   _hitEffect: {fileID: 0}
-  _lifeTimeAfterHit: 2
+  _lifeTimeAfterHit: 0
   ownerPlayer: {fileID: 0}
   ownerEnemy: {fileID: 0}
 --- !u!1001 &2496448594132180705

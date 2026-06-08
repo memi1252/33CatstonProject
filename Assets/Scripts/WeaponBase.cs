@@ -32,7 +32,7 @@ namespace Projectiles
 		{
 			Animator = GetComponent<Animator>();
 			TryGetComponent(out LineRenderer);
-			TryGetComponentInChildren(gameObject, out ParticleEffect);
+			//TryGetComponentInChildren(gameObject, out ParticleEffect);
 			if (attackScope != null)
 			{
 				attackScope.transform.localPosition = Vector3.zero;
