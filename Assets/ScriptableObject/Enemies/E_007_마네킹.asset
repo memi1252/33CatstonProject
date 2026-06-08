@@ -10,21 +10,21 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4adcd431372e4a678b0f5a8f6cd5aae1, type: 3}
-  m_Name: "E_001_\uC2AC\uB77C\uC784"
+  m_Name: "E_007_\uB9C8\uB124\uD0B9"
   m_EditorClassIdentifier: Assembly-CSharp::EnemyScriptableObject
-  enemyID: E_001
-  enemyName: "\uC2AC\uB77C\uC784"
-  appeared: 1
+  enemyID: E_007
+  enemyName: "\uB9C8\uB124\uD0B9"
+  appeared: 2
   enemyIcon: {fileID: 0}
   enemyPrefab: {fileID: 0}
   description: 
   enemyType: 0
   projectileType: 0
-  range: 2
+  range: 5
   size: 1
-  hp: 75
-  damage: 5
-  attackSpeed: 1
-  speed: 15
+  hp: 35
+  damage: 10
+  attackSpeed: 3
+  speed: 3
   allDMG: 100
   dmgReceived: 100

@@ -55,8 +55,17 @@ public class ManholeBossEnemy : Enemy
     public float sprayRadius = 5f;
     public float sprayDamage = 15f;
     public GameObject sprayVfxPrefab;
+    [Tooltip("스프레이 VFX 유지 시간(초). 노출이 이 시간보다 적게 남으면 분사를 생략해 맨홀 들어간 뒤 효과가 남지 않게 한다.")]
+    public float sprayVfxLifetime = 2f;
+    [Tooltip("VFX 분사 시작 위치(보스 로컬 기준 오프셋, 예: 입 높이).")]
+    public Vector3 sprayVfxOffset = new Vector3(0f, 1f, 0f);
+    [Tooltip("VFX 분사 축 보정(도). 프리팹이 +Z가 아닌 다른 축으로 분사하면 조정.")]
+    public Vector3 sprayVfxEulerOffset = Vector3.zero;
 
     [Header("잡몹 소환 (Hidden 동안)")]
+    [Tooltip("소환할 잡몹 종류들. 이 중 하나를 랜덤으로 스폰한다.")]
+    public List<Enemy> minionPrefabs = new List<Enemy>();
+    [Tooltip("(구버전 호환) minionPrefabs 가 비어있으면 이 단일 프리팹을 사용한다.")]
     public Enemy minionPrefab;
     public int maxAliveMinions = 4;
     public float minionSpawnInterval = 1.5f;
@@ -126,7 +135,7 @@ public class ManholeBossEnemy : Enemy
     private void UpdateHidden()
     {
         // 잡몹 소환
-        if (minionPrefab != null && minionSpawnTimer.ExpiredOrNotRunning(Runner))
+        if (HasMinionPrefab() && minionSpawnTimer.ExpiredOrNotRunning(Runner))
         {
             TrySpawnMinion();
             minionSpawnTimer = TickTimer.CreateFromSeconds(Runner, minionSpawnInterval);
@@ -142,12 +151,48 @@ public class ManholeBossEnemy : Enemy
         if (_aliveMinions.Count >= maxAliveMinions) return;
         if (manholeCovers.Count == 0) return;
 
+        Enemy prefab = PickRandomMinionPrefab();
+        if (prefab == null) return;
+
         // 살아있는 플레이어가 있는 맨홀 우선, 없으면 랜덤
         ManholeCover cover = PickManholeNearAnyPlayer() ?? manholeCovers[Random.Range(0, manholeCovers.Count)];
         if (cover == null) return;
 
-        var minion = Runner.Spawn(minionPrefab, cover.transform.position + minionSpawnOffset, Quaternion.identity);
+        var minion = Runner.Spawn(prefab, cover.transform.position + minionSpawnOffset, Quaternion.identity);
         if (minion != null) _aliveMinions.Add(minion);
+    }
+
+    // 소환할 잡몹 종류가 하나라도 있는지
+    private bool HasMinionPrefab()
+    {
+        if (minionPrefabs != null)
+        {
+            foreach (var p in minionPrefabs)
+                if (p != null) return true;
+        }
+        return minionPrefab != null;
+    }
+
+    // 잡몹 종류 중 하나를 랜덤으로 선택 (리스트가 비어있으면 단일 프리팹 사용)
+    private Enemy PickRandomMinionPrefab()
+    {
+        if (minionPrefabs != null && minionPrefabs.Count > 0)
+        {
+            // null 항목을 제외하고 랜덤 선택
+            int valid = 0;
+            foreach (var p in minionPrefabs) if (p != null) valid++;
+            if (valid > 0)
+            {
+                int pick = Random.Range(0, valid);
+                foreach (var p in minionPrefabs)
+                {
+                    if (p == null) continue;
+                    if (pick == 0) return p;
+                    pick--;
+                }
+            }
+        }
+        return minionPrefab;
     }
 
     // ===== Phase: Emerging =====
@@ -194,6 +239,9 @@ public class ManholeBossEnemy : Enemy
     // ===== Phase: Vulnerable =====
     private void UpdateVulnerable()
     {
+        // 가장 가까운 플레이어를 바라보도록 회전 (브레쓰가 플레이어 쪽으로 향하게)
+        FaceClosestPlayer();
+
         // 증기 다단 발사 (모든 살아있는 플레이어에게)
         if (steamBurstTimer.ExpiredOrNotRunning(Runner))
         {
@@ -252,9 +300,14 @@ public class ManholeBossEnemy : Enemy
 
     private void PerformSteamSpray()
     {
-        Vector3 center = transform.position;
-        Rpc_PlaySprayVfx(center);
+        // 노출이 곧 끝나면 분사 생략 → VFX가 맨홀 들어간 뒤까지 남는 것을 방지
+        float? remain = phaseTimer.RemainingTime(Runner);
+        if (remain.HasValue && remain.Value < sprayVfxLifetime)
+            return;
 
+        Rpc_PlaySprayVfx();
+
+        Vector3 center = transform.position;
         var damaged = new HashSet<IDamageable>();
         Collider[] cols = Physics.OverlapSphere(center, sprayRadius);
         foreach (var c in cols)
@@ -267,11 +320,14 @@ public class ManholeBossEnemy : Enemy
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void Rpc_PlaySprayVfx(Vector3 pos)
+    private void Rpc_PlaySprayVfx()
     {
         if (sprayVfxPrefab == null) return;
-        var go = Instantiate(sprayVfxPrefab, pos, Quaternion.identity);
-        Destroy(go, 3f);
+        // 보스에 자식으로 부착 → 보스가 매 틱 플레이어를 바라보므로 브레스도 따라 회전한다.
+        var go = Instantiate(sprayVfxPrefab, transform);
+        go.transform.localPosition = sprayVfxOffset;
+        go.transform.localRotation = Quaternion.Euler(sprayVfxEulerOffset);
+        Destroy(go, Mathf.Max(0.5f, sprayVfxLifetime));
     }
 
     // ===== Phase: Submerging =====
@@ -396,6 +452,27 @@ public class ManholeBossEnemy : Enemy
             if (d < min) { min = d; best = cover; }
         }
         return best;
+    }
+
+    [Header("회전")]
+    [Tooltip("플레이어를 바라보는 회전 속도(도/초). 0 이하면 즉시 바라봄.")]
+    public float faceTurnSpeed = 360f;
+
+    private void FaceClosestPlayer()
+    {
+        Transform closest = FindClosestLivingPlayer();
+        if (closest == null) return;
+
+        Vector3 dir = closest.position - transform.position;
+        dir.y = 0f; // 수평 회전만 (브레쓰가 좌우로 향하게)
+        if (dir.sqrMagnitude < 0.0001f) return;
+
+        Quaternion want = Quaternion.LookRotation(dir.normalized, Vector3.up);
+        transform.rotation = faceTurnSpeed > 0f
+            ? Quaternion.RotateTowards(transform.rotation, want, faceTurnSpeed * Runner.DeltaTime)
+            : want;
+
+        NetworkRotation = transform.rotation;
     }
 
     private Transform FindClosestLivingPlayer()
