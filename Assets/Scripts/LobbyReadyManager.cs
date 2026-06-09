@@ -104,7 +104,8 @@ public class LobbyReadyManager : NetworkBehaviour
 
         if (sceneRef.IsValid)
         {
-            UIManager.Instance.statsUI.HpUI.SetActive(true);
+            // 스탯 UI 활성화는 게임 씬에서 각 클라이언트가 직접 처리한다 (GameManager.Spawned).
+            // 여기서 켜면 마스터 클라이언트(State Authority)에서만 실행되어 다른 클라는 스탯창이 안 보임.
             Runner.LoadScene(sceneRef, LoadSceneMode.Single);
         }
         else

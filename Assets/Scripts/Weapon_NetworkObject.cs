@@ -26,6 +26,10 @@ namespace Projectiles.NetworkObjectExample
 
         public WeaponScriptableObject WeaponSO;
 
+        // 무기 종류를 모든 클라이언트에 동기화하기 위한 인덱스 (WeaponDatabase 기준).
+        // WeaponSO 자체는 ScriptableObject 참조라 네트워크로 못 보내므로 인덱스로 동기화 후 각 클라가 복원한다.
+        [Networked] public int WeaponSOIndex { get; set; } = -1;
+
         private int _visibleFireCount;
 
         private Transform originParent;
@@ -240,6 +244,7 @@ namespace Projectiles.NetworkObjectExample
             _visibleFireCount = _fireCount;
             originParent = transform.parent;
             _isBoundToOwner = BindToOwnerWeaponHold();
+            ResolveWeaponSO();
         }
 
         public override void FixedUpdateNetwork()
@@ -247,6 +252,25 @@ namespace Projectiles.NetworkObjectExample
             if (_isBoundToOwner == false)
             {
                 _isBoundToOwner = BindToOwnerWeaponHold();
+            }
+
+            // 인덱스가 늦게 동기화되거나 권한자가 나중에 세팅한 경우 대비해 복원 재시도
+            if (WeaponSO == null && WeaponSOIndex >= 0)
+            {
+                ResolveWeaponSO();
+            }
+        }
+
+        // 네트워크로 받은 인덱스로 WeaponSO를 복원 (모든 클라이언트에서 실행)
+        private void ResolveWeaponSO()
+        {
+            if (WeaponSOIndex < 0) return;
+            if (WeaponDatabase.Instance == null) return;
+
+            WeaponScriptableObject resolved = WeaponDatabase.Instance.Get(WeaponSOIndex);
+            if (resolved != null)
+            {
+                WeaponSO = resolved;
             }
         }
 

@@ -126,6 +126,98 @@ namespace Starter.Platformer
 			return specialEffectValues[(int)type] > 0f;
 		}
 
+		// === 증강(버프) 적용 ===
+		// Shared 모드에서는 각 클라이언트가 자기 Player의 State Authority만 가지므로,
+		// 버프는 반드시 "자기 자신"에게만 적용해야 동기화된다. (마스터가 남의 스탯을 쓰면 무시됨)
+		// BuffManager가 RpcTargets.All 로 호출 → 각 클라가 자기 플레이어에 적용.
+
+		public void ApplyContractBuff(ContractScriptableObject buff)
+		{
+			if (HasStateAuthority == false) return;
+			if (buff == null || buff.contractBuffs == null) return;
+
+			for (int i = 0; i < buff.contractBuffs.Length; i++)
+			{
+				var props = buff.contractBuffs[i].targetAbilities;
+				if (buff.valueType == global::ValueType.Percent)
+				{
+					maxHp *= (1 + props.maxHp);
+					maxMp *= (1 + props.maxMp);
+				}
+				else
+				{
+					maxHp += props.maxHp;
+					maxMp += props.maxMp;
+				}
+				damage *= props.damage;
+				attackSpeed = (attackSpeed + props.attackSpeed);
+				moveSpeed = WalkSpeed * (1 + props.moveSpeed);
+				allDamage += props.allDamage;
+				damageReceived += props.damageReceived;
+				criticalDamage += props.criticalDamage;
+				criticalChance += props.criticalChance;
+			}
+
+			if (buff.specialEffect != SpecialEffectType.None)
+			{
+				AddSpecialEffect(buff.specialEffect, buff.specialEffectValue);
+			}
+
+			Debug.Log($"[Buff] {Nickname}에게 {buff.contractName} 적용 완료!");
+		}
+
+		public void ApplyImprintBuff(BuffScripableObject buff)
+		{
+			if (HasStateAuthority == false) return;
+			if (buff == null || buff.buffProperties == null) return;
+
+			for (int i = 0; i < buff.buffProperties.Length; i++)
+			{
+				var props = buff.buffProperties[i].targetAbilities;
+				if (buff.Condition == VotingCondition.Fixed)
+				{
+					maxHp += props.maxHp;
+					maxMp += props.maxMp;
+				}
+				else if (buff.Condition == VotingCondition.Percent)
+				{
+					maxHp *= (1 + props.maxHp);
+					maxMp *= (1 + props.maxMp);
+				}
+				damage *= props.damage;
+				attackSpeed = (attackSpeed + props.attackSpeed);
+				moveSpeed = WalkSpeed * (1 + props.moveSpeed);
+				allDamage += props.allDamage;
+				damageReceived += props.damageReceived;
+				criticalDamage += props.criticalDamage;
+				criticalChance += props.criticalChance;
+			}
+
+			Debug.Log($"[Buff] {Nickname}에게 {buff.buffName} 적용 완료!");
+		}
+
+		public void ApplyImprintConditionBuff(BuffScripableObject buff)
+		{
+			if (HasStateAuthority == false) return;
+			if (buff == null || buff.votingAbility == null) return;
+
+			for (int i = 0; i < buff.votingAbility.Length; i++)
+			{
+				var props = buff.votingAbility[i].targetAbilities;
+				maxHp += props.maxHp;
+				maxMp += props.maxMp;
+				damage *= props.damage;
+				attackSpeed = (props.attackSpeed / (attackSpeed / 100f));
+				moveSpeed += props.moveSpeed;
+				allDamage += props.allDamage;
+				damageReceived += props.damageReceived;
+				criticalDamage += props.criticalDamage;
+				criticalChance += props.criticalChance;
+			}
+
+			Debug.Log($"[Buff] {Nickname}에게 {buff.buffName} 적용 완료!");
+		}
+
 		// Animation IDs
 		private int _animIDSpeed;
 		private int _animIDGrounded;
@@ -399,7 +491,8 @@ namespace Starter.Platformer
 		{
 			dead = true;
 			OnDeadChanged();
-			ChatManager.Instance.SendSystemMessage(Nickname + "님이 사망했습니다.", Color.red);
+			if (ChatManager.Instance != null)
+				ChatManager.Instance.SendSystemMessage(Nickname + "님이 사망했습니다.", Color.red);
 			Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
 			// 본래라면 여기서 부활 로직, 혹은 쓰러짐 애니메이션 등을 호출합니다.
 		}

@@ -83,6 +83,12 @@ public sealed class GameManager : NetworkBehaviour
 		LocalPlayer = Runner.Spawn(PlayerPrefab, GetSpawnPosition(), Quaternion.identity, Runner.LocalPlayer);
 		Runner.SetPlayerObject(Runner.LocalPlayer, LocalPlayer.Object);
 
+		// 스탯 UI 활성화 (모든 클라이언트가 각자 실행 → 클라이언트에서도 스탯창 표시됨)
+		if (UIManager.Instance != null && UIManager.Instance.statsUI != null && UIManager.Instance.statsUI.HpUI != null)
+		{
+			UIManager.Instance.statsUI.HpUI.SetActive(true);
+		}
+
 		// LocalPlayer가 InputAuthority를 가진 경우에만 InputHandler 추가
 		if (LocalPlayer.HasInputAuthority)
 		{
@@ -155,7 +161,8 @@ public sealed class GameManager : NetworkBehaviour
 	public void ReviveAllDeadPlayers()
 	{
 		RPC_ReviveAllDeadPlayers();
-		ChatManager.Instance.SendSystemMessage("모든 플레이어가 부활했습니다!", Color.cyan);
+		if (ChatManager.Instance != null)
+			ChatManager.Instance.SendSystemMessage("모든 플레이어가 부활했습니다!", Color.cyan);
 	}
 
 	[Rpc(RpcSources.All, RpcTargets.All)]

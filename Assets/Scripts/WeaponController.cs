@@ -20,9 +20,11 @@ public class WeaponController : NetworkBehaviour
         if (HasStateAuthority == false)
             return;
 
-        if (startWeapon != null)
+        // 로비에서 고른 무기가 있으면 그것을, 없으면 기본 무기를 장착한다.
+        WeaponScriptableObject weaponToEquip = PlayerLoadout.SelectedWeapon != null ? PlayerLoadout.SelectedWeapon : startWeapon;
+        if (weaponToEquip != null)
         {
-            EquipWeapon(startWeapon);
+            EquipWeapon(weaponToEquip);
         }
     }
 
@@ -83,8 +85,21 @@ public class WeaponController : NetworkBehaviour
             return;
         }
 
-        // 새로운 무기 생성
-        NetworkObject weaponObject = Runner.Spawn(newWeapon.weaponPrefab, weaponHold.position, weaponHold.rotation, Object.InputAuthority);
+        // 무기 종류를 모든 클라이언트에 동기화하기 위한 DB 인덱스 산출
+        int weaponSOIndex = WeaponDatabase.Instance != null ? WeaponDatabase.Instance.IndexOf(newWeapon) : -1;
+        if (weaponSOIndex < 0)
+        {
+            Debug.LogWarning($"[WeaponController] '{newWeapon.weaponName}'이(가) WeaponDatabase에 없습니다. " +
+                             "원격 클라이언트에서 무기가 올바르게 동기화되지 않습니다. Resources/WeaponDatabase에 추가하세요.");
+        }
+
+        // 새로운 무기 생성 (스폰 직전 네트워크 인덱스 세팅 → 모든 클라의 Spawned에서 WeaponSO 복원됨)
+        NetworkObject weaponObject = Runner.Spawn(newWeapon.weaponPrefab, weaponHold.position, weaponHold.rotation, Object.InputAuthority,
+            onBeforeSpawned: (runner, obj) =>
+            {
+                var w = obj.GetComponent<Weapon_NetworkObject>();
+                if (w != null) w.WeaponSOIndex = weaponSOIndex;
+            });
         //equippedWeapon = weaponObject.GetComponent<Weapon>();
         equippedWeapon = weaponObject.GetComponent<Weapon_NetworkObject>();
         equippedWeapon.WeaponSO = newWeapon;

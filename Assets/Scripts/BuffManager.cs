@@ -52,12 +52,19 @@ public class BuffManager : NetworkBehaviour
 
     private bool isContractBuffTransmission = false;
 
+    // N/B 키 입력 신뢰성: Update에서 감지하고 FixedUpdateNetwork에서 소비.
+    // (FixedUpdateNetwork의 Input.GetKeyDown은 재시뮬레이션/틱 타이밍 때문에 누락될 수 있음)
+    private bool _contractTriggerRequested;
+    private bool _imprintTriggerRequested;
+
     void Awake()
     {
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // 주의: NetworkBehaviour는 DontDestroyOnLoad로 씬 간 이동시키면 NetworkObject가
+            // 무효화되어 FixedUpdateNetwork/RPC가 동작하지 않는다. 증강이 일어나는 게임 씬에
+            // BuffManager NetworkObject를 직접 배치할 것.
         }
         else
         {
@@ -65,9 +72,34 @@ public class BuffManager : NetworkBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        if (Instance == this) Instance = null;
+    }
+
+    private Player GetLocalPlayer()
+    {
+        if (Runner == null) return null;
+        NetworkObject obj = Runner.GetPlayerObject(Runner.LocalPlayer);
+        if (obj != null && obj.TryGetComponent(out Player p)) return p;
+        return null;
+    }
+
+    // 게임 씬에 배치된 BuffManager는 영구(DontDestroyOnLoad) UI를 에디터에서 연결할 수 없으므로
+    // 런타임에 UIManager에서 UI 참조를 가져온다. (UIManager에 값이 있을 때만 덮어씀 → 로비 인스턴스는 자체 연결 유지)
+    private void ResolveUIReferences()
+    {
+        if (UIManager.Instance == null) return;
+        if (UIManager.Instance.buffTimerFillImage != null) timerFillImage = UIManager.Instance.buffTimerFillImage;
+        if (UIManager.Instance.buffTimerText != null) timerText = UIManager.Instance.buffTimerText;
+        if (UIManager.Instance.buffSlotParent != null) buffSlotParent = UIManager.Instance.buffSlotParent;
+    }
+
     void Start()
     {
-        UIManager.Instance.buffUI.SetActive(false);
+        ResolveUIReferences();
+        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+            UIManager.Instance.buffUI.SetActive(false);
     }
 
     private void DisablePlayerInput()
@@ -96,11 +128,18 @@ public class BuffManager : NetworkBehaviour
         // 네트워크 객체가 스폰되지 않았으면 리턴
         if (!Object || !Object.IsValid) return;
 
+        // N/B 트리거 감지 (씬 권한자만). 실제 시작은 FixedUpdateNetwork에서 소비.
+        if (Runner.IsSceneAuthority)
+        {
+            if (Input.GetKeyDown(KeyCode.N)) _contractTriggerRequested = true;
+            if (Input.GetKeyDown(KeyCode.B)) _imprintTriggerRequested = true;
+        }
+
         if (isContractBuffActive)
         {
             contractVoteTime -= Time.deltaTime;
-            timerFillImage.fillAmount = contractVoteTime / contractVoteTimeMax;
-            timerText.text = $"{contractVoteTime:F0}";
+            if (timerFillImage != null) timerFillImage.fillAmount = contractVoteTime / contractVoteTimeMax;
+            if (timerText != null) timerText.text = $"{contractVoteTime:F0}";
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             if (contractVoteTime <= 0)
@@ -127,21 +166,17 @@ public class BuffManager : NetworkBehaviour
                 }
                 else
                 {
-                    if (contractChosenBuff.Count == Runner.ActivePlayers.Count())
+                    // 모든 플레이어의 선택이 수집되면 (contractChosenBuff는 씬 권한자에만 쌓이므로
+                    // 이 조건은 사실상 씬 권한자에서만 참이 된다)
+                    if (Runner.IsSceneAuthority && contractChosenBuff.Count == Runner.ActivePlayers.Count())
                     {
-                        if (Runner.IsSceneAuthority)
-                        {
-                            contractApplyBuff();
-                            isContractBuffActive  = false;
-                        }
+                        // 선택된 계약 인덱스를 모든 클라에 브로드캐스트 → 각 클라가 자기 플레이어에 적용 + UI 종료
+                        contractApplyBuff();
+
+                        // 권한자 전용 네트워크 상태 정리
+                        isContractBuffActive = false;
                         playerVotes.Clear();
-                        contractChosenBuff.Clear();  // 투표 완료 후 초기화
-                        isContractBuffTransmission = false;  // 다음 투표를 위해 리셋
-                        contractVoteTime = contractVoteTimeMax;
-                        //Cursor.lockState = CursorLockMode.Locked;
-                        //Cursor.visible = false;
-                        UIManager.Instance.buffUI.SetActive(false);
-                        EnablePlayerInput(); // 플레이어 입력 다시 활성화
+                        contractChosenBuff.Clear();
                     }
                 }
             }
@@ -150,8 +185,8 @@ public class BuffManager : NetworkBehaviour
         if (isImprintBuffActive)
         {
             imprintVoteTime -= Time.deltaTime;
-            timerFillImage.fillAmount = imprintVoteTime / imprintVoteTimeMax;
-            timerText.text = $"{imprintVoteTime:F0}";
+            if (timerFillImage != null) timerFillImage.fillAmount = imprintVoteTime / imprintVoteTimeMax;
+            if (timerText != null) timerText.text = $"{imprintVoteTime:F0}";
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
             if (imprintVoteTime <= 0)
@@ -170,20 +205,20 @@ public class BuffManager : NetworkBehaviour
                 {
                     if (Runner.IsSceneAuthority)
                     {
-                        // 버프 적용 로직은 여기서 구현 (예: 가장 많은 표를 받은 버프 적용, 조건에 맞으면 버프 적용)
+                        // 가장 많은 표를 받은 버프 + 조건 충족 버프를 모든 클라에 브로드캐스트 (각자 자기에게 적용)
                         ImprintFinishVoting();
-                    }
-                    
 
-                    //투표 종료 처리
-                    isImprintBuffActive = false;
-                    isVoteFinished = false;
-                    playerVotes.Clear();
+                        // 권한자 전용 네트워크 상태 정리
+                        isImprintBuffActive = false;
+                        isVoteFinished = false;
+                        playerVotes.Clear();
+                    }
+
+                    // 로컬 UI/타이머 초기화 (모든 클라)
                     imprintVoteTimeMax = 30f;
                     imprintVoteTime = imprintVoteTimeMax;
-                    //Cursor.lockState = CursorLockMode.Locked;
-                    //Cursor.visible = false;
-                    UIManager.Instance.buffUI.SetActive(false);
+                    if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+                        UIManager.Instance.buffUI.SetActive(false);
                     EnablePlayerInput(); // 플레이어 입력 다시 활성화
                 }
             }
@@ -215,179 +250,112 @@ public class BuffManager : NetworkBehaviour
             
         }
 
+        // 적용할 버프들의 인덱스(imprintAvailableBuffs 기준)를 모아 브로드캐스트한다.
+        List<int> conditionIndices = new List<int>();
         for (int i = 0; i < buffSlots.Count; i++)
         {
             BuffScripableObject buff = buffSlots[i].buffScripableObject;
-            if (buff.isVotingCondition)
+            if (buff == null || !buff.isVotingCondition) continue;
+
+            bool pass = false;
+            switch (buff.Condition)
             {
-                switch (buff.Condition)
-                {
-                    case VotingCondition.Count:
-                        if (voteCounts[i] == buff.votingValue)
-                        {
-                            imprintConditionApplyBuff(i);
-                        }
-                        break;
-                    case VotingCondition.Percent:
-                        float percent = (float)voteCounts[i] / Runner.ActivePlayers.Count() * 100f;
-                        if (percent >= buff.votingValue)
-                        {
-                            imprintConditionApplyBuff(i);
-                        }
-                        break;
-                    case VotingCondition.MAX:
-                        if (voteCounts[i] == Runner.ActivePlayers.Count())
-                        {
-                            imprintConditionApplyBuff(i);
-                        }
-                        break;
-                }
+                case VotingCondition.Count:
+                    pass = voteCounts[i] == buff.votingValue;
+                    break;
+                case VotingCondition.Percent:
+                    float percent = (float)voteCounts[i] / Runner.ActivePlayers.Count() * 100f;
+                    pass = percent >= buff.votingValue;
+                    break;
+                case VotingCondition.MAX:
+                    pass = voteCounts[i] == Runner.ActivePlayers.Count();
+                    break;
+            }
+
+            if (pass)
+            {
+                int idx = System.Array.IndexOf(imprintAvailableBuffs, buff);
+                if (idx >= 0) conditionIndices.Add(idx);
             }
         }
-        
-        if (voteCounts.Count > 0)
+
+        int winnerIndex = -1;
+        if (voteCounts.Count > 0 && buffSlots.Count > 0)
         {
             int maxValue = voteCounts.Max();
-            int maxIndex = voteCounts.IndexOf(maxValue);
-            imprintApplyBuff(maxIndex);
-        }
-
-        
-    }
-
-    private void imprintConditionApplyBuff(int maxIndex)
-    {
-        var conditionBuffAsset = buffSlots[maxIndex].buffScripableObject;
-
-        if (conditionBuffAsset == null) return;
-        
-        foreach (var playerRef in Runner.ActivePlayers)
-        {
-            NetworkObject playerObj = Runner.GetPlayerObject(playerRef);
-
-            if (playerObj != null)
+            int maxSlot = voteCounts.IndexOf(maxValue);
+            if (maxSlot >= 0 && maxSlot < buffSlots.Count && buffSlots[maxSlot].buffScripableObject != null)
             {
-                if (playerObj.TryGetComponent(out Player player))
-                {
-
-                    for (int i = 0; i < conditionBuffAsset.votingAbility.Length; i++)
-                    {
-                        var props = conditionBuffAsset.votingAbility[i].targetAbilities;
-                        player.maxHp += props.maxHp;
-                        player.maxMp += props.maxMp;
-                        player.damage *= props.damage;
-                        player.attackSpeed = (props.attackSpeed / (player.attackSpeed/100f));
-                        player.moveSpeed += props.moveSpeed;
-                        player.allDamage += props.allDamage;
-                        player.damageReceived += props.damageReceived;
-                        player.criticalDamage += props.criticalDamage;
-                        player.criticalChance += props.criticalChance;
-                    }
-                    
-
-                    Debug.Log($"[Buff] {player.Nickname}에게 {conditionBuffAsset.buffName} 적용 완료!");
-                }
+                winnerIndex = System.Array.IndexOf(imprintAvailableBuffs, buffSlots[maxSlot].buffScripableObject);
             }
         }
+
+        RPC_ApplyImprintBuffs(winnerIndex, conditionIndices.ToArray());
     }
 
-    private void imprintApplyBuff(int maxIndex)
+    // 각인 버프 적용: 모든 클라가 받아 자기 플레이어에만 적용 (Shared 모드 권한 규칙)
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
     {
-        var winnerBuffAsset = buffSlots[maxIndex].buffScripableObject;
+        Player me = GetLocalPlayer();
+        if (me == null) return;
 
-        if (winnerBuffAsset == null) return;
-
-        foreach (var playerRef in Runner.ActivePlayers)
+        if (conditionIndices != null)
         {
-            NetworkObject playerObj = Runner.GetPlayerObject(playerRef);
-
-            if (playerObj != null)
+            foreach (int idx in conditionIndices)
             {
-                if (playerObj.TryGetComponent(out Player player))
-                {
-
-                    for (int i = 0; i < winnerBuffAsset.buffProperties.Length; i++)
-                    {
-                        var props = winnerBuffAsset.buffProperties[i].targetAbilities;
-                        if (winnerBuffAsset.Condition == VotingCondition.Fixed)
-                        {
-                            player.maxHp += props.maxHp;
-                            player.maxMp += props.maxMp;
-                        }else if( winnerBuffAsset.Condition == VotingCondition.Percent)
-                        {
-                            player.maxHp *= (1 + props.maxHp);
-                            player.maxMp *= (1 + props.maxMp);
-                        }
-                        player.damage *= props.damage;
-                        player.attackSpeed = (player.attackSpeed + props.attackSpeed);
-                        player.moveSpeed = player.WalkSpeed * (1 + props.moveSpeed);
-                        player.allDamage += props.allDamage;
-                        player.damageReceived += props.damageReceived;
-                        player.criticalDamage += props.criticalDamage;
-                        player.criticalChance += props.criticalChance;
-                    }
-                    Debug.Log($"[Buff] {player.Nickname}에게 {winnerBuffAsset.buffName} 적용 완료!");
-                }
+                if (idx >= 0 && idx < imprintAvailableBuffs.Length)
+                    me.ApplyImprintConditionBuff(imprintAvailableBuffs[idx]);
             }
         }
+
+        if (winnerIndex >= 0 && winnerIndex < imprintAvailableBuffs.Length)
+            me.ApplyImprintBuff(imprintAvailableBuffs[winnerIndex]);
     }
-    
-    
+
+
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
     public void RPC_ContractBuffTransmission(int buffIndex)
     {
+        if (buffIndex < 0 || buffIndex >= contractAvailableBuffs.Length) return;
         ContractScriptableObject chosenBuff = contractAvailableBuffs[buffIndex];
         contractChosenBuff.Add(chosenBuff);
         Debug.Log($"[Buff] {chosenBuff.contractName}");
     }
-    
-    
+
+
+    // 씬 권한자에서만 호출됨. 선택된 계약 인덱스를 모든 클라에 브로드캐스트.
     private void contractApplyBuff()
     {
-        // 게약은 각인과 달리 무기에 적용시키는 증강이 있아서 나중에 무기를 만든후 무기에적용시키는 증강 만들어야할듯
+        List<int> indices = new List<int>();
         foreach (var buff in contractChosenBuff)
         {
-            foreach (var playerRef in Runner.ActivePlayers)
-            {
-                NetworkObject playerObj = Runner.GetPlayerObject(playerRef);
-        
-                if (playerObj != null)
-                {
-                    if (playerObj.TryGetComponent(out Player player))
-                    {
-                        for (int i = 0; i < buff.contractBuffs.Length; i++)
-                        {
-                            var props = buff.contractBuffs[i].targetAbilities;
-                            if(buff.valueType == ValueType.Percent)
-                            {
-                                player.maxHp *= (1 + props.maxHp);
-                                player.maxMp *= (1 + props.maxMp);
-                            }
-                            else
-                            {
-                                player.maxHp += props.maxHp;
-                                player.maxMp += props.maxMp;
-                            }
-                            player.damage *= props.damage;
-                            player.attackSpeed = (player.attackSpeed + props.attackSpeed);
-                            player.moveSpeed = player.WalkSpeed * (1 + props.moveSpeed);
-                            player.allDamage += props.allDamage;
-                            player.damageReceived += props.damageReceived;
-                            player.criticalDamage += props.criticalDamage;
-                            player.criticalChance += props.criticalChance;
-                        }
-                        
-                        // 특수 기믹 일괄 적용 (If-Else 없이 배열 인덱스로 처리)
-                        if (buff.specialEffect != SpecialEffectType.None)
-                        {
-                            player.AddSpecialEffect(buff.specialEffect, buff.specialEffectValue);
-                        }
+            int idx = System.Array.IndexOf(contractAvailableBuffs, buff);
+            if (idx >= 0) indices.Add(idx);
+        }
+        RPC_FinishContractVote(indices.ToArray());
+    }
 
-                        Debug.Log($"[Buff] {player.Nickname}에게 {buff.contractName} 적용 완료!");
-                    }
-                }
+    // 계약 버프 적용 + UI/입력 종료: 모든 클라가 받아 자기 플레이어에만 적용 (Shared 모드 권한 규칙)
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_FinishContractVote(int[] contractIndices)
+    {
+        Player me = GetLocalPlayer();
+        if (me != null && contractIndices != null)
+        {
+            foreach (int idx in contractIndices)
+            {
+                if (idx >= 0 && idx < contractAvailableBuffs.Length)
+                    me.ApplyContractBuff(contractAvailableBuffs[idx]);
             }
         }
+
+        // 모든 클라 UI/입력/로컬 상태 초기화
+        isContractBuffTransmission = false;
+        contractVoteTime = contractVoteTimeMax;
+        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+            UIManager.Instance.buffUI.SetActive(false);
+        EnablePlayerInput();
     }
 
 
@@ -395,8 +363,10 @@ public class BuffManager : NetworkBehaviour
     {
         // 2. 데이터 변화를 감지하기 위한 디텍터 초기화
         _changeDetector = GetChangeDetector(ChangeDetector.Source.SimulationState);
-        UIManager.Instance.buffUI.SetActive(false);
-        
+        ResolveUIReferences();
+        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+            UIManager.Instance.buffUI.SetActive(false);
+
     }
 
     public override void Render()
@@ -462,7 +432,9 @@ public class BuffManager : NetworkBehaviour
     public override void FixedUpdateNetwork()
     {
         //계약 증강 시작 임시 - StateAuthority만 처리
-        if (Input.GetKeyDown(KeyCode.N) && Runner.IsSceneAuthority)
+        bool contractTrigger = _contractTriggerRequested;
+        _contractTriggerRequested = false;
+        if (contractTrigger && Runner.IsSceneAuthority)
         {
             if (!isContractBuffActive)
             {
@@ -509,7 +481,9 @@ public class BuffManager : NetworkBehaviour
         }
         
         //각인 증강 시작 임시 - StateAuthority만 처리
-        if (Input.GetKeyDown(KeyCode.B) && Runner.IsSceneAuthority)
+        bool imprintTrigger = _imprintTriggerRequested;
+        _imprintTriggerRequested = false;
+        if (imprintTrigger && Runner.IsSceneAuthority)
         {
             if (imprintAvailableBuffs.Length == 0)
                 return;
@@ -559,12 +533,13 @@ public class BuffManager : NetworkBehaviour
     private void RPC_ContractBuffVote(int[] buffIndices)
     {
         myContractBuff.Clear(); // 기존 UI 데이터만 초기화
-        if (buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
+        if (buffSlotParent != null && buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
         buffSlots.Clear();
 
-        UIManager.Instance.buffUI.SetActive(true);
+        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+            UIManager.Instance.buffUI.SetActive(true);
         DisablePlayerInput(); // 플레이어 입력 비활성화
-        
+
         // 현재 접속한 플레이어들을 ID 순서대로 정렬하여 리스트로 만듭니다.
         var sortedPlayers = Runner.ActivePlayers.OrderBy(p => p.PlayerId).ToList();
 
@@ -601,23 +576,26 @@ public class BuffManager : NetworkBehaviour
     private void RPC_ImprintBuffVote(int[] buffIndices)
     {
         isImprintBuffActive = true;
-        if (buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
+        if (buffSlotParent != null && buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
         buffSlots.Clear();
 
-        UIManager.Instance.buffUI.SetActive(true);
+        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+            UIManager.Instance.buffUI.SetActive(true);
         DisablePlayerInput(); // 플레이어 입력 비활성화
 
         int Order = 1;
         foreach (int index in buffIndices)
         {
-
+            if (index < 0 || index >= imprintAvailableBuffs.Length) continue;
             BuffScripableObject buffData = imprintAvailableBuffs[index];
+            if (buffData == null) continue;
+
             var slot = Instantiate(bufffSlotPrefab, buffSlotParent);
             BuffSlot buffSlot = slot.GetComponent<BuffSlot>();
             buffSlot.UpdateVotePlayer("");
             buffSlots.Add(buffSlot);
             buffSlot.Set(buffData);
-            
+
             buffSlot.Order = Order++;
         }
     }

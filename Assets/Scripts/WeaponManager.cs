@@ -37,6 +37,7 @@ public class WeaponManager : NetworkBehaviour
         if (Instance == null)
         {
             Instance = this;
+            DontDestroyOnLoad(gameObject);
         }
         else
         {
@@ -90,7 +91,10 @@ public class WeaponManager : NetworkBehaviour
         WeaponScriptableObject selectedWeapon = weaponSOs[weaponIndex];
         
         Debug.Log($"[WeaponManager] Auto selected weapon: {selectedWeapon.weaponName} (index: {weaponIndex})");
-        
+
+        // 게임 씬으로 선택 무기 전달 (씬 전환 후 WeaponController.Spawned에서 사용)
+        PlayerLoadout.SelectedWeapon = selectedWeapon;
+
         // 로컬 플레이어의 무기 장착
         EquipWeaponToLocalPlayer(selectedWeapon);
         
@@ -214,7 +218,10 @@ public class WeaponManager : NetworkBehaviour
         WeaponScriptableObject selectedWeapon = weaponSOs[weaponIndex];
         
         Debug.Log($"[WeaponManager] Selected weapon slot {order}, actual weapon: {selectedWeapon.weaponName}");
-        
+
+        // 게임 씬으로 선택 무기 전달 (씬 전환 후 WeaponController.Spawned에서 사용)
+        PlayerLoadout.SelectedWeapon = selectedWeapon;
+
         // 로컬 플레이어의 무기 장착 (즉시 적용)
         EquipWeaponToLocalPlayer(selectedWeapon);
         
