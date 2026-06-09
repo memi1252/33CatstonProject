@@ -1835,6 +1835,94 @@ MonoBehaviour:
   - Name: Strike
     Sprite: {fileID: -1085958818, guid: 722f2a961018d2742bc2a4999db271ee, type: 3}
     ring: {fileID: 0}
+--- !u!1 &313703029
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 313703032}
+  - component: {fileID: 313703031}
+  - component: {fileID: 313703030}
+  m_Layer: 0
+  m_Name: WeaponManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &313703030
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 313703029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 2467407797
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 313703031}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &313703031
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 313703029}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6ae85533410ba354fa1dfbbf34cb8b22, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::WeaponManager
+  weaponSelectPrefab: {fileID: 8212849803334025858, guid: 62bbc4985288f4946a8671125027ca75,
+    type: 3}
+  weaponSelectPanel: {fileID: 1487849179}
+  weaponSOs:
+  - {fileID: 11400000, guid: 3f801a032e330d141bb03be70ab42b36, type: 2}
+  - {fileID: 11400000, guid: c882945633fe92342b20c89e44ec359d, type: 2}
+  - {fileID: 11400000, guid: 986e4aa1307b46d439c30fe0efb8dbf2, type: 2}
+  - {fileID: 11400000, guid: 8ce538485f066cd4b906f8acdd3f4b87, type: 2}
+  - {fileID: 11400000, guid: c7c0270138bb1084598bb23c33dd0098, type: 2}
+  - {fileID: 11400000, guid: 3cc9a613be032c44f8a3eada0af685b3, type: 2}
+  - {fileID: 11400000, guid: 2d208e779f1df4e49a3525739c9da0ac, type: 2}
+  - {fileID: 11400000, guid: 7d639b96d10021840a5cb97a7a291582, type: 2}
+  - {fileID: 11400000, guid: bd4677e27b8966f4cbd9973937f1ba34, type: 2}
+  - {fileID: 11400000, guid: 0f3ae892f705b6748a6d3ebb23127f9f, type: 2}
+  - {fileID: 11400000, guid: 587118df2b9497e49af0e1e476a8e448, type: 2}
+  - {fileID: 11400000, guid: c5fd8ea68fba9c942afdcffd6480e0de, type: 2}
+  - {fileID: 11400000, guid: 6e12cf1570af02c49baeb863e44f04d2, type: 2}
+  - {fileID: 11400000, guid: 0fc7743a1fc593749b69fa236046f503, type: 2}
+  - {fileID: 11400000, guid: 4d794084bc03a02469c1dcd965d63804, type: 2}
+  timerFillImage: {fileID: 1062186178}
+  timerText: {fileID: 1447298325}
+  weaponSelectVoteTime: 15
+  _playerWeaponVotes:
+    _items: []
+--- !u!4 &313703032
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 313703029}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &330585543
 GameObject:
   m_ObjectHideFlags: 0
@@ -4779,6 +4867,109 @@ RectTransform:
     type: 3}
   m_PrefabInstance: {fileID: 1070251245}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1374675352
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1374675355}
+  - component: {fileID: 1374675354}
+  - component: {fileID: 1374675353}
+  m_Layer: 0
+  m_Name: BuffManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1374675353
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1374675352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: -1552182283, guid: e725a070cec140c4caffb81624c8c787, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
+  SortKey: 2659701179
+  ObjectInterest: 1
+  Flags: 262145
+  NestedObjects: []
+  NetworkedBehaviours:
+  - {fileID: 1374675354}
+  ForceRemoteRenderTimeframe: 0
+--- !u!114 &1374675354
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1374675352}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 95be4b84327307a4c83aab284a05a02e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BuffManager
+  bufffSlotPrefab: {fileID: 3012248348386653284, guid: 685de29612716754bb50f713fe178aab,
+    type: 3}
+  buffSlotParent: {fileID: 1964283208}
+  imprintVoteTime: 30
+  contractVoteTime: 15
+  timerFillImage: {fileID: 1412213431}
+  timerText: {fileID: 1003368518}
+  imprintAvailableBuffs:
+  - {fileID: 11400000, guid: 870d7d729541ab349870968873a0a82c, type: 2}
+  - {fileID: 11400000, guid: 1bfd88b5161c4ba42bd7f5ae23544fd4, type: 2}
+  - {fileID: 11400000, guid: 41cc3baca059f1c448b138854fb83269, type: 2}
+  - {fileID: 11400000, guid: a0ed8b3523ba6b642b62f91105586e76, type: 2}
+  - {fileID: 11400000, guid: 89af80b138b9a8441b93ec2ac946611e, type: 2}
+  - {fileID: 11400000, guid: 11765233902246f4abdd9baeb379adf7, type: 2}
+  - {fileID: 11400000, guid: cd46a0084e3ba514da9132eac76c6093, type: 2}
+  - {fileID: 11400000, guid: 9a9c170cd698d4a4fa03d10e5b3c14a0, type: 2}
+  - {fileID: 11400000, guid: 07ffa32fb68e9b148977f12ec6abb9ef, type: 2}
+  contractAvailableBuffs:
+  - {fileID: 11400000, guid: 7998e8d96ac05804db04852107607378, type: 2}
+  - {fileID: 11400000, guid: edcee9d2e44a41e4fbf9fd0f134fa60b, type: 2}
+  - {fileID: 11400000, guid: 08b2f60a8207d224a90ee022dfb3e602, type: 2}
+  - {fileID: 11400000, guid: 7a8036e0893d34f48bdedaa8ece0d804, type: 2}
+  - {fileID: 11400000, guid: d4836f7417614a942b01c163eb712b07, type: 2}
+  - {fileID: 11400000, guid: ff9a19d8a0cefc14097e0e5d4e1778ba, type: 2}
+  - {fileID: 11400000, guid: a9fb9a60a3e63d5419fa0b85254e6133, type: 2}
+  - {fileID: 11400000, guid: ee9efd08c9004544bad183c7d22dfa45, type: 2}
+  - {fileID: 11400000, guid: af56d28330fd0ed4a803f1eb2c57ba84, type: 2}
+  - {fileID: 11400000, guid: 262aa8d50de8f1748bf3712e8c0f87e2, type: 2}
+  - {fileID: 11400000, guid: 136b6ec6e4d9cb44ea393962f69f4c62, type: 2}
+  - {fileID: 11400000, guid: 927713e9e1dbc3240b7375b2ab6875e0, type: 2}
+  - {fileID: 11400000, guid: ccb82b371e97a0b488e561f76e29ddc6, type: 2}
+  - {fileID: 11400000, guid: a6ce6495ad9e19d4eacaa50dd754309e, type: 2}
+  - {fileID: 11400000, guid: 9c5880cfb0490e140b48fbd20b7548af, type: 2}
+  - {fileID: 11400000, guid: 4ffeb9ceca2db8140ba57172f4adc372, type: 2}
+  _isImprintBuffActive: 0
+  _isContractBuffActive: 0
+  _isVoteFinished: 0
+  _playerVotes:
+    _items: []
+--- !u!4 &1374675355
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1374675352}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1412213429
 GameObject:
   m_ObjectHideFlags: 0
@@ -7504,3 +7695,5 @@ SceneRoots:
   - {fileID: 1419176094}
   - {fileID: 1599397512}
   - {fileID: 708984639}
+  - {fileID: 1374675355}
+  - {fileID: 313703032}
