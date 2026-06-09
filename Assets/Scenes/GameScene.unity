@@ -1777,6 +1777,14 @@ MonoBehaviour:
   sprayDamage: 15
   sprayVfxPrefab: {fileID: 882568891853687791, guid: fe369982659d9124285304a22d078f2b,
     type: 3}
+  sprayVfxLifetime: 2
+  sprayVfxOffset: {x: 0, y: 1, z: 0}
+  sprayVfxEulerOffset: {x: 0, y: 0, z: 0}
+  minionPrefabs:
+  - {fileID: 2612587202912092544, guid: 6d288e58450fe0847b95cfd30d1149be, type: 3}
+  - {fileID: 1904905494829636971, guid: 54e86a1443c6b0b46bc532d8c879f2d3, type: 3}
+  - {fileID: 3062603542146360061, guid: a6e3ff39693bc114baf23d90f2671aad, type: 3}
+  - {fileID: 5202818310514570323, guid: d134e57aa8bed314c93333a368799898, type: 3}
   minionPrefab: {fileID: 1464755877781911632, guid: 39deb90ef92a6ec489efe36f7ac1fb0b,
     type: 3}
   maxAliveMinions: 4
