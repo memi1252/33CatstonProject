@@ -306,6 +306,14 @@ namespace Projectiles.NetworkObjectExample
             }
         }
 
+        // 디태치한 이펙트를 다시 무기 밑으로 붙이기 전 호출.
+        // 코루틴 대기 중 무기가 디스폰/풀 반환되면 transform이 씬이 아닌 프리팹 에셋 상태가 되어
+        // reparent 시 "resides in a Prefab asset" 예외가 발생하므로, 살아있는 씬 인스턴스일 때만 허용한다.
+        private bool CanReparentToSelf()
+        {
+            return this != null && gameObject != null && gameObject.scene.IsValid();
+        }
+
         private IEnumerator VisualAreaAttack(Vector3 mouseWorldPos, float scopeSize)
         {
             Quaternion scopeOriginalRot = Quaternion.identity;
@@ -368,7 +376,7 @@ namespace Projectiles.NetworkObjectExample
                 {
                     ParticleEffect.transform.GetChild(0).gameObject.SetActive(true);
                 }
-                ParticleEffect.transform.localScale = Vector3.one * scopeSize; // WeaponSO가 null일 수 있으므로 scopeSize를 사용
+                ParticleEffect.transform.localScale = Vector3.one * (scopeSize + ParticelEffectPlugRange); // WeaponSO가 null일 수 있으므로 scopeSize를 사용
                 ParticleEffect.Play();
             }
 
@@ -377,25 +385,31 @@ namespace Projectiles.NetworkObjectExample
             if (VisualEffect != null)
             {
                 VisualEffect.Stop();
-                VisualEffect.transform.parent = transform;
-                VisualEffect.transform.localPosition = Vector3.zero;
-                VisualEffect.transform.localRotation = vfxOriginalRot;
+                if (CanReparentToSelf())
+                {
+                    VisualEffect.transform.parent = transform;
+                    VisualEffect.transform.localPosition = Vector3.zero;
+                    VisualEffect.transform.localRotation = vfxOriginalRot;
+                }
             }
 
             if (ParticleEffect != null)
             {
-                if (ParticleEffect.transform.childCount > 0 && ParticleEffect.transform.GetChild(0).GetComponent<SpriteRenderer>())
-                {
-                    ParticleEffect.transform.GetChild(0).gameObject.SetActive(false);
-                }
+                // if (ParticleEffect.transform.childCount > 0 && ParticleEffect.transform.GetChild(0).GetComponent<SpriteRenderer>())
+                // {
+                //     ParticleEffect.transform.GetChild(0).gameObject.SetActive(false);
+                // }
 
                 ParticleEffect.Stop();
-                ParticleEffect.transform.parent = transform;
-                ParticleEffect.transform.localPosition = Vector3.zero;
-                ParticleEffect.transform.localRotation = vfxOriginalRot;
+                if (CanReparentToSelf())
+                {
+                    ParticleEffect.transform.parent = transform;
+                    ParticleEffect.transform.localPosition = Vector3.zero;
+                    ParticleEffect.transform.localRotation = vfxOriginalRot;
+                }
             }
 
-            if (attackScope != null)
+            if (attackScope != null && CanReparentToSelf())
             {
                 attackScope.transform.parent = transform;
                 attackScope.transform.localPosition = Vector3.zero;
@@ -425,9 +439,12 @@ namespace Projectiles.NetworkObjectExample
             {
                 attackScope.SetActive(false);
                 attackScope.transform.localScale = Vector3.zero;
-                attackScope.transform.parent = transform;
-                attackScope.transform.localPosition = Vector3.zero;
-                attackScope.transform.localRotation = scopeOriginalRot;
+                if (CanReparentToSelf())
+                {
+                    attackScope.transform.parent = transform;
+                    attackScope.transform.localPosition = Vector3.zero;
+                    attackScope.transform.localRotation = scopeOriginalRot;
+                }
             }
 
             // 스코프가 사라졌을 때 파티클 재생
@@ -438,7 +455,7 @@ namespace Projectiles.NetworkObjectExample
                 ParticleEffect.transform.rotation = Quaternion.LookRotation(Vector3.right);
 
                 // 스코프 크기만큼 파티클 크기 키우기 (Strike)
-                ParticleEffect.transform.localScale = new Vector3(scopeSize, scopeSize, scopeSize);
+                ParticleEffect.transform.localScale = new Vector3(scopeSize +ParticelEffectPlugRange, scopeSize +ParticelEffectPlugRange, scopeSize+ParticelEffectPlugRange);
 
                 ParticleEffect.Play();
             }
@@ -450,12 +467,15 @@ namespace Projectiles.NetworkObjectExample
             if (ParticleEffect != null)
             {
                 ParticleEffect.Stop();
-                ParticleEffect.transform.parent = transform; // 다시 무기 밑으로 복귀
-                ParticleEffect.transform.localPosition = Vector3.zero;
-                ParticleEffect.transform.localRotation = Quaternion.identity;
+                if (CanReparentToSelf())
+                {
+                    ParticleEffect.transform.parent = transform; // 다시 무기 밑으로 복귀
+                    ParticleEffect.transform.localPosition = Vector3.zero;
+                    ParticleEffect.transform.localRotation = Quaternion.identity;
 
-                // 줄였던 크기 원상 복귀
-                ParticleEffect.transform.localScale = Vector3.one;
+                    // 줄였던 크기 원상 복귀
+                    ParticleEffect.transform.localScale = Vector3.one;
+                }
             }
         }
 

@@ -561,7 +561,6 @@ GameObject:
   - component: {fileID: 4456342224105129039}
   - component: {fileID: 8828225339365680580}
   - component: {fileID: 6712133823524720216}
-  - component: {fileID: 9108333147693381742}
   m_Layer: 0
   m_Name: FireCaneWeapon
   m_TagString: Untagged
@@ -602,11 +601,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: Fusion.Runtime.dll::Fusion.NetworkObject
   SortKey: 781991032
   ObjectInterest: 1
-  Flags: 1
+  Flags: 262145
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 6712133823524720216}
-  - {fileID: 9108333147693381742}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &6712133823524720216
 MonoBehaviour:
@@ -627,31 +625,18 @@ MonoBehaviour:
   Animator: {fileID: 0}
   LineRenderer: {fileID: 0}
   ParticleEffect: {fileID: 0}
+  ParticelEffectPlugRange: 0
   VisualEffect: {fileID: 8439065430451226624}
   ownerPlayer: {fileID: 0}
   ownerEnemy: {fileID: 0}
   _projectilePrefab: {fileID: 0}
   _useBuffer: 0
-  _projectileBuffer: {fileID: 9108333147693381742}
+  _projectileBuffer: {fileID: 0}
   WeaponSO: {fileID: 0}
   raycastLayerMask:
     serializedVersion: 2
     m_Bits: 320
   plusDelay: 3.4
---- !u!114 &9108333147693381742
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6870260640496897606}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 081165ad89451c443967130a0e54f8a2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectBuffer
-  _prefab: {fileID: 0}
-  _bufferSize: 8
 --- !u!1 &7605276268703199881
 GameObject:
   m_ObjectHideFlags: 0

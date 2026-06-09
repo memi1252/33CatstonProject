@@ -34,6 +34,7 @@ Transform:
   m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
 --- !u!212 &7952318100761287046
 SpriteRenderer:
+  serializedVersion: 2
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
@@ -79,6 +80,7 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_Sprite: {fileID: -2413806693520163455, guid: a86470a33a6bf42c4b3595704624658b,
     type: 3}
   m_Color: {r: 1, g: 0.3537736, b: 0.3537736, a: 0.7372549}
@@ -89,7 +91,6 @@ SpriteRenderer:
   m_AdaptiveModeThreshold: 0.5
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
-  m_MaskInteraction: 0
   m_SpriteSortPoint: 0
 --- !u!1 &4584603937215807588
 GameObject:
@@ -182,6 +183,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &5558429585557826630
 GameObject:
@@ -271,6 +273,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1 &8268848501549680484
 GameObject:
@@ -283,7 +286,6 @@ GameObject:
   - component: {fileID: 2374002435489564810}
   - component: {fileID: 7151553951272132489}
   - component: {fileID: 2948508823131318376}
-  - component: {fileID: 224251422123382023}
   m_Layer: 0
   m_Name: lightningRodWeapon
   m_TagString: Untagged
@@ -327,7 +329,6 @@ MonoBehaviour:
   NestedObjects: []
   NetworkedBehaviours:
   - {fileID: 2948508823131318376}
-  - {fileID: 224251422123382023}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &2948508823131318376
 MonoBehaviour:
@@ -348,28 +349,18 @@ MonoBehaviour:
   Animator: {fileID: 0}
   LineRenderer: {fileID: 0}
   ParticleEffect: {fileID: 6229393458274016948}
+  ParticelEffectPlugRange: 0
   VisualEffect: {fileID: 0}
+  ownerPlayer: {fileID: 0}
+  ownerEnemy: {fileID: 0}
   _projectilePrefab: {fileID: 0}
   _useBuffer: 0
-  _projectileBuffer: {fileID: 224251422123382023}
+  _projectileBuffer: {fileID: 0}
   WeaponSO: {fileID: 0}
   raycastLayerMask:
     serializedVersion: 2
     m_Bits: 320
---- !u!114 &224251422123382023
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8268848501549680484}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 081165ad89451c443967130a0e54f8a2, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectBuffer
-  _prefab: {fileID: 0}
-  _bufferSize: 8
+  plusDelay: 0
 --- !u!1 &8457370020968699852
 GameObject:
   m_ObjectHideFlags: 0
@@ -458,6 +449,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!1001 &2309766009117250119
 PrefabInstance:

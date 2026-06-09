@@ -26,6 +26,7 @@ namespace Projectiles
 		public Animator Animator;
 		public LineRenderer LineRenderer;
 		public ParticleSystem ParticleEffect;
+		public float ParticelEffectPlugRange;
 		public VisualEffect VisualEffect;
 
 		protected virtual void Awake()
