@@ -231,7 +231,7 @@ Material:
     - _ZWriteControl: 0
     m_Colors:
     - _BaseColor: {r: 1, g: 1, b: 1, a: 1}
-    - _Color: {r: 0, g: 0.15507881, b: 0.23584908, a: 1}
+    - _Color: {r: 0, g: 0.08805035, b: 0.13207549, a: 1}
     - _ColorMaskScroll: {r: 0.001, g: 0.05, b: 0, a: 0}
     - _ColorRemap: {r: -0.03, g: 0.5, b: 0, a: 0}
     - _Color_1: {r: 1, g: 1, b: 1, a: 0}
