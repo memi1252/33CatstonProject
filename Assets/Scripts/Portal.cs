@@ -69,7 +69,16 @@ public class Portal : MonoBehaviour
         {
             if (worldPromptObject != null) worldPromptObject.SetActive(false);
             _localPlayerInRange.StartTeleport(this);
+
+            // 스테이지 출구 포탈이라면 StageManager 에 알려 다음 스테이지를 시작시킨다.
+            if (StageManager.Instance != null) StageManager.Instance.NotifyExitPortalUsed(this);
         }
+    }
+
+    // 도착 지점을 런타임에 외부(StageManager 등)에서 지정할 수 있게 한다.
+    public void SetDestination(Transform dest)
+    {
+        if (dest != null) destination = dest;
     }
 
     // Player가 텔레포트 시퀀스에서 사용

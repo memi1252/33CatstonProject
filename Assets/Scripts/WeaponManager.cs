@@ -37,7 +37,9 @@ public class WeaponManager : NetworkBehaviour
         if (Instance == null)
         {
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            // 주의: NetworkBehaviour를 DontDestroyOnLoad로 씬 간 이동시키면 NetworkObject가
+            // 무효화되어 FixedUpdateNetwork/RPC(M키 무기선택)가 동작하지 않는다.
+            // 무기 선택이 일어나는 씬에 WeaponManager NetworkObject를 직접 배치할 것.
         }
         else
         {
@@ -47,7 +49,19 @@ public class WeaponManager : NetworkBehaviour
 
     void Start()
     {
-        UIManager.Instance.weaponUI.SetActive(false);
+        ResolveUIReferences();
+        if (UIManager.Instance != null && UIManager.Instance.weaponUI != null)
+            UIManager.Instance.weaponUI.SetActive(false);
+    }
+
+    // 게임 씬에 배치된 WeaponManager는 영구(DontDestroyOnLoad) UI를 에디터에서 연결할 수 없으므로
+    // 런타임에 UIManager에서 UI 참조를 가져온다. (UIManager에 값이 있을 때만 덮어씀 → 로비 인스턴스는 자체 연결 유지)
+    private void ResolveUIReferences()
+    {
+        if (UIManager.Instance == null) return;
+        if (UIManager.Instance.weaponSelectPanel != null) weaponSelectPanel = UIManager.Instance.weaponSelectPanel;
+        if (UIManager.Instance.weaponTimerFillImage != null) timerFillImage = UIManager.Instance.weaponTimerFillImage;
+        if (UIManager.Instance.weaponTimerText != null) timerText = UIManager.Instance.weaponTimerText;
     }
 
     public override void FixedUpdateNetwork()
@@ -121,6 +135,13 @@ public class WeaponManager : NetworkBehaviour
         WeaponSelect();
     }
 
+    // StageManager 등 외부에서 무기 선택을 시작하기 위한 진입점. (씬 권한자 → 모든 클라이언트에 오픈)
+    public void RequestWeaponSelect()
+    {
+        if (Runner != null && Runner.IsSceneAuthority)
+            RPC_OpenWeaponSelectUI();
+    }
+
     public void WeaponSelect()
     {
         if (_localUIActive)
@@ -148,7 +169,8 @@ public class WeaponManager : NetworkBehaviour
         NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
         if (playerObj != null && playerObj.TryGetComponent(out Starter.Platformer.PlayerInput playerInput))
         {
-            playerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>().enabled = false;
+            // 래퍼를 거쳐야 누적 입력(_input)이 초기화되어 UI 종료 후 이동이 정상 복구된다.
+            playerInput.DisableInput();
             Debug.Log("[WeaponManager] Player input disabled");
         }
     }
@@ -158,7 +180,7 @@ public class WeaponManager : NetworkBehaviour
         NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
         if (playerObj != null && playerObj.TryGetComponent(out Starter.Platformer.PlayerInput playerInput))
         {
-            playerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>().enabled = true;
+            playerInput.EnableInput();
             Debug.Log("[WeaponManager] Player input enabled");
         }
     }

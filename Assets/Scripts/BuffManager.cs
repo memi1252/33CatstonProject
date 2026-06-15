@@ -107,7 +107,8 @@ public class BuffManager : NetworkBehaviour
         NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
         if (playerObj != null && playerObj.TryGetComponent(out PlayerInput playerInput))
         {
-            playerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>().enabled = false;
+            // 래퍼를 거쳐야 누적 입력(_input)이 초기화되어 UI 종료 후 이동이 정상 복구된다.
+            playerInput.DisableInput();
             Debug.Log("[BuffManager] Player input disabled");
         }
     }
@@ -117,10 +118,25 @@ public class BuffManager : NetworkBehaviour
         NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
         if (playerObj != null && playerObj.TryGetComponent(out PlayerInput playerInput))
         {
-            playerInput.gameObject.GetComponent<UnityEngine.InputSystem.PlayerInput>().enabled = true;
+            playerInput.EnableInput();
             Debug.Log("[BuffManager] Player input enabled");
         }
     }
+
+    // ===== 외부(StageManager 등) 연동 진입점 =====
+    // 계약/각인 투표를 코드로 시작한다. 실제 시작은 씬 권한자의 FixedUpdateNetwork 에서 소비된다.
+    public void RequestContractVote()
+    {
+        if (Runner != null && Runner.IsSceneAuthority) _contractTriggerRequested = true;
+    }
+
+    public void RequestImprintVote()
+    {
+        if (Runner != null && Runner.IsSceneAuthority) _imprintTriggerRequested = true;
+    }
+
+    // 계약/각인 투표가 진행 중인지 (네트워크 동기화 상태 기반). 종료되면 둘 다 false.
+    public bool IsBuffVoteActive => isContractBuffActive || isImprintBuffActive;
 
     // Update is called once per frame
     void Update()

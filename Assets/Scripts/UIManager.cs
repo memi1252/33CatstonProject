@@ -21,6 +21,11 @@ public class UIManager : MonoBehaviour
     public InputField chatInput;
     public TextMeshProUGUI chatMessageText;
 
+    [Header("Weapon UI (WeaponManager가 런타임에 사용)")]
+    public Transform weaponSelectPanel;
+    public Image weaponTimerFillImage;
+    public TextMeshProUGUI weaponTimerText;
+
     private void Awake()
     {
         if (Instance == null)

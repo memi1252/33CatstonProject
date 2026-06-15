@@ -74,8 +74,15 @@ public sealed class GameManager : NetworkBehaviour
 
 	public Vector3 GetSpawnPosition()
 	{
+		// 스폰 위치는 StageManager 가 지정한다. 없거나 지정 안 됐으면 GameManager 위치로 폴백.
+		if (StageManager.Instance != null &&
+		    StageManager.Instance.TryGetPlayerSpawnPosition(SpawnRadius, out Vector3 stagePos))
+		{
+			return stagePos;
+		}
+
 		var randomPositionOffset = UnityEngine.Random.insideUnitCircle * SpawnRadius;
-		return transform.position + new Vector3(randomPositionOffset.x, transform.position.y, randomPositionOffset.y);
+		return transform.position + new Vector3(randomPositionOffset.x, 0f, randomPositionOffset.y);
 	}
 
 	public override void Spawned()

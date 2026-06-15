@@ -47,6 +47,8 @@ public class Enemy : NetworkBehaviour , IDamageable
     [Networked] protected TickTimer attackCooldown { get; set; }
 
     [Header("어그로 설정")]
+    [Tooltip("한 번 플레이어를 감지하면 거리에 상관없이 계속 추격한다. (켜두면 감지 후 절대 놓치지 않음)")]
+    public bool alwaysChase = true;
     [Tooltip("피격으로 어그로 끌린 후, 평소 감지 범위를 무시하고 추격을 유지하는 시간(초)")]
     public float aggroPersistDuration = 10f;
     // 피격 어그로가 유지되는 동안에는 detection 범위 밖이어도 타겟을 떨구지 않음
@@ -176,7 +178,8 @@ public class Enemy : NetworkBehaviour , IDamageable
 
         float distanceToTarget = Vector3.Distance(transform.position, target.position);
 
-        if (distanceToTarget > attackRange * detectionMultiplier)
+        // alwaysChase 가 켜져 있으면 한 번 감지한 타겟을 거리와 무관하게 계속 추격한다.
+        if (!alwaysChase && distanceToTarget > attackRange * detectionMultiplier)
         {
             // 피격 어그로가 활성화된 동안에는 거리가 멀어도 계속 추격
             if (aggroPersistTimer.ExpiredOrNotRunning(Runner))
@@ -362,7 +365,7 @@ public class Enemy : NetworkBehaviour , IDamageable
         {
             return;
         }
-        rb.linearVelocity = Vector3.zero; // 피격 시 순간적으로 이동 멈춤 (넉백 효과 제거)
+        if (rb != null) rb.linearVelocity = Vector3.zero; // 피격 시 순간적으로 이동 멈춤 (넉백 효과 제거). Rigidbody 없는 적이면 건너뜀(NRE 방지)
 
         // attacker의 NetworkObject를 RPC로 전달하기 위해 추출
         NetworkObject attackerNetObj = null;
@@ -390,6 +393,8 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = default)
     {
+        if (isDead) return; // 사망 후 디스폰 지연 동안 들어온 추가 타격은 무시 (오버킬 팝업/중복 처리 방지)
+
         Debug.Log(damage);
         Rpc_ShowDamagePopup(damage);
         health -= damage;
@@ -482,13 +487,29 @@ public class Enemy : NetworkBehaviour , IDamageable
         damagePopup.Spawn(transform.position + Vector3.up, damage);
     }
 
+    [Header("사망")]
+    [Tooltip("사망 후 디스폰까지 지연(초). 즉시 디스폰하면 막타 데미지 숫자 RPC가 디스폰과 같은 틱에 묻혀 원격 클라이언트에서 안 보인다. 약간의 지연으로 팝업 RPC가 먼저 전달되게 한다.")]
+    public float despawnDelay = 0.12f;
+
     public virtual void Die()
     {
         if (!Object.HasStateAuthority) return;
+        if (isDead) return;
 
         isDead = true;
         CurrentState = EnemyState.Dead;
-        Runner.Despawn(Object);
+
+        if (despawnDelay > 0f)
+            StartCoroutine(DespawnAfterDelay(despawnDelay));
+        else
+            Runner.Despawn(Object);
+    }
+
+    private IEnumerator DespawnAfterDelay(float delay)
+    {
+        yield return new WaitForSeconds(delay);
+        if (Object != null && Object.IsValid && HasStateAuthority)
+            Runner.Despawn(Object);
     }
 
     private void OnDrawGizmosSelected()

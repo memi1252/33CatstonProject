@@ -96,6 +96,10 @@ namespace Starter.Platformer
 		{
 			if (_playerInputComponent != null)
 			{
+				// 비활성화 동안 남아있던 stale 입력을 초기화한다.
+				// Value형 Move 액션은 재활성화 시 초기 상태 체크로 현재 눌린 방향을 다시 보내므로
+				// 이동이 정상 복구된다. (초기화하지 않으면 채팅 후 가끔 캐릭터가 안 움직임)
+				_input = default;
 				_playerInputComponent.enabled = true;
 				Debug.Log($"[PlayerInput] Unity PlayerInput 활성화 - HasInputAuthority: {_networkObject?.HasInputAuthority}");
 			}
@@ -106,6 +110,8 @@ namespace Starter.Platformer
 			if (_playerInputComponent != null)
 			{
 				_playerInputComponent.enabled = false;
+				// 입력 잠금 동안 마지막 이동값이 남아 캐릭터가 계속 미끄러지지 않도록 초기화한다.
+				_input = default;
 				Debug.Log("[PlayerInput] Unity PlayerInput 비활성화");
 			}
 		}
@@ -164,6 +170,14 @@ namespace Starter.Platformer
             if(_networkObject == null || !_networkObject.HasInputAuthority)
 
                 return;
+
+			// 마우스가 UI(버튼 등) 위에 있을 때는 공격하지 않는다.
+			if (value.isPressed
+			    && UnityEngine.EventSystems.EventSystem.current != null
+			    && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+			{
+				return;
+			}
 
 			_input.Attack = value.isPressed;
 		}

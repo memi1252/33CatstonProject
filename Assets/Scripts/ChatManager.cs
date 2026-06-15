@@ -10,8 +10,11 @@ public class ChatManager : NetworkBehaviour
 {
     public static ChatManager Instance { get; private set; }
     
-    public InputField inputChat; 
+    public InputField inputChat;
     public TextMeshProUGUI messageText;
+
+    // InputField의 isFocused는 Enter 제출 시 같은 프레임에 풀리므로, 채팅 열림 상태를 직접 추적한다.
+    private bool _chatOpen;
 
 
     private void Awake()
@@ -51,7 +54,9 @@ public class ChatManager : NetworkBehaviour
 
         if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
         {
-            if (inputChat.isFocused)
+            // InputField는 Enter 입력 시 같은 프레임에 포커스를 잃으므로 isFocused로 판단하면
+            // 전송이 누락된다. 자체 _chatOpen 플래그로 열림/닫힘을 판단한다.
+            if (_chatOpen)
             {
                 // 입력 중 Enter → 내용이 있으면 전송하고 채팅 닫기
                 if (!string.IsNullOrEmpty(inputChat.text))
@@ -71,6 +76,7 @@ public class ChatManager : NetworkBehaviour
     private void OpenChat()
     {
         if (inputChat == null) return;
+        _chatOpen = true;
         if (!inputChat.gameObject.activeSelf) inputChat.gameObject.SetActive(true);
         inputChat.ActivateInputField();
         inputChat.Select();
@@ -79,6 +85,7 @@ public class ChatManager : NetworkBehaviour
 
     private void CloseChat()
     {
+        _chatOpen = false;
         if (inputChat != null)
         {
             inputChat.text = "";
@@ -96,18 +103,26 @@ public class ChatManager : NetworkBehaviour
         NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
         if (playerObj != null && playerObj.TryGetComponent(out PlayerInput playerInput))
         {
-            var unityInput = playerInput.GetComponent<UnityEngine.InputSystem.PlayerInput>();
-            if (unityInput != null) unityInput.enabled = inputEnabled;
+            // 래퍼를 거쳐야 누적 입력(_input)이 초기화되어 채팅 종료 후 이동이 정상 복구된다.
+            if (inputEnabled) playerInput.EnableInput();
+            else playerInput.DisableInput();
         }
     }
 
     public void SendChatMessage()
     {
-        if (!string.IsNullOrEmpty(inputChat.text))
+        // 채팅 UI(DontDestroyOnLoad) 버튼의 OnClick이 씬 전환으로 무효화된 ChatManager를
+        // 가리킬 수 있으므로, 항상 현재 씬의 유효한 Instance를 통해 전송한다.
+        ChatManager mgr = (Instance != null) ? Instance : this;
+        if (mgr.Object == null || !mgr.Object.IsValid)
         {
-            RPC_SendChatMessage(inputChat.text);
-            inputChat.text = "";
+            Debug.LogWarning("[ChatManager] 유효한 NetworkObject가 없어 채팅을 전송할 수 없습니다.");
+            return;
         }
+        if (mgr.inputChat == null || string.IsNullOrEmpty(mgr.inputChat.text)) return;
+
+        mgr.RPC_SendChatMessage(mgr.inputChat.text);
+        mgr.inputChat.text = "";
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
@@ -127,10 +142,15 @@ public class ChatManager : NetworkBehaviour
 
     public void SendSystemMessage(string msg, Color color)
     {
-        if (!string.IsNullOrEmpty(msg))
+        if (string.IsNullOrEmpty(msg)) return;
+
+        ChatManager mgr = (Instance != null) ? Instance : this;
+        if (mgr.Object == null || !mgr.Object.IsValid)
         {
-            RPC_SendSystemMessage(msg, color);
+            Debug.LogWarning("[ChatManager] 유효한 NetworkObject가 없어 시스템 메시지를 전송할 수 없습니다.");
+            return;
         }
+        mgr.RPC_SendSystemMessage(msg, color);
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]
