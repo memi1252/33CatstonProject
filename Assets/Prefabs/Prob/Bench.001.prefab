@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 6308598324917287571}
   - component: {fileID: 6298702116687923799}
   - component: {fileID: 3546378370817521089}
+  - component: {fileID: 8279507801143162352}
   m_Layer: 0
   m_Name: Bench.001
   m_TagString: Untagged
@@ -88,4 +89,26 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!65 &8279507801143162352
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 214980904754818720}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 0.4709357, y: 0.7466211, z: 0.6832497}
+  m_Center: {x: -0.03676934, y: -0.0044024433, z: -0.06459768}

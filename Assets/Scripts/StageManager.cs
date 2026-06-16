@@ -349,10 +349,15 @@ public class StageManager : NetworkBehaviour
 
     private void SetPortalLockedLocal(int stageIndex, bool locked)
     {
+        Debug.Log("됬다고 해줘 제발");
         if (stageIndex < 0 || stageIndex >= stages.Count) return;
         Portal p = stages[stageIndex].exitPortal;
         if (p != null && p.gameObject.activeSelf == locked)
+        {
+            Debug.Log("됬다고 해줘 제발");
             p.gameObject.SetActive(!locked);
+        }
+           
     }
 
     // 스테이지에 지정한 도착 지점을 해당 출구 포탈에 적용한다.
