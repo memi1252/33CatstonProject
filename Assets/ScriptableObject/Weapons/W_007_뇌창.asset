@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::WeaponScriptableObject
   weaponID: W_007
   weaponName: "\uB1CC\uCC3D"
-  weaponIcon: {fileID: 21300000, guid: ad7e80dbde5f2114a8cdac7abe5962fb, type: 3}
+  weaponIcon: {fileID: 0}
   description: "\uC9C1\uC120\uC73C\uB85C \uAF42\uD788\uB294 \uAC15\uB825\uD55C \uB1CC\uAD11\uC785\uB2C8\uB2E4.
     \uC55E\uAE38\uC744 \uB9C9\uB294 \uC790\uB294 \uB204\uAD6C\uB4E0 \uC804\uAE30\uC758
     \uC2EC\uD310\uC744 \uBC1B\uAC8C \uB420 \uAC83\uC785\uB2C8\uB2E4. \uADF8\uAC8C

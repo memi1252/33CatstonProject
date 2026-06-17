@@ -108,10 +108,13 @@ MonoBehaviour:
   _NetworkPosition: {x: 0, y: 0, z: 0}
   _NetworkRotation: {x: 0, y: 0, z: 0, w: 0}
   detectionMultiplier: 3
-  enemyData: {fileID: 11400000, guid: 8d04dede18f3fe840933f33a08e3b0d6, type: 2}
+  enemyData: {fileID: 11400000, guid: c9080ea775a6ecb43843c9044be511cd, type: 2}
   agent: {fileID: 5012005425520275564}
   dieEffect: {fileID: 0}
+  alwaysChase: 1
+  aggroPersistDuration: 10
   dontMove: 0
+  despawnDelay: 0.12
 --- !u!114 &4790685389386678985
 MonoBehaviour:
   m_ObjectHideFlags: 0

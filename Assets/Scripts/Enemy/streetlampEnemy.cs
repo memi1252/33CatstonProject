@@ -20,36 +20,57 @@ public class streetlampEnemy : Enemy
     public bool _useBuffer;
 
     private MeshRenderer meshRenderer;
+    private Rigidbody _rb;
+    private bool _landed = false;
 
-
-    private void Awake()
+    protected override void Awake()
     {
+        base.Awake(); // Enemy.Awake() — rb 세팅 + enemyData 스탯 초기화
         ownerEnemy = GetComponent<Enemy>();
         meshRenderer = GetComponentInChildren<MeshRenderer>();
+        _rb = GetComponent<Rigidbody>();
     }
 
+    public override void Spawned()
+    {
+        base.Spawned();
+        // StateAuthority(호스트)에서만 물리 낙하 처리. 클라이언트는 NetworkPosition 보간으로 따라옴.
+        if (HasStateAuthority && _rb != null)
+        {
+            _rb.isKinematic = false;
+            _rb.useGravity = true;
+            StartCoroutine(LandingTimeout());
+        }
+    }
+
+    // 바닥에 닿는 순간 kinematic으로 전환 — 투사체가 맞출 수 있는 정확한 위치에 고정
+    private void OnCollisionEnter(Collision collision)
+    {
+        if (_landed || _rb == null || _rb.isKinematic) return;
+        FreezeRigidbody();
+    }
+
+    private void FreezeRigidbody()
+    {
+        if (_rb == null || _landed) return;
+        _rb.linearVelocity = Vector3.zero;
+        _rb.angularVelocity = Vector3.zero;
+        _rb.isKinematic = true;
+        _landed = true;
+    }
+
+    // OnCollisionEnter가 어떤 이유로 안 불릴 경우 대비한 안전 타임아웃 (5초)
+    private System.Collections.IEnumerator LandingTimeout()
+    {
+        yield return new WaitForSeconds(5f);
+        FreezeRigidbody();
+    }
 
     protected override void Start()
     {
         base.Start();
-
-        // ???(Enemy)?? Start()???? enemyData?? ???? ü??, ??????, ???? ?????? ??????.
-        // ??? ??????????? ??????? ?????? ?? ?????????.
         if (enemyData != null)
-        {
             damage = enemyData.damage;
-        }
-        else
-        {
-            // SO?? ???? ????? ?? ????(???? ???? ????)
-            startingHealth = 50f;
-            attackRange = 5f;
-
-            if (agent != null)
-            {
-                agent.speed = 10f;
-            }
-        }
     }
 
     private void Update()

@@ -127,6 +127,12 @@ public class StageManager : NetworkBehaviour
     {
         if (index < 0 || index >= stages.Count) return;
 
+        // 추적 목록 + 씬 전체 Enemy를 모두 디스폰 (_aliveEnemies 누락분까지 보장)
+        DespawnAllEnemies();
+
+        // 포탈 재사용 시 이전에 열린 포탈을 다시 잠근다
+        RPC_LockAllPortals();
+
         CurrentStageIndex = index;
         StageDefinition def = stages[index];
 
@@ -183,15 +189,60 @@ public class StageManager : NetworkBehaviour
         }
     }
 
+    private void DespawnAllEnemies()
+    {
+        if (!HasStateAuthority) return;
+        // _aliveEnemies 추적 목록에 있는 것
+        foreach (var e in _aliveEnemies)
+        {
+            if (e != null && e.Object != null && e.Object.IsValid)
+                Runner.Despawn(e.Object);
+        }
+        // 씬에서 직접 찾아서 누락분도 처리 (NavMesh 오류 등으로 비정상 상태인 적 포함)
+        foreach (var e in FindObjectsOfType<Enemy>())
+        {
+            if (e.Object != null && e.Object.IsValid)
+                Runner.Despawn(e.Object);
+        }
+    }
+
     private void SpawnEnemies(StageDefinition def)
     {
         int count = Mathf.Clamp(Random.Range(def.minEnemies, def.maxEnemies + 1), 1, 99);
+        // 전봇대(streetlampEnemy)는 위치가 겹치면 안 되므로 점유된 스폰 포인트 인덱스를 따로 추적
+        var lampOccupied = new System.Collections.Generic.HashSet<int>();
+
         for (int i = 0; i < count; i++)
         {
             Enemy prefab = def.RandomEnemy();
             if (prefab == null) continue;
 
-            Transform pt = def.enemySpawnPoints[i % def.enemySpawnPoints.Length];
+            Transform pt;
+            if (prefab is streetlampEnemy)
+            {
+                // 아직 전봇대가 없는 포인트를 순서대로 찾는다
+                pt = null;
+                for (int k = 0; k < def.enemySpawnPoints.Length; k++)
+                {
+                    int idx = (i + k) % def.enemySpawnPoints.Length;
+                    if (!lampOccupied.Contains(idx))
+                    {
+                        lampOccupied.Add(idx);
+                        pt = def.enemySpawnPoints[idx];
+                        break;
+                    }
+                }
+                if (pt == null)
+                {
+                    Debug.LogWarning($"[StageManager] {def.stageName}: 전봇대를 스폰할 남은 포인트가 없어 건너뜁니다.");
+                    continue;
+                }
+            }
+            else
+            {
+                pt = def.enemySpawnPoints[i % def.enemySpawnPoints.Length];
+            }
+
             Enemy e = Runner.Spawn(prefab, pt.position, pt.rotation);
             if (e != null) _aliveEnemies.Add(e);
         }
@@ -313,23 +364,26 @@ public class StageManager : NetworkBehaviour
     private void OnBossDefeated()
     {
         _phase = StagePhase.Cleared;
-        RPC_RunComplete();
+        if (CurrentStageIndex >= stages.Count - 1)
+        {
+            // 최종 보스 처치 → 런 클리어
+            RPC_RunComplete();
+        }
+        else
+        {
+            // 중간 보스 처치 → 포탈 열고 다음 스테이지로 계속
+            RPC_SetPortalLocked(CurrentStageIndex, false);
+            Announce($"[{stages[CurrentStageIndex].stageName}] 보스 처치! 포탈이 열렸습니다.");
+        }
     }
 
     // ===== 다음 스테이지 진입 (출구 포탈 사용 시 호출) =====
-    // 로컬 플레이어가 출구 포탈을 사용하면 Portal 에서 호출된다.
     public void NotifyExitPortalUsed(Portal portal)
     {
-        int idx = FindStageByExitPortal(portal);
-        if (idx < 0) return;                 // 스테이지 출구 포탈이 아님 (일반 포탈)
-        RPC_RequestBeginStage(idx + 1);
-    }
-
-    private int FindStageByExitPortal(Portal portal)
-    {
-        for (int i = 0; i < stages.Count; i++)
-            if (stages[i] != null && stages[i].exitPortal == portal) return i;
-        return -1;
+        // 현재 클리어된 스테이지의 포탈인지만 확인 (같은 포탈이 여러 스테이지에서 재사용되므로 인덱스 검색 금지)
+        if (CurrentStageIndex < 0 || CurrentStageIndex >= stages.Count) return;
+        if (stages[CurrentStageIndex].exitPortal != portal) return;
+        RPC_RequestBeginStage(CurrentStageIndex + 1);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
@@ -341,6 +395,20 @@ public class StageManager : NetworkBehaviour
     }
 
     // ===== 출구 포탈 잠금/해제 =====
+
+    // 모든 고유 포탈을 강제로 잠근다 (포탈 재사용 시 이전 스테이지에서 열린 것을 닫기 위해)
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_LockAllPortals()
+    {
+        var seen = new System.Collections.Generic.HashSet<int>();
+        foreach (var def in stages)
+        {
+            if (def.exitPortal == null) continue;
+            if (seen.Add(def.exitPortal.GetInstanceID()))
+                def.exitPortal.gameObject.SetActive(false);
+        }
+    }
+
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_SetPortalLocked(int stageIndex, NetworkBool locked)
     {
@@ -349,15 +417,10 @@ public class StageManager : NetworkBehaviour
 
     private void SetPortalLockedLocal(int stageIndex, bool locked)
     {
-        Debug.Log("됬다고 해줘 제발");
         if (stageIndex < 0 || stageIndex >= stages.Count) return;
         Portal p = stages[stageIndex].exitPortal;
         if (p != null && p.gameObject.activeSelf == locked)
-        {
-            Debug.Log("됬다고 해줘 제발");
             p.gameObject.SetActive(!locked);
-        }
-           
     }
 
     // 스테이지에 지정한 도착 지점을 해당 출구 포탈에 적용한다.

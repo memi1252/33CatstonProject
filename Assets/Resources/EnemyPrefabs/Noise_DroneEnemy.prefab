@@ -99,6 +99,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NoiseDroneEnemy
   startingHealth: 0
   attackRange: 2
+  damagePopup: {fileID: 557488438303967389, guid: 2f96b9f2e11e72e4d9b62f5cfb3132d2,
+    type: 3}
   _health: 0
   _CurrentState: 0
   _isDead:
@@ -110,7 +112,10 @@ MonoBehaviour:
   agent: {fileID: 2917285165443099311}
   dieEffect: {fileID: 7133298800578810401, guid: 1eb899d11cb9cc942933e65f220fd41c,
     type: 3}
+  alwaysChase: 1
+  aggroPersistDuration: 10
   dontMove: 0
+  despawnDelay: 0.12
 --- !u!114 &4918969112356061101
 MonoBehaviour:
   m_ObjectHideFlags: 0

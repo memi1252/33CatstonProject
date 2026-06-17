@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 615407502337852208}
   - component: {fileID: 8494020081945462430}
   - component: {fileID: 4168648336917408603}
+  - component: {fileID: 5789571956813142613}
   m_Layer: 8
   m_Name: street lampEnemy
   m_TagString: Untagged
@@ -30,8 +31,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -0.32, y: -1.06, z: -4.07}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 2, y: 2, z: 2}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 2829271862961982044}
   - {fileID: 5057837183345607375}
@@ -75,6 +76,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::streetlampEnemy
   startingHealth: 0
   attackRange: 2
+  damagePopup: {fileID: 557488438303967389, guid: 2f96b9f2e11e72e4d9b62f5cfb3132d2,
+    type: 3}
   _health: 0
   _CurrentState: 0
   _isDead:
@@ -84,7 +87,11 @@ MonoBehaviour:
   detectionMultiplier: 3
   enemyData: {fileID: 11400000, guid: 13965a363105c45409c8a40034144b61, type: 2}
   agent: {fileID: 0}
+  dieEffect: {fileID: 0}
+  alwaysChase: 1
+  aggroPersistDuration: 10
   dontMove: 1
+  despawnDelay: 0.12
   damage: 10
   Light: {fileID: 3586294263484557528}
   IdleColor: {r: 1, g: 0.99106956, b: 0, a: 1}
@@ -138,6 +145,33 @@ MonoBehaviour:
   - {fileID: 615407502337852208}
   - {fileID: 8494020081945462430}
   ForceRemoteRenderTimeframe: 0
+--- !u!54 &5789571956813142613
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1495933542202697539}
+  serializedVersion: 5
+  m_Mass: 10
+  m_LinearDamping: 0.5
+  m_AngularDamping: 0.05
+  m_CenterOfMass: {x: 0, y: 0, z: 0}
+  m_InertiaTensor: {x: 1, y: 1, z: 1}
+  m_InertiaRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ImplicitCom: 1
+  m_ImplicitTensor: 1
+  m_UseGravity: 1
+  m_IsKinematic: 0
+  m_Interpolate: 0
+  m_Constraints: 112
+  m_CollisionDetection: 0
 --- !u!1 &2935500287252805423
 GameObject:
   m_ObjectHideFlags: 0

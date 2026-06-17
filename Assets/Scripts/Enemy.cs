@@ -58,31 +58,29 @@ public class Enemy : NetworkBehaviour , IDamageable
     
     private Rigidbody rb;
 
-    private void Awake()
+    protected virtual void Awake()
     {
         rb = GetComponent<Rigidbody>();
+        // Spawned()보다 먼저 실행되므로 여기서 스탯을 초기화해야 health = startingHealth가 올바르게 세팅됨
+        if (enemyData != null)
+        {
+            startingHealth = enemyData.hp;
+            attackRange = enemyData.range;
+            enemyType = enemyData.enemyType;
+        }
+        else
+        {
+            enemyType = EnemyType.Melee;
+        }
     }
-
 
     protected virtual void Start()
     {
         if (!dontMove)
         {
             agent = GetComponent<NavMeshAgent>();
-            agent.updateRotation = false; // NavMeshAgent의 자동 회전을 끄고 수동으로 타겟을 바라보게 설정
-        }
-        
-
-        if (enemyData != null)
-        {
-            startingHealth = enemyData.hp;
-            attackRange = enemyData.range;
-            enemyType = enemyData.enemyType;
-            if (agent != null) agent.speed = enemyData.speed;
-        }
-        else
-        {
-            enemyType = EnemyType.Melee; // 기본값
+            agent.updateRotation = false;
+            if (enemyData != null && agent != null) agent.speed = enemyData.speed;
         }
     }
 
@@ -263,21 +261,20 @@ public class Enemy : NetworkBehaviour , IDamageable
         {
             case EnemyType.Melee:
                 if (dontMove) break;
-                // 근거리는 타겟과 살짝 거리를 유지하며 멈추거나 조금 다가가기
-                float meleeStoppingDistance = attackRange * 0.85f; // 사거리의 85% 정도에서 멈춤
+                float meleeStoppingDistance = attackRange * 0.85f;
                 if (distanceToTarget > meleeStoppingDistance)
                 {
-                    agent.SetDestination(target.position);
+                    if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                        agent.SetDestination(target.position);
                 }
                 else
                 {
-                    // 거리가 충분히 가까우면 제자리에 정지
-                    agent.ResetPath();
+                    if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                        agent.ResetPath();
                 }
                 break;
             case EnemyType.Ranged:
                 if (dontMove) break;
-                // 원거리는 사거리 내에서 거리를 유지하며 횡이동(Strafing)
                 strafeTimer -= Runner.DeltaTime;
                 if (strafeTimer <= 0)
                 {
@@ -288,15 +285,16 @@ public class Enemy : NetworkBehaviour , IDamageable
                 Vector3 dirToTarget = (target.position - transform.position).normalized;
                 dirToTarget.y = 0;
                 Vector3 rightDir = Vector3.Cross(dirToTarget, Vector3.up).normalized;
-                
+
                 float maintainDistance = attackRange * 0.8f;
                 Vector3 targetPosition = target.position - (dirToTarget * maintainDistance) + (rightDir * strafeDirection * 2f);
-                agent.SetDestination(targetPosition);
+                if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                    agent.SetDestination(targetPosition);
                 break;
             case EnemyType.destruct:
                 if (dontMove) break;
-                // 자폭형: 목표를 향해 돌진 (무빙 필요 없음)
-                agent.SetDestination(target.position);
+                if (agent != null && agent.isActiveAndEnabled && agent.isOnNavMesh)
+                    agent.SetDestination(target.position);
                 // 자폭 처리 로직은 자폭 사거리 내에 들어오면 실행
                 if (distanceToTarget <= 3f)
                 {

@@ -50,6 +50,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::TaxiEnemy
   startingHealth: 0
   attackRange: 2
+  damagePopup: {fileID: 557488438303967389, guid: 2f96b9f2e11e72e4d9b62f5cfb3132d2,
+    type: 3}
   _health: 0
   _CurrentState: 0
   _isDead:
@@ -57,9 +59,13 @@ MonoBehaviour:
   _NetworkPosition: {x: 0, y: 0, z: 0}
   _NetworkRotation: {x: 0, y: 0, z: 0, w: 0}
   detectionMultiplier: 3
-  enemyData: {fileID: 11400000, guid: f719b10c85cca124da778bdd91f234af, type: 2}
+  enemyData: {fileID: 11400000, guid: 490918d6905d9884487677cc06498005, type: 2}
   agent: {fileID: 0}
+  dieEffect: {fileID: 0}
+  alwaysChase: 1
+  aggroPersistDuration: 10
   dontMove: 0
+  despawnDelay: 0.12
   wheelDustParticles:
   - {fileID: 7536640277860392099}
   - {fileID: 1718336545290929384}
