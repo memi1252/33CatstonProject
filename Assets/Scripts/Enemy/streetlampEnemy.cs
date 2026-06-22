@@ -70,7 +70,7 @@ public class streetlampEnemy : Enemy
     {
         base.Start();
         if (enemyData != null)
-            damage = enemyData.damage;
+            damage = GetFinalDamage();
     }
 
     private void Update()

@@ -93,12 +93,13 @@ public class LobbyReadyUI : MonoBehaviour
             StatusText.text = string.Empty;
     }
 
-    private void OnReadyClicked()
+private void OnReadyClicked()
     {
         if (LobbyReadyManager.Instance == null) return;
         if (_runner == null) return;
         if (!LobbyReadyManager.Instance.CanReady()) return;
 
+        SoundManager.Instance?.PlaySFX(SoundManager.Instance?.sfxUIReady);
         bool current = LobbyReadyManager.Instance.IsReady(_runner.LocalPlayer);
         LobbyReadyManager.Instance.RPC_SetReady(_runner.LocalPlayer, !current);
     }

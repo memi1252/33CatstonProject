@@ -310,8 +310,7 @@ public class BuffManager : NetworkBehaviour
     }
 
     // 각인 버프 적용: 모든 클라가 받아 자기 플레이어에만 적용 (Shared 모드 권한 규칙)
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
+private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
     {
         Player me = GetLocalPlayer();
         if (me == null) return;
@@ -321,12 +320,26 @@ public class BuffManager : NetworkBehaviour
             foreach (int idx in conditionIndices)
             {
                 if (idx >= 0 && idx < imprintAvailableBuffs.Length)
-                    me.ApplyImprintConditionBuff(imprintAvailableBuffs[idx]);
+                {
+                    var buff = imprintAvailableBuffs[idx];
+                    me.ApplyImprintConditionBuff(buff);
+                    if (buff.votingAbility != null)
+                        foreach (var entry in buff.votingAbility)
+                            EnemyGlobalBuffs.Apply(entry.targetAbilities);
+                }
             }
         }
 
         if (winnerIndex >= 0 && winnerIndex < imprintAvailableBuffs.Length)
-            me.ApplyImprintBuff(imprintAvailableBuffs[winnerIndex]);
+        {
+            var winner = imprintAvailableBuffs[winnerIndex];
+            me.ApplyImprintBuff(winner);
+            if (winner.buffProperties != null)
+                foreach (var entry in winner.buffProperties)
+                    EnemyGlobalBuffs.Apply(entry.targetAbilities);
+        }
+
+        SoundManager.Instance?.PlayBuffApply();
     }
 
 
@@ -362,7 +375,14 @@ public class BuffManager : NetworkBehaviour
             foreach (int idx in contractIndices)
             {
                 if (idx >= 0 && idx < contractAvailableBuffs.Length)
-                    me.ApplyContractBuff(contractAvailableBuffs[idx]);
+                {
+                    var contract = contractAvailableBuffs[idx];
+                    me.ApplyContractBuff(contract);
+                    // 계약에 적 관련 속성이 있으면 전역에 누적
+                    if (contract.contractBuffs != null)
+                        foreach (var entry in contract.contractBuffs)
+                            EnemyGlobalBuffs.Apply(entry.targetAbilities);
+                }
             }
         }
 

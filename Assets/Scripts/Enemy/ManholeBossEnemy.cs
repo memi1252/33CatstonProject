@@ -203,7 +203,11 @@ public class ManholeBossEnemy : Enemy
         if (cover == null) return;
 
         var minion = Runner.Spawn(prefab, cover.transform.position + minionSpawnOffset, Quaternion.identity);
-        if (minion != null) _aliveMinions.Add(minion);
+        if (minion != null)
+        {
+            _aliveMinions.Add(minion);
+            SoundManager.Instance?.PlayEnemyMinionSpawn();
+        }
     }
 
     // 소환할 잡몹 종류가 하나라도 있는지
@@ -308,6 +312,7 @@ public class ManholeBossEnemy : Enemy
     {
         if (steamProjectilePrefab == null || steamFirePoint == null) return;
 
+        SoundManager.Instance?.PlayEnemyBossSteam();
         Rpc_PlayMomentary(ANIM_CROCHBITE); // 증기 발사 모션
 
         var players = GameObject.FindGameObjectsWithTag("Player");
@@ -335,7 +340,7 @@ public class ManholeBossEnemy : Enemy
             if (proj != null)
             {
                 proj.ownerEnemy = this;
-                float dmg = enemyData != null ? enemyData.damage : 10f;
+                float dmg = GetFinalDamage();
                 proj.Fire(steamFirePoint.position, rot, dmg, steamRaycastMask, steamAttribute);
             }
             if (steamMuzzleParticles != null) steamMuzzleParticles.Play();

@@ -95,6 +95,7 @@ public class TaxiEnemy : Enemy
     {
         if (isCharging) return;
         isCharging = true;
+        SoundManager.Instance?.PlayEnemyTaxiCharge();
         hitObjects.Clear();
         chargeDirection = transform.forward;
         var vector3 = chargeDirection;

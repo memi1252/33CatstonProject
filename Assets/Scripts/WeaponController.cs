@@ -2,6 +2,7 @@ using System;
 using Fusion;
 using Projectiles.NetworkObjectExample;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class WeaponController : NetworkBehaviour
 {
@@ -9,6 +10,7 @@ public class WeaponController : NetworkBehaviour
     public WeaponScriptableObject startWeapon;
     //private Weapon equippedWeapon;
     private Weapon_NetworkObject equippedWeapon;
+    public WeaponScriptableObject CurrentWeaponSO => equippedWeapon?.WeaponSO;
 
     [Networked] private TickTimer attackCooldownTimer { get; set; }
     [Networked] private float currentMaxCooldown { get; set; }
@@ -130,27 +132,33 @@ public class WeaponController : NetworkBehaviour
         }
     }
 
-    public void Attack(Vector3 Look, float damage, float criticalDamage)
+public void Attack(Vector3 Look, float damage, float criticalDamage)
     {
         if (HasStateAuthority == false)
+            return;
+
+        if (SceneManager.GetActiveScene().buildIndex == 1)
             return;
         
         if (equippedWeapon != null && equippedWeapon.Object != null)
         {
-            // 공격 쿨타임 체크
             if (attackCooldownTimer.ExpiredOrNotRunning(Runner))
             {
                 equippedWeapon.Fire(damage, criticalDamage);
 
-                // 무기의 attackSpeed (쿨타임) (공격 속도 합산)
+                // 무기별 고유 발사음
+                if (SoundManager.Instance != null && equippedWeapon.WeaponSO != null && equippedWeapon.WeaponSO.fireSound != null)
+                    SoundManager.Instance.PlaySFX(equippedWeapon.WeaponSO.fireSound);
+
                 Starter.Platformer.Player player = GetComponent<Starter.Platformer.Player>();
                 float calculatedAttackTime = equippedWeapon.WeaponSO.attackSpeed;
-                
-                // Strike 무기일 때 5번 증강 기능(Strike 무기에 공격 속도 증가) 적용
-                if (equippedWeapon.WeaponSO.weaponType == WeaponType.Strike && player.HasSpecialEffect(SpecialEffectType.StrikeWeaponSpeedUp))
+
+                if (player != null && player.attackSpeed > 0f)
+                    calculatedAttackTime /= player.attackSpeed;
+
+                if (equippedWeapon.WeaponSO.weaponType == WeaponType.Strike && player != null && player.HasSpecialEffect(SpecialEffectType.StrikeWeaponSpeedUp))
                 {
                     float speedBonus = player.GetSpecialEffectValue(SpecialEffectType.StrikeWeaponSpeedUp);
-                    // 공속이 증가할수록 쿨타임은 줄어듦. (1 + 보너스)로 나누는 방식
                     calculatedAttackTime = calculatedAttackTime / (1f + speedBonus);
                 }
 

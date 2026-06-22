@@ -12,7 +12,7 @@ public class SlimeEnemy : Enemy
         IDamageable damageable = target.transform.GetComponent<IDamageable>();
         if (damageable != null)
         {
-            damageable.TakeHit(enemyData.damage, new RaycastHit(), this.gameObject);
+            damageable.TakeHit(GetFinalDamage(), new RaycastHit(), this.gameObject);
         }
     }
 }

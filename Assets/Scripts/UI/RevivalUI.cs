@@ -1,4 +1,4 @@
-﻿	/// 부활 UI를 표시합니다 (가능 상태)
+	/// 부활 UI를 표시합니다 (가능 상태)
 using System;
 using UnityEngine;
 using UnityEngine.UI;
@@ -12,10 +12,7 @@ using TMPro;
 	public class RevivalUI : MonoBehaviour
 	{
 
-		public void Show()
-		{
-			gameObject.SetActive(true);
-		}
+public void Show() { gameObject.SetActive(true); SoundManager.Instance?.PlayRevivalPrompt(); }
 
 		
 		public void Hide()

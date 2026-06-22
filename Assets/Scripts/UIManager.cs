@@ -26,6 +26,10 @@ public class UIManager : MonoBehaviour
     public Image weaponTimerFillImage;
     public TextMeshProUGUI weaponTimerText;
 
+    [Header("게임오버 / 클리어 UI")]
+    public GameOverUI gameOverUI;
+    public GameClearUI gameClearUI;
+
     private void Awake()
     {
         if (Instance == null)

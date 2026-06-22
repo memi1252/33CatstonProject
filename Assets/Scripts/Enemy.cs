@@ -55,7 +55,12 @@ public class Enemy : NetworkBehaviour , IDamageable
     [Networked] protected TickTimer aggroPersistTimer { get; set; }
 
     public bool dontMove = false;
-    
+    public bool isBoss = false;
+
+    // EnemyGlobalBuffs를 적용한 최종 데미지 (서브클래스에서 사용)
+    protected float GetFinalDamage() =>
+        EnemyGlobalBuffs.ScaledDamage(enemyData != null ? enemyData.damage : 10f, isBoss);
+
     private Rigidbody rb;
 
     protected virtual void Awake()
@@ -76,11 +81,16 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     protected virtual void Start()
     {
-        if (!dontMove)
+        // NavMeshAgent 초기화는 Spawned()에서 수행 (Fusion 위치 확정 후 Warp 필요)
+        // Fusion 없이 씬에 직접 배치된 경우(DummyEnemy 등)를 위한 폴백
+        if (!dontMove && agent == null)
         {
             agent = GetComponent<NavMeshAgent>();
-            agent.updateRotation = false;
-            if (enemyData != null && agent != null) agent.speed = enemyData.speed;
+            if (agent != null)
+            {
+                agent.updateRotation = false;
+                if (enemyData != null) agent.speed = EnemyGlobalBuffs.ScaledSpeed(enemyData.speed, isBoss);
+            }
         }
     }
 
@@ -88,10 +98,34 @@ public class Enemy : NetworkBehaviour , IDamageable
     {
         if (HasStateAuthority)
         {
-            health = startingHealth;
+            health = EnemyGlobalBuffs.ScaledHealth(startingHealth, isBoss);
             CurrentState = EnemyState.Idle;
             NetworkPosition = transform.position;
             NetworkRotation = transform.rotation;
+        }
+
+        // NavMeshAgent 초기화: Fusion이 스폰 위치를 확정한 뒤 실행해야
+        // OnEnable() 시점에 잘못된 NavMesh Surface에 붙는 문제를 방지한다.
+        if (!dontMove)
+        {
+            agent = GetComponent<NavMeshAgent>();
+            if (agent != null)
+            {
+                agent.updateRotation = false;
+                if (enemyData != null) agent.speed = EnemyGlobalBuffs.ScaledSpeed(enemyData.speed, isBoss);
+
+                // 스폰 위치(Fusion이 확정한 위치) 기준으로 가장 가까운 NavMesh에 재배치.
+                // 반경 2f: 스폰 포인트가 올바른 Surface 위에 있다면 그 Surface만 찾힌다.
+                if (NavMesh.SamplePosition(transform.position, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+                {
+                    agent.Warp(hit.position);
+                }
+                else
+                {
+                    Debug.LogWarning($"[Enemy] {name}: 스폰 위치 {transform.position} 주변 2m 내 NavMesh 없음. " +
+                                     "스폰 포인트를 NavMesh 표면 위에 배치하거나 NavMesh를 다시 구워주세요.");
+                }
+            }
         }
     }
 
@@ -334,7 +368,7 @@ public class Enemy : NetworkBehaviour , IDamageable
             if (c.transform.parent == transform) continue;
             if (c.transform.parent.TryGetComponent<IDamageable>(out var damageable))
             {
-                damageable.TakeHit(enemyData.damage, new RaycastHit(), this.gameObject);
+                damageable.TakeHit(GetFinalDamage(), new RaycastHit(), this.gameObject);
             }
         }
         ApplyDamage(health); 
@@ -389,13 +423,15 @@ public class Enemy : NetworkBehaviour , IDamageable
         ApplyDamage(damage, attackerObj);
     }
 
-    protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = default)
+protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = default)
     {
-        if (isDead) return; // 사망 후 디스폰 지연 동안 들어온 추가 타격은 무시 (오버킬 팝업/중복 처리 방지)
+        if (isDead) return;
 
-        Debug.Log(damage);
-        Rpc_ShowDamagePopup(damage);
-        health -= damage;
+        float finalDamage = EnemyGlobalBuffs.ScaledReceived(damage, isBoss);
+        Debug.Log(finalDamage);
+        Rpc_ShowDamagePopup(finalDamage);
+        health -= finalDamage;
+        SoundManager.Instance?.PlayEnemyHit();
         if (health <= 0 && !isDead)
         {
             CurrentState = EnemyState.Dead;
@@ -403,7 +439,6 @@ public class Enemy : NetworkBehaviour , IDamageable
             return;
         }
 
-        // 피격 시 어그로 끌기 - 공격자 우선, 없으면 가장 가까운 생존 플레이어로 폴백
         if (CurrentState != EnemyState.Dead)
         {
             AggroOnHit(attackerObj != null ? attackerObj.gameObject : null);
@@ -489,13 +524,18 @@ public class Enemy : NetworkBehaviour , IDamageable
     [Tooltip("사망 후 디스폰까지 지연(초). 즉시 디스폰하면 막타 데미지 숫자 RPC가 디스폰과 같은 틱에 묻혀 원격 클라이언트에서 안 보인다. 약간의 지연으로 팝업 RPC가 먼저 전달되게 한다.")]
     public float despawnDelay = 0.12f;
 
-    public virtual void Die()
+public virtual void Die()
     {
         if (!Object.HasStateAuthority) return;
         if (isDead) return;
 
         isDead = true;
         CurrentState = EnemyState.Dead;
+
+        if (isBoss)
+            SoundManager.Instance?.PlayEnemyBossRoar();
+        else
+            SoundManager.Instance?.PlayEnemySlimeDeath();
 
         if (despawnDelay > 0f)
             StartCoroutine(DespawnAfterDelay(despawnDelay));
