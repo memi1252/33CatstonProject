@@ -66,8 +66,9 @@ public class RoomSlot : MonoBehaviour
             roomPingText.color = badColor;
     }
 
-    private void HandleClick()
+private void HandleClick()
     {
+        SoundManager.Instance?.PlaySFX(SoundManager.Instance?.sfxUIRoomJoin);
         _onClick?.Invoke(_session);
     }
 }

@@ -625,7 +625,7 @@ public class BuffSOImporter : EditorWindow
             so.contractID = idStr;
             
             so.contractName = name;
-            so.contractIcon = Resources.Load<Sprite>($"ContractIcons/{imageName}");
+            so.contractIcon = Resources.Load<Sprite>($"ContractIcons/{name}");
             so.description = data[7]; // Explanation
 
             // TargetType 매핑 (None, Player, Enemy, Both)

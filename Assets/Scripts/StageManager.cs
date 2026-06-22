@@ -35,8 +35,8 @@ public class StageManager : NetworkBehaviour
         public Transform[] enemySpawnPoints;
         [Tooltip("이 스테이지에서 스폰할 적 프리팹 후보(랜덤). 정예 스테이지는 강한 적으로 채우세요.")]
         public Enemy[] enemyPool;
-        public int minEnemies = 3;
-        public int maxEnemies = 5;
+        public int minEnemies = 6;
+        public int maxEnemies = 12;
         [Tooltip("보스 스테이지에서 스폰할 보스 프리팹")]
         public Enemy bossPrefab;
 
@@ -70,6 +70,10 @@ public class StageManager : NetworkBehaviour
     [Tooltip("보상(투표)이 비정상 종료될 때를 대비한 최대 대기 시간(초).")]
     public float rewardTimeout = 60f;
 
+    [Header("게임 시작 무기 선택")]
+    [Tooltip("게임 씬 진입 시 첫 스테이지 전에 무기 선택 UI를 열지 여부")]
+    public bool weaponSelectOnStart = true;
+
     [Networked, OnChangedRender(nameof(OnStageChanged))]
     public int CurrentStageIndex { get; set; } = -1;
 
@@ -78,10 +82,22 @@ public class StageManager : NetworkBehaviour
     private bool _combatActive;
     private readonly List<Enemy> _aliveEnemies = new List<Enemy>();
 
+    // 포탈을 통과한 플레이어 추적 (전원 통과 시 다음 스테이지 시작)
+    private readonly System.Collections.Generic.HashSet<PlayerRef> _playersPassedPortal =
+        new System.Collections.Generic.HashSet<PlayerRef>();
+
+    // DespawnAllEnemies 후 1틱 기다렸다가 스폰 (이전 스테이지 잡몹 잔존 방지)
+    private int _pendingSpawnStageIndex = -1;
+    private TickTimer _spawnDelayTimer;
+
     private StageReward _rewardKind;
     private bool _rewardSawActive;     // 보상 투표가 실제로 시작됨(active==true)을 확인했는지
     private TickTimer _rewardTimeout;  // 보상 단계 안전 타임아웃
     private TickTimer _weaponRewardTimer;
+
+    // 게임 시작 시 무기 선택 대기
+    private bool _initialWeaponSelectPending;
+    private TickTimer _initialWeaponSelectTimer;
 
     private void Awake()
     {
@@ -105,15 +121,38 @@ public class StageManager : NetworkBehaviour
 
         if (HasStateAuthority)
         {
-            // 첫 스테이지 시작
             if (stages.Count > 0)
-                BeginStage(0);
+            {
+                if (weaponSelectOnStart)
+                {
+                    // 첫 스테이지 전 무기 선택 UI 오픈
+                    RPC_OpenInitialWeaponSelect();
+                    _initialWeaponSelectTimer = TickTimer.CreateFromSeconds(Runner, weaponRewardWait);
+                    _initialWeaponSelectPending = true;
+                }
+                else
+                {
+                    BeginStage(0);
+                }
+            }
         }
     }
 
     public override void FixedUpdateNetwork()
     {
         if (!HasStateAuthority) return;
+
+        if (_initialWeaponSelectPending)
+        {
+            if (_initialWeaponSelectTimer.Expired(Runner))
+            {
+                _initialWeaponSelectPending = false;
+                BeginStage(0);
+            }
+            return; // 무기 선택 중에는 다른 로직 정지
+        }
+
+        TickPendingSpawn();
 
         switch (_phase)
         {
@@ -133,6 +172,9 @@ public class StageManager : NetworkBehaviour
         // 포탈 재사용 시 이전에 열린 포탈을 다시 잠근다
         RPC_LockAllPortals();
 
+        // 포탈 통과 집계 초기화 (새 스테이지)
+        _playersPassedPortal.Clear();
+
         CurrentStageIndex = index;
         StageDefinition def = stages[index];
 
@@ -145,6 +187,34 @@ public class StageManager : NetworkBehaviour
 
         Announce($"[{def.stageName}] 시작");
 
+        if (!def.hasCombat)
+        {
+            // 전투 없는 스테이지(무기 변경 방 등): 바로 보상
+            Debug.Log($"[StageManager] {def.stageName}: 전투 없는 스테이지 → 바로 보상.");
+            StartReward(def);
+        }
+        else
+        {
+            // 전투 스테이지: 이전 스테이지 잡몹 소환 타이머가 완전히 정지하도록
+            // 1틱 기다렸다가 스폰 (DespawnAllEnemies 직후 즉시 스폰 시 잔존 몬스터 방지)
+            _pendingSpawnStageIndex = index;
+            _spawnDelayTimer = TickTimer.CreateFromSeconds(Runner, 0.1f);
+            _phase = StagePhase.NotStarted; // FixedUpdateNetwork가 스폰 대기를 처리
+        }
+    }
+
+    // 지연된 스폰 실행 (FixedUpdateNetwork에서 호출)
+    private void TickPendingSpawn()
+    {
+        if (_pendingSpawnStageIndex < 0) return;
+        if (!_spawnDelayTimer.Expired(Runner)) return;
+
+        int index = _pendingSpawnStageIndex;
+        _pendingSpawnStageIndex = -1;
+
+        if (index < 0 || index >= stages.Count) return;
+        StageDefinition def = stages[index];
+
         if (def.isBoss)
         {
             SpawnBoss(def);
@@ -155,16 +225,15 @@ public class StageManager : NetworkBehaviour
             }
             else
             {
-                Debug.LogError($"[StageManager] {def.stageName}: 보스 스테이지인데 보스가 스폰되지 않았습니다. bossPrefab/스폰포인트를 확인하세요.");
+                Debug.LogError($"[StageManager] {def.stageName}: 보스 스테이지인데 보스가 스폰되지 않았습니다.");
                 OnBossDefeated();
             }
         }
-        else if (def.hasCombat)
+        else
         {
             if (!def.HasSpawnData)
             {
-                Debug.LogError($"[StageManager] {def.stageName}: 전투 스테이지인데 스폰 포인트 또는 적 프리팹(enemyPool)이 비어 있습니다. " +
-                               $"(spawnPoints={(def.enemySpawnPoints?.Length ?? 0)}, enemyPool={(def.enemyPool?.Length ?? 0)})");
+                Debug.LogError($"[StageManager] {def.stageName}: 스폰 포인트 또는 enemyPool이 비어 있습니다.");
             }
 
             SpawnEnemies(def);
@@ -176,16 +245,9 @@ public class StageManager : NetworkBehaviour
             }
             else
             {
-                // 전투 스테이지인데 적이 한 마리도 스폰되지 않음 → 설정 오류. 게임이 막히지 않게 보상으로 넘기되 경고.
-                Debug.LogWarning($"[StageManager] {def.stageName}: 적이 0마리 스폰되어 전투를 건너뜁니다. 설정을 확인하세요.");
+                Debug.LogWarning($"[StageManager] {def.stageName}: 적이 0마리 스폰되어 전투를 건너뜁니다.");
                 StartReward(def);
             }
-        }
-        else
-        {
-            // 전투 없는 스테이지(무기 변경 방 등): 의도적으로 바로 보상으로.
-            Debug.Log($"[StageManager] {def.stageName}: 전투 없는 스테이지 → 바로 보상.");
-            StartReward(def);
         }
     }
 
@@ -249,7 +311,7 @@ public class StageManager : NetworkBehaviour
         Debug.Log($"[StageManager] {def.stageName}: 적 {_aliveEnemies.Count}마리 스폰");
     }
 
-    private void SpawnBoss(StageDefinition def)
+private void SpawnBoss(StageDefinition def)
     {
         if (def.bossPrefab == null)
         {
@@ -262,13 +324,43 @@ public class StageManager : NetworkBehaviour
             ? def.enemySpawnPoints[0].rotation : Quaternion.identity;
 
         Enemy boss = Runner.Spawn(def.bossPrefab, pos, rot);
-        if (boss != null) _aliveEnemies.Add(boss);
+        if (boss != null)
+        {
+            boss.isBoss = true;
+            _aliveEnemies.Add(boss);
+            SoundManager.Instance?.PlayEnemyBossSpawn();
+            SoundManager.Instance?.PlayBossBGM();
+        }
     }
 
     // ===== 전투 진행 =====
+    private bool AllPlayersDead()
+    {
+        int total = 0, dead = 0;
+        foreach (var playerRef in Runner.ActivePlayers)
+        {
+            total++;
+            if (Runner.TryGetPlayerObject(playerRef, out var obj))
+            {
+                var p = obj.GetComponent<Starter.Platformer.Player>();
+                if (p != null && p.dead) dead++;
+            }
+        }
+        return total > 0 && dead >= total;
+    }
+
     private void TickCombat()
     {
         if (!_combatActive) return;
+
+        // 전투 중 모든 플레이어가 사망하면 게임오버
+        if (AllPlayersDead())
+        {
+            _combatActive = false;
+            _phase = StagePhase.Cleared;
+            RPC_GameOver();
+            return;
+        }
 
         CleanDeadEnemies();
         if (_aliveEnemies.Count > 0) return;
@@ -361,37 +453,53 @@ public class StageManager : NetworkBehaviour
         Announce($"[{stages[CurrentStageIndex].stageName}] 클리어! 포탈이 열렸습니다.");
     }
 
-    private void OnBossDefeated()
+private void OnBossDefeated()
     {
         _phase = StagePhase.Cleared;
         if (CurrentStageIndex >= stages.Count - 1)
         {
-            // 최종 보스 처치 → 런 클리어
             RPC_RunComplete();
         }
         else
         {
-            // 중간 보스 처치 → 포탈 열고 다음 스테이지로 계속
             RPC_SetPortalLocked(CurrentStageIndex, false);
             Announce($"[{stages[CurrentStageIndex].stageName}] 보스 처치! 포탈이 열렸습니다.");
+            SoundManager.Instance?.PlayStageClear();
         }
     }
 
     // ===== 다음 스테이지 진입 (출구 포탈 사용 시 호출) =====
-    public void NotifyExitPortalUsed(Portal portal)
+    // Portal에서 로컬 플레이어 정보를 넘겨주면 서버에서 전원 통과 여부를 집계한다.
+    public void NotifyExitPortalUsed(Portal portal, PlayerRef player)
     {
-        // 현재 클리어된 스테이지의 포탈인지만 확인 (같은 포탈이 여러 스테이지에서 재사용되므로 인덱스 검색 금지)
         if (CurrentStageIndex < 0 || CurrentStageIndex >= stages.Count) return;
         if (stages[CurrentStageIndex].exitPortal != portal) return;
-        RPC_RequestBeginStage(CurrentStageIndex + 1);
+        RPC_NotifyPortalUsed(player, CurrentStageIndex);
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
-    private void RPC_RequestBeginStage(int index)
+    private void RPC_NotifyPortalUsed(PlayerRef player, int stageIndex)
     {
-        // 클리어된 현재 스테이지의 바로 다음만 허용 → 중복/순서 꼬임 방지
-        if (_phase == StagePhase.Cleared && index == CurrentStageIndex + 1 && index < stages.Count)
-            BeginStage(index);
+        // 클리어 상태이고, 현재 스테이지의 포탈 통과인지 확인
+        if (_phase != StagePhase.Cleared) return;
+        if (stageIndex != CurrentStageIndex) return;
+
+        _playersPassedPortal.Add(player);
+
+        // 접속 중인 전체 플레이어 수 집계
+        int total = 0;
+        foreach (var _ in Runner.ActivePlayers) total++;
+
+        int passed = _playersPassedPortal.Count;
+        Announce($"포탈 통과 {passed}/{total}명");
+
+        // 전원 통과 시 다음 스테이지 시작
+        if (passed >= total)
+        {
+            int next = CurrentStageIndex + 1;
+            if (next < stages.Count)
+                BeginStage(next);
+        }
     }
 
     // ===== 출구 포탈 잠금/해제 =====
@@ -433,13 +541,25 @@ public class StageManager : NetworkBehaviour
     }
 
     // ===== 런 클리어 =====
-    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void RPC_RunComplete()
+private void RPC_RunComplete()
     {
         if (ChatManager.Instance != null)
             ChatManager.Instance.SendSystemMessage("최종 보스 처치! 스테이지 클리어!", Color.yellow);
         if (GameManager.Instance != null)
             GameManager.Instance.ReviveAllDeadPlayers();
+        if (UIManager.Instance != null && UIManager.Instance.gameClearUI != null)
+            UIManager.Instance.gameClearUI.Show();
+        SoundManager.Instance?.PlayGameClear();
+    }
+
+    // ===== 게임오버 =====
+private void RPC_GameOver()
+    {
+        if (ChatManager.Instance != null)
+            ChatManager.Instance.SendSystemMessage("모든 플레이어가 사망했습니다. 게임 오버!", Color.red);
+        if (UIManager.Instance != null && UIManager.Instance.gameOverUI != null)
+            UIManager.Instance.gameOverUI.Show();
+        SoundManager.Instance?.PlayGameOver();
     }
 
     private void OnStageChanged()
@@ -478,6 +598,12 @@ public class StageManager : NetworkBehaviour
             pick--;
         }
         return null;
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_OpenInitialWeaponSelect()
+    {
+        WeaponManager.Instance?.WeaponSelect();
     }
 
     private void Announce(string msg)

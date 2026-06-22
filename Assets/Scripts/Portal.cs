@@ -59,7 +59,7 @@ public class Portal : MonoBehaviour
         if (worldPromptObject != null) worldPromptObject.SetActive(false);
     }
 
-    private void Update()
+private void Update()
     {
         if (_localPlayerInRange == null) return;
         if (destination == null) return;
@@ -68,10 +68,11 @@ public class Portal : MonoBehaviour
         if (Input.GetKeyDown(interactKey))
         {
             if (worldPromptObject != null) worldPromptObject.SetActive(false);
+            SoundManager.Instance?.PlayPortalTeleport();
             _localPlayerInRange.StartTeleport(this);
 
-            // 스테이지 출구 포탈이라면 StageManager 에 알려 다음 스테이지를 시작시킨다.
-            if (StageManager.Instance != null) StageManager.Instance.NotifyExitPortalUsed(this);
+            if (StageManager.Instance != null)
+                StageManager.Instance.NotifyExitPortalUsed(this, _localPlayerInRange.Runner.LocalPlayer);
         }
     }
 

@@ -32,3 +32,4 @@ MonoBehaviour:
   playerSpeed: 6
   projectileSpeed: 18
   projectileDis: 12.5
+  fireSound: {fileID: 8300000, guid: 12eedbf0c96d54e4f9c468bc3a633636, type: 3}

@@ -13,7 +13,7 @@ public class DummyEnemy : Enemy
         // 자식 클래스에서는 추가적인 데미지 등만 동기화합니다.
         if (enemyData != null)
         {
-            damage = enemyData.damage;
+            damage = GetFinalDamage();
         }
         else
         {

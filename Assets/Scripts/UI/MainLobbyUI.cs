@@ -15,17 +15,19 @@ public class MainLobbyUI : MonoBehaviour
         gameExitButton.onClick.AddListener(OnGameExitButtonClicked);
     }
 
-    private void OnGameStartButtonClicked()
+private void OnGameStartButtonClicked()
     {
-        SceneManager.LoadScene("LobbyScene");
+        SoundManager.Instance?.PlaySFX(SoundManager.Instance?.sfxUIGameStart);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("LobbyScene");
     }
 
-    private void OnGameExitButtonClicked()
+private void OnGameExitButtonClicked()
     {
-        #if UNITY_EDITOR
-        EditorApplication.ExitPlaymode();
-        #else
+        SoundManager.Instance?.PlaySFX(SoundManager.Instance?.sfxUIDisconnect);
+#if UNITY_EDITOR
+        UnityEditor.EditorApplication.ExitPlaymode();
+#else
         Application.Quit();
-        #endif
+#endif
     }
 }

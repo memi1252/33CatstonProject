@@ -28,7 +28,7 @@ public class AbandonedDroneEnemy : Enemy
         {
             var projectile = Runner.Spawn(bulletPrefab, firePoint.position, firePoint.rotation, Object.InputAuthority);
             projectile.ownerEnemy = this;
-            projectile.Fire(firePoint.position, firePoint.rotation, enemyData.damage, raycastLayerMask, targetAttribute);
+            projectile.Fire(firePoint.position, firePoint.rotation, GetFinalDamage(), raycastLayerMask, targetAttribute);
             fireParticles.Play();
             yield return new WaitForSeconds(0.4f);
         }

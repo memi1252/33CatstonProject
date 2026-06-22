@@ -36,6 +36,19 @@ namespace Projectiles.NetworkObjectExample
 
         private float damage;
         private float criticalDamage;
+
+        // ownerPlayer의 allDamage / criticalChance / criticalDamage를 적용한 최종 데미지
+        private float ComputeFinalDamage()
+        {
+            float total = damage + (WeaponSO != null ? WeaponSO.weaponDamage : 0f);
+            if (ownerPlayer != null)
+            {
+                total += ownerPlayer.allDamage;
+                if (UnityEngine.Random.value < ownerPlayer.criticalChance)
+                    total *= (1f + criticalDamage);
+            }
+            return Mathf.Max(0f, total);
+        }
         
         public LayerMask raycastLayerMask;
 
@@ -104,7 +117,7 @@ namespace Projectiles.NetworkObjectExample
                     IDamageable damageable = hit.collider.GetComponentInParent<IDamageable>();
                     if (damageable != null)
                     {
-                        float totalDamage = damage + WeaponSO.weaponDamage;
+                        float totalDamage = ComputeFinalDamage();
                         damageable.TakeHit(totalDamage, hit, GetAttackerGameObject());
 
                         // 속성 효과 적용
@@ -185,7 +198,7 @@ namespace Projectiles.NetworkObjectExample
                     if (damageableObject == null) continue;
                     if (!alreadyHit.Add(damageableObject)) continue;
 
-                    float totalDamage = damage + WeaponSO.weaponDamage;
+                    float totalDamage = ComputeFinalDamage();
                     damageableObject.TakeHit(totalDamage, new RaycastHit(), GetAttackerGameObject());
                     ApplyWeaponAttributeEffect(damageableObject, targetPos, totalDamage);
                 }
@@ -211,7 +224,7 @@ namespace Projectiles.NetworkObjectExample
                 IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
                 if (damageableObject != null)
                 {
-                    float totalDamage = damage + WeaponSO.weaponDamage;
+                    float totalDamage = ComputeFinalDamage();
                     damageableObject.TakeHit(totalDamage, new RaycastHit(), GetAttackerGameObject());
 
                     // 속성 효과 적용
@@ -315,7 +328,7 @@ namespace Projectiles.NetworkObjectExample
             projectile.ownerPlayer = this.ownerPlayer;
             projectile.ownerEnemy = this.ownerEnemy;
 
-            projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask, WeaponSO.targetAttribute);
+            projectile.Fire(FireTransform.position, FireTransform.rotation, ComputeFinalDamage(), raycastLayerMask, WeaponSO.targetAttribute);
         }
 
         private void FireWithBuffer()
@@ -326,7 +339,7 @@ namespace Projectiles.NetworkObjectExample
                 projectile.ownerPlayer = this.ownerPlayer;
                 projectile.ownerEnemy = this.ownerEnemy; // 적 주인 전달
 
-                projectile.Fire(FireTransform.position, FireTransform.rotation, damage + WeaponSO.weaponDamage, raycastLayerMask, WeaponSO.targetAttribute);
+                projectile.Fire(FireTransform.position, FireTransform.rotation, ComputeFinalDamage(), raycastLayerMask, WeaponSO.targetAttribute);
             }
         }
 
@@ -379,16 +392,13 @@ namespace Projectiles.NetworkObjectExample
 
             float lifeTime = 1f;
             if (WeaponSO != null)
-            {
                 lifeTime = WeaponSO.projectileSpeed * 0.08f;
-                if (VisualEffect != null)
-                {
-                    VisualEffect.SetFloat("Size", scopeSize * 0.1f);
-                }
-            }
 
             if (VisualEffect != null)
             {
+                // WeaponSO 유무와 관계없이 RPC로 전달된 scopeSize로 크기를 설정해야
+                // 모든 클라이언트에서 동일한 크기가 보임
+                VisualEffect.SetFloat("Size", scopeSize * 0.1f);
                 VisualEffect.SetFloat("LifeTime", lifeTime);
                 VisualEffect.Stop();
                 VisualEffect.Play();
@@ -471,33 +481,50 @@ namespace Projectiles.NetworkObjectExample
                 }
             }
 
-            // 스코프가 사라졌을 때 파티클 재생
+            // 스코프가 사라졌을 때 파티클/VFX 재생
+            // ▶ VisualEffect가 있으면 크기를 먼저 설정한 뒤 재생 (크기를 RPC 전달값으로 고정해 클라이언트 간 일치)
+            if (VisualEffect != null)
+            {
+                VisualEffect.transform.parent = null;
+                VisualEffect.transform.position = targetPos;
+                VisualEffect.SetFloat("Size", scopeSize * 0.1f);
+                VisualEffect.Stop();
+                VisualEffect.Play();
+            }
+
             if (ParticleEffect != null)
             {
-                ParticleEffect.transform.parent = null; // 타겟 위치로 보내기 위해 부모 해제
+                ParticleEffect.transform.parent = null;
                 ParticleEffect.transform.position = targetPos;
                 ParticleEffect.transform.rotation = Quaternion.LookRotation(Vector3.right);
 
-                // 스코프 크기만큼 파티클 크기 키우기 (Strike)
-                ParticleEffect.transform.localScale = new Vector3(scopeSize +ParticelEffectPlugRange, scopeSize +ParticelEffectPlugRange, scopeSize+ParticelEffectPlugRange);
+                // RPC로 전달된 scopeSize 기준으로 크기 설정 → 모든 클라이언트 동일
+                ParticleEffect.transform.localScale = new Vector3(scopeSize + ParticelEffectPlugRange, scopeSize + ParticelEffectPlugRange, scopeSize + ParticelEffectPlugRange);
 
                 ParticleEffect.Play();
             }
 
-            // 파티클 지속 시간 대기
-            // 현재 Area와 비슷하게 LifeTime과 관련된 값이 없으므로 임의의 파티클 지속시간 1초 대기
             yield return new WaitForSeconds(1f);
+
+            if (VisualEffect != null)
+            {
+                VisualEffect.Stop();
+                if (CanReparentToSelf())
+                {
+                    VisualEffect.transform.parent = transform;
+                    VisualEffect.transform.localPosition = Vector3.zero;
+                    VisualEffect.transform.localScale = Vector3.one;
+                }
+            }
 
             if (ParticleEffect != null)
             {
                 ParticleEffect.Stop();
                 if (CanReparentToSelf())
                 {
-                    ParticleEffect.transform.parent = transform; // 다시 무기 밑으로 복귀
+                    ParticleEffect.transform.parent = transform;
                     ParticleEffect.transform.localPosition = Vector3.zero;
                     ParticleEffect.transform.localRotation = Quaternion.identity;
-
-                    // 줄였던 크기 원상 복귀
                     ParticleEffect.transform.localScale = Vector3.one;
                 }
             }

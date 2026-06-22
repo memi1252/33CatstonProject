@@ -9,7 +9,7 @@ using System;
 /// <summary>
 /// Handles player connections (spawning of Player instances).
 /// </summary>
-public sealed class GameManager : NetworkBehaviour
+public sealed class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 {
 	public static GameManager Instance { get; private set; }
 	public int MinCoinsToWin = 10;
@@ -85,37 +85,71 @@ public sealed class GameManager : NetworkBehaviour
 		return transform.position + new Vector3(randomPositionOffset.x, 0f, randomPositionOffset.y);
 	}
 
-	public override void Spawned()
+	private void SpawnLocalPlayer()
 	{
-		LocalPlayer = Runner.Spawn(PlayerPrefab, GetSpawnPosition(), Quaternion.identity, Runner.LocalPlayer);
-		Runner.SetPlayerObject(Runner.LocalPlayer, LocalPlayer.Object);
+		if (LocalPlayer != null) return; // 이미 스폰됨
 
-		// 스탯 UI 활성화 (모든 클라이언트가 각자 실행 → 클라이언트에서도 스탯창 표시됨)
-		if (UIManager.Instance != null && UIManager.Instance.statsUI != null && UIManager.Instance.statsUI.HpUI != null)
+		LocalPlayer = Runner.Spawn(PlayerPrefab, GetSpawnPosition(), Quaternion.identity, Runner.LocalPlayer);
+
+		if (LocalPlayer == null)
 		{
-			UIManager.Instance.statsUI.HpUI.SetActive(true);
+			Debug.LogError("[GameManager] Runner.Spawn() 실패 - LocalPlayer가 null입니다. 네트워크 연결 상태를 확인하세요.");
+			return;
 		}
 
-		// LocalPlayer가 InputAuthority를 가진 경우에만 InputHandler 추가
+		Runner.SetPlayerObject(Runner.LocalPlayer, LocalPlayer.Object);
+
 		if (LocalPlayer.HasInputAuthority)
 		{
-			// PlayerInput 활성화
 			var playerInput = LocalPlayer.GetComponent<PlayerInput>();
-			if (playerInput != null)
-			{
-				playerInput.EnableInput();
-			}
+			if (playerInput != null) playerInput.EnableInput();
 
-			// InputHandler 추가
 			var inputHandler = LocalPlayer.gameObject.AddComponent<InputHandler>();
 			inputHandler.Initialize(Runner);
 			Debug.Log("[GameManager] InputHandler를 LocalPlayer에 추가했습니다.");
 		}
-		else
+	}
+
+	public override void Spawned()
+	{
+		Runner.AddCallbacks(this);
+		SpawnLocalPlayer();
+	}
+
+	public override void Despawned(NetworkRunner runner, bool hasState)
+	{
+		if (runner != null) runner.RemoveCallbacks(this);
+		LocalPlayer = null;
+	}
+
+	// 뒤늦게 방에 입장한 경우 자신의 캐릭터를 스폰
+	public void OnPlayerJoined(NetworkRunner runner, PlayerRef player)
+	{
+		if (player == runner.LocalPlayer && LocalPlayer == null)
 		{
-			Debug.Log("[GameManager] LocalPlayer에 InputAuthority가 없어서 입력 시스템을 활성화하지 않았습니다.");
+			SpawnLocalPlayer();
 		}
 	}
+
+	// INetworkRunnerCallbacks 나머지 빈 구현
+	public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
+	public void OnInput(NetworkRunner runner, NetworkInput input) { }
+	public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
+	public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
+	public void OnConnectedToServer(NetworkRunner runner) { }
+	public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
+	public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
+	public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
+	public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
+	public void OnSessionListUpdated(NetworkRunner runner, List<SessionInfo> sessionList) { }
+	public void OnCustomAuthenticationResponse(NetworkRunner runner, Dictionary<string, object> data) { }
+	public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
+	public void OnSceneLoadDone(NetworkRunner runner) { }
+	public void OnSceneLoadStart(NetworkRunner runner) { }
+	public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+	public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+	public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
+	public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
 
 	private void Update()
 	{
@@ -143,12 +177,6 @@ public sealed class GameManager : NetworkBehaviour
 			// Reset timer
 			GameOverTimer = default;
 		}
-	}
-
-	public override void Despawned(NetworkRunner runner, bool hasState)
-	{
-		// Clear the reference because UI can try to access it even after despawn
-		LocalPlayer = null;
 	}
 
 	[Rpc(RpcSources.StateAuthority, RpcTargets.All)]

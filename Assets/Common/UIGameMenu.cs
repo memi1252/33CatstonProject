@@ -78,7 +78,7 @@ namespace Starter
 			events.OnShutdown.AddListener(OnShutdown);
 
 			var sceneInfo = new NetworkSceneInfo();
-			sceneInfo.AddSceneRef(SceneRef.FromIndex(SceneManager.GetActiveScene().buildIndex));
+			sceneInfo.AddSceneRef(SceneRef.FromIndex(1)); // LobbyScene (build index 1)
 
 			// 외부에서 특정 세션 이름이 지정되면 그걸로, 아니면 닉네임 기반 자동 생성
 			string sessionName;
@@ -285,8 +285,8 @@ namespace Starter
 			await _runnerInstance.Shutdown();
 			_runnerInstance = null;
 
-			// Reset of scene network objects is needed, reload the whole scene
-			SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+			// Reset of scene network objects is needed, reload the lobby scene
+			SceneManager.LoadScene(1); // LobbyScene (build index 1)
 		}
 
 		private void OnShutdown(NetworkRunner runner, ShutdownReason reason)
@@ -297,8 +297,8 @@ namespace Starter
 			_shutdownStatus = $"Shutdown: {reason}";
 			Debug.LogWarning(_shutdownStatus);
 
-			// Reset of scene network objects is needed, reload the whole scene
-			SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+			// Reset of scene network objects is needed, reload the lobby scene
+			SceneManager.LoadScene(1); // LobbyScene (build index 1)
 		}
 	}
 }

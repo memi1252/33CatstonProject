@@ -308,6 +308,7 @@ namespace Projectiles.NetworkObjectExample
 
        private void ShowDestroyEffect()
        {
+          SoundManager.Instance?.PlayProjectileImpact();
           if (_hitEffect != null) _hitEffect.SetActive(true);
           if (_visualsRoot != null) _visualsRoot.SetActive(false);
        }

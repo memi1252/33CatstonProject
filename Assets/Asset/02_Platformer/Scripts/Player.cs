@@ -1,10 +1,11 @@
-﻿using System.Collections;
+using System.Collections;
 using UnityEngine;
 using Fusion;
 using Fusion.Addons.SimpleKCC;
 using Starter.Platformer;
 using UnityEngine.UIElements;
 using DamageNumbersPro;
+using UnityEngine.SceneManagement;
 
 namespace Starter.Platformer
 {
@@ -136,6 +137,20 @@ namespace Starter.Platformer
 			if (HasStateAuthority == false) return;
 			if (buff == null || buff.contractBuffs == null) return;
 
+			// 무기 타입 조건 체크 (TargetType.None(4) 이면 모든 무기에 적용)
+			if (buff.targetType != TargetType.None)
+			{
+				var weaponSO = GetComponent<WeaponController>()?.CurrentWeaponSO;
+				if (weaponSO == null || (WeaponType)buff.targetType != weaponSO.weaponType) return;
+			}
+
+			// 무기 속성 조건 체크 (TargetAttribute.None(0) 이면 모든 속성에 적용)
+			if (buff.targetAttribute != TargetAttribute.None)
+			{
+				var weaponSO = GetComponent<WeaponController>()?.CurrentWeaponSO;
+				if (weaponSO == null || buff.targetAttribute != weaponSO.targetAttribute) return;
+			}
+
 			for (int i = 0; i < buff.contractBuffs.Length; i++)
 			{
 				var props = buff.contractBuffs[i].targetAbilities;
@@ -163,6 +178,7 @@ namespace Starter.Platformer
 				AddSpecialEffect(buff.specialEffect, buff.specialEffectValue);
 			}
 
+			ActiveBuffDisplayUI.Instance?.AddBuff(buff.contractIcon, buff.contractName);
 			Debug.Log($"[Buff] {Nickname}에게 {buff.contractName} 적용 완료!");
 		}
 
@@ -193,6 +209,7 @@ namespace Starter.Platformer
 				criticalChance += props.criticalChance;
 			}
 
+			ActiveBuffDisplayUI.Instance?.AddBuff(buff.buffIcon, buff.buffName);
 			Debug.Log($"[Buff] {Nickname}에게 {buff.buffName} 적용 완료!");
 		}
 
@@ -215,6 +232,7 @@ namespace Starter.Platformer
 				criticalChance += props.criticalChance;
 			}
 
+			ActiveBuffDisplayUI.Instance?.AddBuff(buff.buffIcon, buff.buffName);
 			Debug.Log($"[Buff] {Nickname}에게 {buff.buffName} 적용 완료!");
 		}
 
@@ -253,6 +271,20 @@ namespace Starter.Platformer
 				while (GameManager.Instance == null) await System.Threading.Tasks.Task.Delay(100);
 
 				GameManager.Instance.RPC_RegisterPlayerName(Runner.LocalPlayer, Nickname);
+			}
+
+			// 로컬 플레이어(InputAuthority) 스폰 완료 시점에 StatsUI 활성화
+			// GameManager.Spawned()보다 이 시점이 더 안정적 (Player 오브젝트가 실제로 준비됨)
+			if (HasInputAuthority)
+			{
+				if (UIManager.Instance != null && UIManager.Instance.statsUI != null && UIManager.Instance.statsUI.HpUI != null)
+				{
+					UIManager.Instance.statsUI.HpUI.SetActive(true);
+				}
+				else
+				{
+					Debug.LogWarning("[Player] StatsUI를 찾을 수 없습니다. UIManager 설정을 확인하세요.");
+				}
 			}
 
 			// In case the nickname is already changed,
@@ -349,12 +381,15 @@ namespace Starter.Platformer
 			if (HasStateAuthority == false)
 				return;
 
-			if (_gameManager.IsGameFinished)
+			if (_gameManager == null || _gameManager.IsGameFinished)
 				return;
 
 			// UI표시
-			UIManager.Instance.statsUI.hpImageView(hp / maxHp);
-			UIManager.Instance.statsUI.mpImageView(mp / maxMp);
+			if (UIManager.Instance != null && UIManager.Instance.statsUI != null)
+			{
+				UIManager.Instance.statsUI.hpImageView(hp / maxHp);
+				UIManager.Instance.statsUI.mpImageView(mp / maxMp);
+			}
 
 			// 텔레포트 중에는 카메라를 그대로 정지
 			if (_cameraFollowFrozen)
@@ -446,6 +481,9 @@ namespace Starter.Platformer
 
 		public void TakeHit(float _damage, RaycastHit hit, GameObject attackerGameObject)
 		{
+			// 로비씬에서는 플레이어끼리 피해 없음 (build index 1 = LobbyScene)
+			if (SceneManager.GetActiveScene().buildIndex == 1) return;
+
 			if (Object.HasStateAuthority)
 			{
 				TakeDamage(_damage);
@@ -469,45 +507,46 @@ namespace Starter.Platformer
 			damagePopup.Spawn(transform.position + Vector3.up, _damage);
 		}
 
-	public void TakeDamage(float _damage)
-	{
-		if (dead) return;
-
-		float actualDamage = damageReceived * 0.01f * _damage;
-		hp -= actualDamage;
-
-		Rpc_ShowDamagePopup(actualDamage);
-
-		Debug.Log($"[Player 피격] 유저({Nickname})가 {actualDamage}의 데미지를 입었습니다. (남은 HP : {hp}/{maxHp})");
-
-		// 로컬 플레이어만 카메라 흔들기
-		if (HasStateAuthority && GameManager.Instance != null && GameManager.Instance.cameraShack != null)
+public void TakeDamage(float _damage)
 		{
-			float shakeIntensity = Mathf.Clamp01(actualDamage / maxHp);
-			GameManager.Instance.cameraShack.Shake(0.3f, shakeIntensity * 0.5f);
+			if (dead) return;
+
+			float actualDamage = damageReceived * _damage;
+			hp -= actualDamage;
+
+			SoundManager.Instance?.PlayPlayerHit();
+			Rpc_ShowDamagePopup(actualDamage);
+
+			Debug.Log($"[Player 피격] 유저({Nickname})가 {actualDamage}의 데미지를 입었습니다. (남은 HP : {hp}/{maxHp})");
+
+			if (HasStateAuthority && GameManager.Instance != null && GameManager.Instance.cameraShack != null)
+			{
+				float shakeIntensity = Mathf.Clamp01(actualDamage / maxHp);
+				GameManager.Instance.cameraShack.Shake(0.3f, shakeIntensity * 0.5f);
+			}
+
+			if (hp <= 0)
+			{
+				dead = true;
+				OnDeadChanged();
+				SoundManager.Instance?.PlayPlayerDeath();
+				if (ChatManager.Instance != null)
+					ChatManager.Instance.SendSystemMessage(Nickname + "님이 사망했습니다.", Color.red);
+				Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
+			}
 		}
 
-		if (hp <= 0)
+public void Revive(string reviverName, float revivalHpPercent = 0.3f)
 		{
-			dead = true;
+			if (!dead) return;
+
+			dead = false;
+			hp = maxHp * revivalHpPercent;
 			OnDeadChanged();
-			if (ChatManager.Instance != null)
-				ChatManager.Instance.SendSystemMessage(Nickname + "님이 사망했습니다.", Color.red);
-			Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
-			// 본래라면 여기서 부활 로직, 혹은 쓰러짐 애니메이션 등을 호출합니다.
+			SoundManager.Instance?.PlayPlayerRevive();
+
+			Debug.Log($"[Player 부활] 유저({Nickname})가 {reviverName}에 의해 부활했습니다! (HP : {hp}/{maxHp})");
 		}
-	}
-
-	public void Revive(string reviverName, float revivalHpPercent = 0.3f)
-	{
-		if (!dead) return;
-
-		dead = false;
-		hp = maxHp * revivalHpPercent;
-		OnDeadChanged();
-
-		Debug.Log($"[Player 부활] 유저({Nickname})가 {reviverName}에 의해 부활했습니다! (HP : {hp}/{maxHp})");
-	}
 
 		private void AssignAnimationIDs()
 		{
@@ -531,16 +570,18 @@ namespace Starter.Platformer
 			}
 		}
 
-		private void OnJumpingChanged()
+private void OnJumpingChanged()
 		{
 			if (_isJumping)
 			{
-				AudioSource.PlayClipAtPoint(JumpAudioClip, KCC.Position, 1f);
+				SoundManager.Instance?.PlayPlayerJump();
+				if (JumpAudioClip != null) AudioSource.PlayClipAtPoint(JumpAudioClip, KCC.Position, 1f);
 				ScalingRoot.localScale = new Vector3(0.5f, 1.5f, 0.5f);
 			}
 			else
 			{
-				AudioSource.PlayClipAtPoint(LandAudioClip, KCC.Position, 1f);
+				SoundManager.Instance?.PlayPlayerLand();
+				if (LandAudioClip != null) AudioSource.PlayClipAtPoint(LandAudioClip, KCC.Position, 1f);
 				ScalingRoot.localScale = new Vector3(1.25f, 0.75f, 1.25f);
 			}
 		}
