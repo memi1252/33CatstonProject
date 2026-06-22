@@ -187,6 +187,13 @@ public class WeaponManager : NetworkBehaviour
 
     private void ShowWeaponOptions()
     {
+        if (weaponSelectPanel == null)
+        {
+            Debug.LogWarning("[WeaponManager] weaponSelectPanel is null. ResolveUIReferences 재시도.");
+            ResolveUIReferences();
+            if (weaponSelectPanel == null) return;
+        }
+
         // 기존 슬롯 삭제
         foreach (Transform child in weaponSelectPanel)
         {
@@ -194,18 +201,18 @@ public class WeaponManager : NetworkBehaviour
         }
         _weaponSelectSlots.Clear();
 
-        // 무기 옵션 표시 (최대 3개) - 각 플레이어마다 랜덤
-        int optionCount = Mathf.Min(3, weaponSOs.Length);
-        
-        // 랜덤 무기 인덱스 생성 (중복 없음)
+        // null 항목 제외한 유효 무기만 사용
         List<int> availableIndices = new List<int>();
         for (int i = 0; i < weaponSOs.Length; i++)
         {
-            availableIndices.Add(i);
+            if (weaponSOs[i] != null) availableIndices.Add(i);
         }
+
+        // 무기 옵션 표시 (최대 3개) - 각 플레이어마다 랜덤
+        int optionCount = Mathf.Min(3, availableIndices.Count);
         
         Debug.Log($"[WeaponManager] Showing {optionCount} random weapon options");
-        
+
         for (int i = 0; i < optionCount; i++)
         {
             // 남은 인덱스 중에서 랜덤 선택
@@ -237,8 +244,9 @@ public class WeaponManager : NetworkBehaviour
 
         // 선택한 무기의 실제 인덱스 가져오기
         int weaponIndex = _randomWeaponIndices[order - 1];
-        WeaponScriptableObject selectedWeapon = weaponSOs[weaponIndex];
-        
+        WeaponScriptableObject selectedWeapon = (weaponIndex >= 0 && weaponIndex < weaponSOs.Length) ? weaponSOs[weaponIndex] : null;
+        if (selectedWeapon == null) { Debug.LogWarning($"[WeaponManager] selectedWeapon null (index={weaponIndex})"); return; }
+
         Debug.Log($"[WeaponManager] Selected weapon slot {order}, actual weapon: {selectedWeapon.weaponName}");
 
         // 게임 씬으로 선택 무기 전달 (씬 전환 후 WeaponController.Spawned에서 사용)

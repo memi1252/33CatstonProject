@@ -58,8 +58,13 @@ public class Enemy : NetworkBehaviour , IDamageable
     public bool isBoss = false;
 
     // EnemyGlobalBuffs를 적용한 최종 데미지 (서브클래스에서 사용)
-    protected float GetFinalDamage() =>
-        EnemyGlobalBuffs.ScaledDamage(enemyData != null ? enemyData.damage : 10f, isBoss);
+    protected float GetFinalDamage()
+    {
+        float baseDmg = enemyData != null ? enemyData.damage : 10f;
+        float final = EnemyGlobalBuffs.ScaledDamage(baseDmg, isBoss);
+        Debug.Log($"[EnemyDMG] {gameObject.name} baseDmg={baseDmg} damageBonus={EnemyGlobalBuffs.damageBonus} final={final}");
+        return final;
+    }
 
     private Rigidbody rb;
 
@@ -360,18 +365,18 @@ public class Enemy : NetworkBehaviour , IDamageable
     {
         if (!HasStateAuthority || isDead) return;
         Debug.Log("자폭 공격 수행!");
-        // 폭발 이펙트, 주변 데미지 처리 후 사망
         Instantiate(dieEffect, transform.position, Quaternion.identity);
         Collider[] cols = Physics.OverlapSphere(transform.position, enemyData.range);
+        var hitTargets = new System.Collections.Generic.HashSet<IDamageable>();
         foreach (Collider c in cols)
         {
-            if (c.transform.parent == transform) continue;
-            if (c.transform.parent.TryGetComponent<IDamageable>(out var damageable))
-            {
-                damageable.TakeHit(GetFinalDamage(), new RaycastHit(), this.gameObject);
-            }
+            var damageable = c.GetComponentInParent<IDamageable>();
+            if (damageable == null) continue;
+            if (damageable is Enemy) continue; // 적 끼리 피해 X
+            if (!hitTargets.Add(damageable)) continue; // 같은 대상 중복 방지
+            damageable.TakeHit(GetFinalDamage(), new RaycastHit(), this.gameObject);
         }
-        ApplyDamage(health); 
+        ApplyDamage(health);
     }
     
 

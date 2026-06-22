@@ -164,7 +164,7 @@ namespace Starter.Platformer
 					maxHp += props.maxHp;
 					maxMp += props.maxMp;
 				}
-				damage *= props.damage;
+				damage += props.damage;
 				attackSpeed = (attackSpeed + props.attackSpeed);
 				moveSpeed = WalkSpeed * (1 + props.moveSpeed);
 				allDamage += props.allDamage;
@@ -179,7 +179,7 @@ namespace Starter.Platformer
 			}
 
 			ActiveBuffDisplayUI.Instance?.AddBuff(buff.contractIcon, buff.contractName);
-			Debug.Log($"[Buff] {Nickname}에게 {buff.contractName} 적용 완료!");
+			Debug.Log($"[ContractBuff] {buff.contractName}: dmgReceived={damageReceived} dmg={damage} allDmg={allDamage}");
 		}
 
 		public void ApplyImprintBuff(BuffScripableObject buff)
@@ -200,7 +200,7 @@ namespace Starter.Platformer
 					maxHp *= (1 + props.maxHp);
 					maxMp *= (1 + props.maxMp);
 				}
-				damage *= props.damage;
+				damage += props.damage;
 				attackSpeed = (attackSpeed + props.attackSpeed);
 				moveSpeed = WalkSpeed * (1 + props.moveSpeed);
 				allDamage += props.allDamage;
@@ -223,7 +223,7 @@ namespace Starter.Platformer
 				var props = buff.votingAbility[i].targetAbilities;
 				maxHp += props.maxHp;
 				maxMp += props.maxMp;
-				damage *= props.damage;
+				damage += props.damage;
 				attackSpeed = (props.attackSpeed / (attackSpeed / 100f));
 				moveSpeed += props.moveSpeed;
 				allDamage += props.allDamage;
@@ -261,6 +261,7 @@ namespace Starter.Platformer
 
 		public override async void Spawned()
 		{
+			Debug.Log($"[Player.Spawned] damageReceived={damageReceived} damage={damage} allDamage={allDamage} HasStateAuthority={HasStateAuthority}");
 			if (HasStateAuthority)
 			{
 				_gameManager = FindObjectOfType<GameManager>();
@@ -512,6 +513,7 @@ public void TakeDamage(float _damage)
 			if (dead) return;
 
 			float actualDamage = damageReceived * _damage;
+			Debug.Log($"[TakeDamage] _damage={_damage} damageReceived={damageReceived} actual={actualDamage}");
 			hp -= actualDamage;
 
 			SoundManager.Instance?.PlayPlayerHit();

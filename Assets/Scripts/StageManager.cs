@@ -119,6 +119,9 @@ public class StageManager : NetworkBehaviour
             SetPortalLockedLocal(i, true);
         }
 
+        // 게임 시작 시 적 글로벌 버프 초기화 (이전 런 데이터 잔류 방지)
+        EnemyGlobalBuffs.Reset();
+
         if (HasStateAuthority)
         {
             if (stages.Count > 0)
@@ -147,7 +150,7 @@ public class StageManager : NetworkBehaviour
             if (_initialWeaponSelectTimer.Expired(Runner))
             {
                 _initialWeaponSelectPending = false;
-                BeginStage(0);
+                RPC_StartCountdown();
             }
             return; // 무기 선택 중에는 다른 로직 정지
         }
@@ -553,7 +556,8 @@ private void RPC_RunComplete()
     }
 
     // ===== 게임오버 =====
-private void RPC_GameOver()
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_GameOver()
     {
         if (ChatManager.Instance != null)
             ChatManager.Instance.SendSystemMessage("모든 플레이어가 사망했습니다. 게임 오버!", Color.red);
@@ -604,6 +608,16 @@ private void RPC_GameOver()
     private void RPC_OpenInitialWeaponSelect()
     {
         WeaponManager.Instance?.WeaponSelect();
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_StartCountdown()
+    {
+        var countdownUI = CountdownUI.GetOrCreate();
+        countdownUI.StartCountdown(3, () =>
+        {
+            if (HasStateAuthority) BeginStage(0);
+        });
     }
 
     private void Announce(string msg)

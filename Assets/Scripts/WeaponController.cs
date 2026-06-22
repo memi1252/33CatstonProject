@@ -22,6 +22,10 @@ public class WeaponController : NetworkBehaviour
         if (HasStateAuthority == false)
             return;
 
+        // 로비씬에서는 무기를 장착하지 않음
+        if (SceneManager.GetActiveScene().buildIndex == 1)
+            return;
+
         // 로비에서 고른 무기가 있으면 그것을, 없으면 기본 무기를 장착한다.
         WeaponScriptableObject weaponToEquip = PlayerLoadout.SelectedWeapon != null ? PlayerLoadout.SelectedWeapon : startWeapon;
         if (weaponToEquip != null)

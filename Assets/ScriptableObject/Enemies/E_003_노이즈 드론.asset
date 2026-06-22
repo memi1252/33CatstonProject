@@ -27,5 +27,5 @@ MonoBehaviour:
   damage: 25
   attackSpeed: 3
   speed: 7.5
-  allDMG: 100
-  dmgReceived: 100
+  allDMG: 0
+  dmgReceived: 0

@@ -29,7 +29,7 @@ MonoBehaviour:
       damage: 0
       attackSpeed: 0
       moveSpeed: 0
-      allDamage: 50
+      allDamage: 0.5
       damageReceived: 0
       criticalChance: 0
       criticalDamage: 0

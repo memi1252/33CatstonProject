@@ -323,7 +323,8 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                 {
                     var buff = imprintAvailableBuffs[idx];
                     me.ApplyImprintConditionBuff(buff);
-                    if (buff.votingAbility != null)
+                    // EnemyGlobalBuffs는 씬 권한자(호스트)에서만 1회 적용 — 멀티플레이어에서 중복 stacking 방지
+                    if (Runner.IsSceneAuthority && buff.votingAbility != null)
                         foreach (var entry in buff.votingAbility)
                             EnemyGlobalBuffs.Apply(entry.targetAbilities);
                 }
@@ -334,7 +335,7 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
         {
             var winner = imprintAvailableBuffs[winnerIndex];
             me.ApplyImprintBuff(winner);
-            if (winner.buffProperties != null)
+            if (Runner.IsSceneAuthority && winner.buffProperties != null)
                 foreach (var entry in winner.buffProperties)
                     EnemyGlobalBuffs.Apply(entry.targetAbilities);
         }
@@ -378,8 +379,8 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                 {
                     var contract = contractAvailableBuffs[idx];
                     me.ApplyContractBuff(contract);
-                    // 계약에 적 관련 속성이 있으면 전역에 누적
-                    if (contract.contractBuffs != null)
+                    // 계약에 적 관련 속성이 있으면 전역에 누적 — 씬 권한자에서만 1회 적용
+                    if (Runner.IsSceneAuthority && contract.contractBuffs != null)
                         foreach (var entry in contract.contractBuffs)
                             EnemyGlobalBuffs.Apply(entry.targetAbilities);
                 }

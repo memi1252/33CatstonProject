@@ -261,9 +261,9 @@ namespace Projectiles.NetworkObjectExample
                     }
                     else if (ownerEnemy != null)
                     {
-                        // 적 투척물: 떨어진 위치에서 항상 폭발 (반경 키워서 안정적으로 적중)
-                        explosionDamage = damageValue * 0.5f;
-                        explosionRadius = 5f;
+                        // 적 투척물: 떨어진 위치에서 폭발
+                        explosionDamage = damageValue * 0.15f;
+                        explosionRadius = 3.5f;
                         shouldExplode = true;
                     }
 

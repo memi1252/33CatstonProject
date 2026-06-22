@@ -344,12 +344,12 @@ MonoBehaviour:
   _mp: 50
   _maxMp: 50
   _damage: 5
-  _attackSpeed: 100
+  _attackSpeed: 1
   _moveSpeed: 10
-  _allDamage: 100
-  _damageReceived: 100
-  _criticalChance: 10
-  _criticalDamage: 5
+  _allDamage: 0
+  _damageReceived: 1
+  _criticalChance: 0.1
+  _criticalDamage: 0.5
   _specialEffectValues: []
   _TeleportVisuallyHidden:
     _value: 0

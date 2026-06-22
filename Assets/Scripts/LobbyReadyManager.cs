@@ -14,10 +14,10 @@ public class LobbyReadyManager : NetworkBehaviour
     public int MinPlayers = 2;
     [Tooltip("혼자 테스트할 때 사용. true면 1명이어도 게임 시작 가능")]
     public bool SoloTestMode = false;
-    [Tooltip("게임 씬 빌드 인덱스. -1이면 GameSceneName 사용")]
-    public int GameSceneBuildIndex = -1;
+    [Tooltip("로딩 씬 빌드 인덱스 (LoadingScene=2)")]
+    public int GameSceneBuildIndex = 2;
     [Tooltip("GameSceneBuildIndex가 -1일 때 사용할 씬 이름")]
-    public string GameSceneName = "GameScene";
+    public string GameSceneName = "LoadingScene";
     [Tooltip("모두 준비 후 시작까지 대기 시간 (초)")]
     public float StartDelay = 1.0f;
 

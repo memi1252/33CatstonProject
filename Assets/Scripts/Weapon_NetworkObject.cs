@@ -37,16 +37,17 @@ namespace Projectiles.NetworkObjectExample
         private float damage;
         private float criticalDamage;
 
-        // ownerPlayer의 allDamage / criticalChance / criticalDamage를 적용한 최종 데미지
+        // 기획서 공식: baseDMG = (DMG_Player * Ratio) + WeaponDMG, then * (1 + allDamage)
         private float ComputeFinalDamage()
         {
-            float total = damage + (WeaponSO != null ? WeaponSO.weaponDamage : 0f);
-            if (ownerPlayer != null)
-            {
-                total += ownerPlayer.allDamage;
-                if (UnityEngine.Random.value < ownerPlayer.criticalChance)
-                    total *= (1f + criticalDamage);
-            }
+            float ratio = WeaponSO != null ? WeaponSO.damageRatio : 1f;
+            float weaponDmg = WeaponSO != null ? WeaponSO.weaponDamage : 0f;
+            float baseDmg = (damage * ratio) + weaponDmg;
+            float allDmgMult = 1f + (ownerPlayer != null ? ownerPlayer.allDamage : 0f);
+            float total = baseDmg * allDmgMult;
+            if (ownerPlayer != null && UnityEngine.Random.value < ownerPlayer.criticalChance)
+                total *= (1f + criticalDamage);
+            Debug.Log($"[DMG] playerDMG={damage} ratio={ratio} weaponDmg={weaponDmg} baseDmg={baseDmg} allDmgMult={allDmgMult} total={total}");
             return Mathf.Max(0f, total);
         }
         

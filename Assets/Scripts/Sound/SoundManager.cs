@@ -74,6 +74,14 @@ public class SoundManager : MonoBehaviour
         SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
+    private void Start()
+    {
+        // 중복 인스턴스(Destroy 예정)는 BGM 재생 안 함
+        if (Instance != this) return;
+        // 현재 씬이 처음 로드될 때 sceneLoaded 이벤트를 놓치므로 직접 재생
+        OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
+    }
+
     private void OnDestroy()
     {
         SceneManager.sceneLoaded -= OnSceneLoaded;
@@ -86,9 +94,10 @@ public class SoundManager : MonoBehaviour
         {
             case 0:
             case 1:
+            case 2: // LoadingScene
                 PlayBGM(bgmLobby);
                 break;
-            case 2:
+            case 3: // GameScene
                 PlayBGM(bgmGame);
                 break;
         }
@@ -96,7 +105,9 @@ public class SoundManager : MonoBehaviour
 
     public void PlayBGM(AudioClip clip, bool loop = true)
     {
-        if (clip == null || (bgmSource.clip == clip && bgmSource.isPlaying)) return;
+        if (clip == null) return;
+        if (bgmSource.clip == clip && bgmSource.isPlaying) return;
+        bgmSource.Stop();
         bgmSource.clip = clip;
         bgmSource.loop = loop;
         bgmSource.Play();
