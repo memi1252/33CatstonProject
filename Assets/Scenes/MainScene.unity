@@ -3079,6 +3079,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::MainLobbyUI
   gameStartButton: {fileID: 1164243381}
   gameExitButton: {fileID: 960615581}
+  loadingFont: {fileID: 11400000, guid: f788399e46f73b246abd288668dd3a65, type: 2}
 --- !u!1 &1568527016
 GameObject:
   m_ObjectHideFlags: 0
