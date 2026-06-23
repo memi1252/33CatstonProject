@@ -559,10 +559,13 @@ private void RPC_RunComplete()
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
     private void RPC_GameOver()
     {
+        Debug.Log($"[GameOver] RPC 수신 - UIManager={UIManager.Instance != null}, gameOverUI={UIManager.Instance?.gameOverUI != null}");
         if (ChatManager.Instance != null)
             ChatManager.Instance.SendSystemMessage("모든 플레이어가 사망했습니다. 게임 오버!", Color.red);
         if (UIManager.Instance != null && UIManager.Instance.gameOverUI != null)
             UIManager.Instance.gameOverUI.Show();
+        else
+            Debug.LogWarning("[GameOver] UIManager 또는 gameOverUI가 null입니다!");
         SoundManager.Instance?.PlayGameOver();
     }
 
@@ -614,10 +617,10 @@ private void RPC_RunComplete()
     private void RPC_StartCountdown()
     {
         var countdownUI = CountdownUI.GetOrCreate();
-        countdownUI.StartCountdown(3, () =>
-        {
-            if (HasStateAuthority) BeginStage(0);
-        });
+        if (countdownUI != null)
+            countdownUI.StartCountdown(3, () => { if (HasStateAuthority) BeginStage(0); });
+        else if (HasStateAuthority)
+            BeginStage(0);
     }
 
     private void Announce(string msg)

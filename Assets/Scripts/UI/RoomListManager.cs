@@ -27,6 +27,12 @@ namespace Starter
         [Tooltip("같은 GameMode 세션만 표시. 비워두면 모든 세션 표시.")]
         public string GameModeFilter;
 
+        [Header("Search")]
+        [Tooltip("방 이름 검색에 연결할 InputField (RoomText)")]
+        public TMPro.TMP_InputField SearchInputField;
+
+        private string _searchKeyword = "";
+
         [Header("Lobby")]
         public string LobbyName = "default";
 
@@ -44,6 +50,14 @@ namespace Starter
         {
             if (RefreshButton != null)
                 RefreshButton.onClick.AddListener(Refresh);
+            if (SearchInputField != null)
+                SearchInputField.onValueChanged.AddListener(OnSearchChanged);
+        }
+
+        private void OnSearchChanged(string keyword)
+        {
+            _searchKeyword = keyword;
+            Repaint();
         }
 
         // region → Photon NameServer 호스트 매핑 (ICMP 핑용)
@@ -200,23 +214,27 @@ namespace Starter
 
         private void Repaint()
         {
-            // 기존 슬롯 정리
             for (int i = _slots.Count - 1; i >= 0; i--)
             {
                 if (_slots[i] != null) Destroy(_slots[i].gameObject);
             }
             _slots.Clear();
 
+            bool hasKeyword = !string.IsNullOrWhiteSpace(_searchKeyword);
+            int shown = 0;
             foreach (var s in _filteredSessions)
             {
                 if (RoomSlotPrefab == null || RoomListContent == null) break;
+                if (hasKeyword && !s.Name.Contains(_searchKeyword, System.StringComparison.OrdinalIgnoreCase))
+                    continue;
                 var slot = Instantiate(RoomSlotPrefab, RoomListContent);
                 slot.Bind(s, OnRoomClicked);
                 _slots.Add(slot);
+                shown++;
             }
 
             if (EmptyLabel != null)
-                EmptyLabel.SetActive(_filteredSessions.Count == 0);
+                EmptyLabel.SetActive(shown == 0);
         }
 
         private async void OnRoomClicked(SessionInfo session)

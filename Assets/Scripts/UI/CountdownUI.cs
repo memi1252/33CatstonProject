@@ -15,47 +15,13 @@ public class CountdownUI : MonoBehaviour
         gameObject.SetActive(false);
     }
 
-    // UIManager에 연결이 없을 때 동적으로 생성
     public static CountdownUI GetOrCreate()
     {
         if (UIManager.Instance != null && UIManager.Instance.countdownUI != null)
             return UIManager.Instance.countdownUI;
 
-        // 동적 생성
-        var go = new GameObject("CountdownUI_Dynamic");
-        DontDestroyOnLoad(go);
-
-        var canvas = go.AddComponent<Canvas>();
-        canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-        canvas.sortingOrder = 300;
-        go.AddComponent<UnityEngine.UI.CanvasScaler>();
-
-        var textGo = new GameObject("CountText");
-        textGo.transform.SetParent(go.transform, false);
-        var rect = textGo.AddComponent<RectTransform>();
-        rect.anchorMin = new Vector2(0.5f, 0.5f);
-        rect.anchorMax = new Vector2(0.5f, 0.5f);
-        rect.sizeDelta = new Vector2(400, 300);
-        rect.anchoredPosition = Vector2.zero;
-
-        var tmp = textGo.AddComponent<TextMeshProUGUI>();
-        tmp.fontSize = 200;
-        tmp.alignment = TextAlignmentOptions.Center;
-        tmp.color = Color.white;
-        tmp.fontStyle = FontStyles.Bold;
-
-        var outline = textGo.AddComponent<UnityEngine.UI.Outline>();
-        outline.effectColor = new Color(0, 0, 0, 1f);
-        outline.effectDistance = new Vector2(4, -4);
-
-        var cd = go.AddComponent<CountdownUI>();
-        cd.countText = tmp;
-
-        if (UIManager.Instance != null)
-            UIManager.Instance.countdownUI = cd;
-
-        go.SetActive(false);
-        return cd;
+        Debug.LogWarning("[CountdownUI] UIManager.countdownUI가 연결되지 않았습니다. LobbyScene의 UIManager를 확인하세요.");
+        return null;
     }
 
     public void StartCountdown(int seconds, Action onComplete)
@@ -69,11 +35,13 @@ public class CountdownUI : MonoBehaviour
         for (int i = seconds; i > 0; i--)
         {
             if (countText != null) countText.text = i.ToString();
+            SoundManager.Instance?.PlayCountdownTick();
             SetScale(1.6f);
             yield return LerpScale(1.6f, 1f, 0.3f);
             yield return new WaitForSeconds(0.7f);
         }
         if (countText != null) countText.text = "GO!";
+        SoundManager.Instance?.PlayCountdownGo();
         SetScale(1.8f);
         yield return LerpScale(1.8f, 1f, 0.3f);
         yield return new WaitForSeconds(0.5f);

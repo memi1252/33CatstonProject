@@ -52,6 +52,10 @@ public class SoundManager : MonoBehaviour
     public AudioClip sfxProjectileImpact;
     public AudioClip sfxRevivalPrompt;
 
+    [Header("Countdown")]
+    public AudioClip sfxCountdownTick;
+    public AudioClip sfxCountdownGo;
+
     [Header("BGM")]
     public AudioClip bgmLobby;
     public AudioClip bgmGame;
@@ -151,8 +155,10 @@ public class SoundManager : MonoBehaviour
     public void PlayGameClear()       => PlaySFX(sfxGameClear);
     public void PlayGameOver()        => PlaySFX(sfxGameOver);
     public void PlayPortalTeleport()  => PlaySFX(sfxPortalTeleport);
-    public void PlayProjectileImpact()=> PlaySFX(sfxProjectileImpact);
-    public void PlayRevivalPrompt()   => PlaySFX(sfxRevivalPrompt);
+    public void PlayProjectileImpact()  => PlaySFX(sfxProjectileImpact);
+    public void PlayRevivalPrompt()     => PlaySFX(sfxRevivalPrompt);
+    public void PlayCountdownTick()     => PlaySFX(sfxCountdownTick);
+    public void PlayCountdownGo()       => PlaySFX(sfxCountdownGo);
 
     public void SetMasterVolume(float v) { SetVolume(MasterVolumeParam, v); PlayerPrefs.SetFloat(MasterVolumeParam, v); }
     public void SetBGMVolume(float v)    { SetVolume(BGMVolumeParam, v);    PlayerPrefs.SetFloat(BGMVolumeParam, v); }

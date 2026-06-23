@@ -16,19 +16,33 @@ public class SettingsUI : MonoBehaviour
 
     [SerializeField] private GameObject settingsPanel;
 
-    private void Start()
+    private void Awake()
+    {
+        // 닫기 버튼 자동 연결
+        var closeBtn = transform.Find("CloseButton")?.GetComponent<Button>();
+        if (closeBtn != null) closeBtn.onClick.AddListener(CloseSettings);
+    }
+
+    private void OnEnable()
     {
         if (SoundManager.Instance == null) return;
 
         masterSlider.value = SoundManager.Instance.GetMasterVolume();
-        bgmSlider.value = SoundManager.Instance.GetBGMVolume();
-        sfxSlider.value = SoundManager.Instance.GetSFXVolume();
+        bgmSlider.value    = SoundManager.Instance.GetBGMVolume();
+        sfxSlider.value    = SoundManager.Instance.GetSFXVolume();
 
         masterSlider.onValueChanged.AddListener(OnMasterChanged);
         bgmSlider.onValueChanged.AddListener(OnBGMChanged);
         sfxSlider.onValueChanged.AddListener(OnSFXChanged);
 
         UpdateLabels();
+    }
+
+    private void OnDisable()
+    {
+        masterSlider.onValueChanged.RemoveListener(OnMasterChanged);
+        bgmSlider.onValueChanged.RemoveListener(OnBGMChanged);
+        sfxSlider.onValueChanged.RemoveListener(OnSFXChanged);
     }
 
     private void OnMasterChanged(float value)

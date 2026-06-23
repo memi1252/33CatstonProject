@@ -17,7 +17,7 @@ public class MainLobbyUI : MonoBehaviour
 
 private void OnGameStartButtonClicked()
     {
-        SoundManager.Instance?.PlaySFX(SoundManager.Instance?.sfxUIGameStart);
+        //SoundManager.Instance?.PlaySFX(SoundManager.Instance?.sfxUIGameStart);
         UnityEngine.SceneManagement.SceneManager.LoadScene("LobbyScene");
     }
 
