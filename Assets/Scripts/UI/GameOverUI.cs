@@ -1,3 +1,4 @@
+using Starter;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
@@ -42,15 +43,18 @@ public class GameOverUI : MonoBehaviour
         if (subText != null) subText.text = "모든 플레이어가 쓰러졌습니다.";
     }
 
-private void OnLobbyClicked()
+    private void OnLobbyClicked()
     {
+        
         SoundManager.Instance?.PlaySFX(SoundManager.Instance?.sfxUIDisconnect);
-        var runner = Fusion.NetworkRunner.Instances?.GetEnumerator();
-        if (runner != null && runner.MoveNext())
-        {
-            var r = runner.Current;
-            if (r != null) _ = r.Shutdown();
-        }
-        UnityEngine.SceneManagement.SceneManager.LoadScene(1);
+        // var runner = Fusion.NetworkRunner.Instances?.GetEnumerator();
+        // if (runner != null && runner.MoveNext())
+        // {
+        //     var r = runner.Current;
+        //     if (r != null) _ = r.Shutdown();
+        // }
+        // SceneManager.LoadScene(1);
+        UIGameMenu._instance.DisconnectClicked();
+        
     }
 }

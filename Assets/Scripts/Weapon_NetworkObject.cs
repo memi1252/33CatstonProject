@@ -108,8 +108,8 @@ namespace Projectiles.NetworkObjectExample
             Ray ray = new Ray(FireTransform.position, transform.forward);
             Vector3 endPoint;
             float hitDistance = 50f;
-
-            if (Physics.Raycast(ray, out RaycastHit hit, 50f, raycastLayerMask))
+            
+            if (Physics.CapsuleCast(FireTransform.position, FireTransform.position + transform.forward * 50f, 0.1f, transform.forward, out RaycastHit hit, 50f, raycastLayerMask))
             {
                 endPoint = hit.point;
                 hitDistance = hit.distance;
@@ -123,6 +123,23 @@ namespace Projectiles.NetworkObjectExample
 
                         // 속성 효과 적용
                         ApplyWeaponAttributeEffect(damageable, hit.point, totalDamage);
+                    }
+                }
+            }
+            else if (Physics.Raycast(ray, out RaycastHit hit2, raycastLayerMask))
+            {
+                endPoint = hit2.point;
+                hitDistance = hit2.distance;
+                if (HasStateAuthority && hit2.collider != null && hit2.collider.transform.root.gameObject != originParent.root.gameObject)
+                {
+                    IDamageable damageable = hit2.collider.GetComponentInParent<IDamageable>();
+                    if (damageable != null)
+                    {
+                        float totalDamage = ComputeFinalDamage();
+                        damageable.TakeHit(totalDamage, hit2, GetAttackerGameObject());
+
+                        // 속성 효과 적용
+                        ApplyWeaponAttributeEffect(damageable, hit2.point, totalDamage);
                     }
                 }
             }

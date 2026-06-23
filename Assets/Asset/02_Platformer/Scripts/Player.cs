@@ -17,7 +17,6 @@ namespace Starter.Platformer
 		[Header("References")]
 		public SimpleKCC KCC;
 		public PlayerInput PlayerInput;
-		public Animator Animator;
 		public Transform CameraPivot;
 		public Transform CameraHandle;
 		public Transform ScalingRoot;
@@ -59,7 +58,7 @@ namespace Starter.Platformer
 		[Networked, OnChangedRender(nameof(OnJumpingChanged))]
 		private NetworkBool _isJumping { get; set; }
 
-		[Networked, OnChangedRender(nameof(OnDeadChanged))]
+		[Networked]
 		public NetworkBool dead { get; set; }
 
 		[Header("Stats")]
@@ -357,8 +356,6 @@ namespace Starter.Platformer
 			RevivalUI.SetActive(dead);
 			if (dead) return;
 			
-			Animator.SetFloat(_animIDSpeed, KCC.RealSpeed);
-			Animator.SetBool(_animIDGrounded, KCC.IsGrounded);	
 
 			FootstepSound.enabled = KCC.IsGrounded && KCC.RealSpeed > 1f;
 			FootstepSound.pitch = KCC.RealSpeed > moveSpeed + 3 - 1 ? 1.5f : 1f;
@@ -367,11 +364,6 @@ namespace Starter.Platformer
 
 			var emission = DustParticles.emission;
 			emission.enabled = KCC.IsGrounded && KCC.RealSpeed > 1f;
-		}
-
-		private void Awake()
-		{
-			AssignAnimationIDs();
 		}
 
         
@@ -530,7 +522,6 @@ public void TakeDamage(float _damage)
 			if (hp <= 0)
 			{
 				dead = true;
-				OnDeadChanged();
 				SoundManager.Instance?.PlayPlayerDeath();
 				if (ChatManager.Instance != null)
 					ChatManager.Instance.SendSystemMessage(Nickname + "님이 사망했습니다.", Color.red);
@@ -538,25 +529,18 @@ public void TakeDamage(float _damage)
 			}
 		}
 
-public void Revive(string reviverName, float revivalHpPercent = 0.3f)
+		public void Revive(string reviverName, float revivalHpPercent = 0.3f)
 		{
 			if (!dead) return;
 
 			dead = false;
 			hp = maxHp * revivalHpPercent;
-			OnDeadChanged();
 			SoundManager.Instance?.PlayPlayerRevive();
 
 			Debug.Log($"[Player 부활] 유저({Nickname})가 {reviverName}에 의해 부활했습니다! (HP : {hp}/{maxHp})");
 		}
 
-		private void AssignAnimationIDs()
-		{
-			_animIDSpeed = Animator.StringToHash("Speed");
-			_animIDGrounded = Animator.StringToHash("Grounded");
-			_animIDRespawn = Animator.StringToHash("ReSpawn");
-			_animIDDie = Animator.StringToHash("Die");
-		}
+		
 
 		private void OnTriggerEnter(Collider other)
 		{
@@ -585,18 +569,6 @@ private void OnJumpingChanged()
 				SoundManager.Instance?.PlayPlayerLand();
 				if (LandAudioClip != null) AudioSource.PlayClipAtPoint(LandAudioClip, KCC.Position, 1f);
 				ScalingRoot.localScale = new Vector3(1.25f, 0.75f, 1.25f);
-			}
-		}
-
-		private void OnDeadChanged()
-		{
-			if (dead)
-			{
-				Animator.SetTrigger(_animIDDie);
-			}
-			else
-			{
-				Animator.SetTrigger(_animIDRespawn);
 			}
 		}
 

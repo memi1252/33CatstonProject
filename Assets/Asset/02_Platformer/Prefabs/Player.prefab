@@ -310,7 +310,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   KCC: {fileID: 8261807108443789817}
   PlayerInput: {fileID: 731081082244027627}
-  Animator: {fileID: 6764647696057925006}
   CameraPivot: {fileID: 53799290566343439}
   CameraHandle: {fileID: 8328573696601887576}
   ScalingRoot: {fileID: 7912246800516094496}
@@ -6239,12 +6238,6 @@ PrefabInstance:
     m_AddedComponents: []
   m_SourcePrefab: {fileID: -4850744874352902152, guid: 5267786472d9b204a8e446c0297801a6,
     type: 3}
---- !u!95 &6764647696057925006 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: -3773943229118037871, guid: 5267786472d9b204a8e446c0297801a6,
-    type: 3}
-  m_PrefabInstance: {fileID: 1603450371024338207}
-  m_PrefabAsset: {fileID: 0}
 --- !u!4 &7912246800516094496 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8902889783771277119, guid: 5267786472d9b204a8e446c0297801a6,

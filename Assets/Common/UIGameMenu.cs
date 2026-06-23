@@ -47,7 +47,7 @@ namespace Starter
 		private Coroutine _connectingDotsCoroutine;
 		private Coroutine _hideConnectingCoroutine;
 
-		private static UIGameMenu _instance;
+		public static UIGameMenu _instance;
 
 		private void Awake()
 		{
@@ -212,12 +212,16 @@ namespace Starter
 		public async void DisconnectClicked()
 		{
 			if (RoomMenuPanel != null) RoomMenuPanel.SetActive(false);
+			UIManager.Instance.buffUI.SetActive(false);
+			UIManager.Instance.weaponUI.SetActive(false);
 			await Disconnect(loadLobby: true);
 		}
 
 		public async void BackToMenu()
 		{
 			if (RoomMenuPanel != null) RoomMenuPanel.SetActive(false);
+			UIManager.Instance.buffUI.SetActive(false);
+			UIManager.Instance.weaponUI.SetActive(false);
 			await Disconnect(loadLobby: false);
 			Destroy(gameObject.transform.parent.gameObject);
 			SceneManager.LoadScene(0);
@@ -244,6 +248,8 @@ namespace Starter
 			StatusText.text = "";
 
 			if (loadLobby) SceneManager.LoadScene(1);
+			Destroy(UIManager.Instance.gameObject);
+			Destroy(transform.root.gameObject);
 		}
 
 		private void OnShutdown(NetworkRunner runner, ShutdownReason reason)

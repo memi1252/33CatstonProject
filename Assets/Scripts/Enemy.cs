@@ -519,7 +519,7 @@ protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = def
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    private void Rpc_ShowDamagePopup(float damage)
+    public void Rpc_ShowDamagePopup(float damage)
     {
         if (damagePopup == null) return;
         damagePopup.Spawn(transform.position + Vector3.up, damage);
