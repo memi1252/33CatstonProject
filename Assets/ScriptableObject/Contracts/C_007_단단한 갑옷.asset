@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ContractScriptableObject
   contractID: C_007
   contractName: "\uB2E8\uB2E8\uD55C \uAC11\uC637"
-  contractIcon: {fileID: 0}
+  contractIcon: {fileID: 21300000, guid: 4bc7bc3f79ad807479513cbdcf819e3e, type: 3}
   description: "\uC544\uAD70\uC774 \uBC1B\uB294 \uD53C\uD574\uAC00{Ratio:0} \uAC10\uC18C\uD569\uB2C8\uB2E4.
     \uC774\uB3D9\uC18D\uB3C4\uAC00{Ratio:1}\uAC10\uC18C\uD569\uB2C8\uB2E4"
   targetType: 4

@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::ContractScriptableObject
   contractID: C_010
   contractName: "\uC635\uC635\uC635"
-  contractIcon: {fileID: 0}
+  contractIcon: {fileID: 21300000, guid: b2e861427235ad4459da98e2933a9113, type: 3}
   description: "\uC635\uC635\uC635\uC635"
   targetType: 4
   targetAttribute: 0
