@@ -101,12 +101,26 @@ public class Enemy : NetworkBehaviour , IDamageable
 
     public override void Spawned()
     {
+        // 스테이지 전환 시 적이 비호스트 클라이언트에 제대로 복제되는지 진단하기 위한 로그.
+        // 모든 클라이언트(권한 여부 무관)에서 찍힌다 — 비호스트 로그에 이게 안 보이면 복제 자체가 안 된 것.
+        Debug.Log($"[EnemySpawn] {name} HasStateAuthority={HasStateAuthority} pos={transform.position} isBoss={isBoss}");
+
         if (HasStateAuthority)
         {
             health = EnemyGlobalBuffs.ScaledHealth(startingHealth, isBoss);
             CurrentState = EnemyState.Idle;
             NetworkPosition = transform.position;
             NetworkRotation = transform.rotation;
+        }
+
+        // NavMeshAgent는 State Authority(호스트)만 필요하다. 클라이언트(proxy)에서 활성 상태로 두면
+        // NavMeshAgent 자신의 내부 Transform 갱신이 Render()의 NetworkPosition Lerp와 매 프레임 충돌해서
+        // 적이 위치를 왔다갔다 텔레포트하는 것처럼 떨리는 버그가 발생한다. 클라이언트에서는 비활성화한다.
+        if (!HasStateAuthority)
+        {
+            var proxyAgent = GetComponent<NavMeshAgent>();
+            if (proxyAgent != null) proxyAgent.enabled = false;
+            return;
         }
 
         // NavMeshAgent 초기화: Fusion이 스폰 위치를 확정한 뒤 실행해야
@@ -134,14 +148,35 @@ public class Enemy : NetworkBehaviour , IDamageable
         }
     }
 
+    private bool _posDiagLogged;
+
     public override void Render()
     {
         // State Authority가 아닌 경우 네트워크 동기화된 위치와 회전으로 업데이트
         if (!HasStateAuthority)
         {
+            // 진단용: 스폰 후 실제 transform.position이 NetworkPosition과 동기화되는지,
+            // 렌더러가 실제로 켜져있는지 1회만 확인 로그를 남긴다.
+            if (!_posDiagLogged)
+            {
+                _posDiagLogged = true;
+                StartCoroutine(LogPositionDiagAfterDelay());
+            }
+
             transform.position = Vector3.Lerp(transform.position, NetworkPosition, Time.deltaTime * 10f);
             transform.rotation = Quaternion.Lerp(transform.rotation, NetworkRotation, Time.deltaTime * 10f);
         }
+    }
+
+    private IEnumerator LogPositionDiagAfterDelay()
+    {
+        yield return new WaitForSeconds(1f);
+        var renderers = GetComponentsInChildren<Renderer>(true);
+        string rendererInfo = string.Join(", ", System.Array.ConvertAll(renderers,
+            r => $"{r.name}:enabled={r.enabled},visible={r.isVisible}"));
+        Debug.Log($"[EnemyPosDiag] {name} transform.pos={transform.position} NetworkPosition={NetworkPosition} " +
+                  $"distance={Vector3.Distance(transform.position, NetworkPosition):F2} activeInHierarchy={gameObject.activeInHierarchy} " +
+                  $"renderers=[{rendererInfo}]");
     }
 
     public override void FixedUpdateNetwork()
@@ -434,7 +469,7 @@ protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = def
 
         float finalDamage = EnemyGlobalBuffs.ScaledReceived(damage, isBoss);
         Debug.Log(finalDamage);
-        Rpc_ShowDamagePopup(finalDamage);
+        Rpc_ShowDamagePopup(finalDamage, attackerObj != null ? attackerObj.transform.position : default);
         health -= finalDamage;
         SoundManager.Instance?.PlayEnemyHit();
         if (health <= 0 && !isDead)
@@ -519,10 +554,117 @@ protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = def
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
-    public void Rpc_ShowDamagePopup(float damage)
+    public void Rpc_ShowDamagePopup(float damage, Vector3 attackerPos = default)
     {
+        PlayHitFlash();
+        PlayHitPunch();
+        PlayHitKnockback(attackerPos);
         if (damagePopup == null) return;
         damagePopup.Spawn(transform.position + Vector3.up, damage);
+    }
+
+    private Coroutine _hitFlashCoroutine;
+    private Coroutine _hitPunchCoroutine;
+
+    /// <summary>
+    /// 피격 시 살짝 찌그러졌다 돌아오는 펀치 스케일 효과 (히트 플래시와 함께 타격감을 만든다).
+    /// 콜라이더/NavMeshAgent가 붙은 루트가 아니라 첫 번째 자식(비주얼)만 스케일한다.
+    /// </summary>
+    private void PlayHitPunch()
+    {
+        Transform visual = transform.childCount > 0 ? transform.GetChild(0) : null;
+        if (visual == null) return;
+
+        if (_hitPunchCoroutine != null) StopCoroutine(_hitPunchCoroutine);
+        _hitPunchCoroutine = StartCoroutine(HitPunchRoutine(visual));
+    }
+
+    private IEnumerator HitPunchRoutine(Transform visual)
+    {
+        Vector3 baseScale = visual.localScale;
+        Vector3 punchScale = Vector3.Scale(baseScale, new Vector3(1.2f, 0.8f, 1.2f));
+        float duration = 0.18f;
+        float t = 0f;
+        visual.localScale = punchScale;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            visual.localScale = Vector3.Lerp(punchScale, baseScale, t / duration);
+            yield return null;
+        }
+        visual.localScale = baseScale;
+        _hitPunchCoroutine = null;
+    }
+
+    private Coroutine _hitKnockbackCoroutine;
+
+    /// <summary>
+    /// 피격 시 공격자 반대 방향으로 살짝 밀려나는 스태거 효과 (비주얼 전용 — 콜라이더/NavMeshAgent 위치는 그대로 유지).
+    /// attackerPos가 비어있으면(default) 방향을 알 수 없으니 건너뛴다.
+    /// </summary>
+    private void PlayHitKnockback(Vector3 attackerPos)
+    {
+        if (attackerPos == default) return;
+        Transform visual = transform.childCount > 0 ? transform.GetChild(0) : null;
+        if (visual == null) return;
+
+        Vector3 dir = transform.position - attackerPos;
+        dir.y = 0f;
+        if (dir.sqrMagnitude < 0.0001f) return;
+        dir.Normalize();
+
+        if (_hitKnockbackCoroutine != null) StopCoroutine(_hitKnockbackCoroutine);
+        _hitKnockbackCoroutine = StartCoroutine(HitKnockbackRoutine(visual, dir));
+    }
+
+    private IEnumerator HitKnockbackRoutine(Transform visual, Vector3 worldDir)
+    {
+        Vector3 basePos = visual.localPosition;
+        Vector3 punchOffset = visual.InverseTransformDirection(worldDir) * 0.25f;
+        float duration = 0.15f;
+        float t = 0f;
+        visual.localPosition = basePos + punchOffset;
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            visual.localPosition = Vector3.Lerp(basePos + punchOffset, basePos, t / duration);
+            yield return null;
+        }
+        visual.localPosition = basePos;
+        _hitKnockbackCoroutine = null;
+    }
+
+    /// <summary>
+    /// 피격 시 짧게 빨간색으로 반짝이는 타격감 효과. RPC로 모든 클라이언트에서 동시에 재생된다.
+    /// </summary>
+    protected void PlayHitFlash()
+    {
+        if (_hitFlashCoroutine != null) StopCoroutine(_hitFlashCoroutine);
+        _hitFlashCoroutine = StartCoroutine(HitFlashRoutine());
+    }
+
+    private IEnumerator HitFlashRoutine()
+    {
+        var renderers = GetComponentsInChildren<Renderer>(true);
+        var blocks = new MaterialPropertyBlock[renderers.Length];
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            blocks[i] = new MaterialPropertyBlock();
+            renderers[i].GetPropertyBlock(blocks[i]);
+            blocks[i].SetColor("_BaseColor", Color.red);
+            blocks[i].SetColor("_Color", Color.red);
+            renderers[i].SetPropertyBlock(blocks[i]);
+        }
+
+        yield return new WaitForSeconds(0.35f);
+
+        for (int i = 0; i < renderers.Length; i++)
+        {
+            if (renderers[i] == null) continue;
+            blocks[i].Clear();
+            renderers[i].SetPropertyBlock(blocks[i]);
+        }
+        _hitFlashCoroutine = null;
     }
 
     [Header("사망")]

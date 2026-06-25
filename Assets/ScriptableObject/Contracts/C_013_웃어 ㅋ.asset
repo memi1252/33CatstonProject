@@ -39,5 +39,5 @@ MonoBehaviour:
       boosDamage: 0
       boosReceived: 0
       boosHp: 0
-    ratio: -50
+    ratio: -0.5
   valueType: 0

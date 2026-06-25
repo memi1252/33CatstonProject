@@ -21,6 +21,7 @@ public class BuffManager : NetworkBehaviour
     [Header("UI")]
     public Image timerFillImage;
     public TextMeshProUGUI timerText;
+    public TextMeshProUGUI voteTitleText;
 
     public BuffScripableObject[] imprintAvailableBuffs; // 각인 투표 가능한 버프 목록
     
@@ -50,7 +51,8 @@ public class BuffManager : NetworkBehaviour
     private float contractVoteTimeMax = 15f;
     private float voteResultTime = 5f;
 
-    private bool isContractBuffTransmission = false;
+    private bool _hasChosenContract = false;
+    private float _imprintStuckTimer = 0f;
 
     // N/B 키 입력 신뢰성: Update에서 감지하고 FixedUpdateNetwork에서 소비.
     // (FixedUpdateNetwork의 Input.GetKeyDown은 재시뮬레이션/틱 타이밍 때문에 누락될 수 있음)
@@ -93,6 +95,7 @@ public class BuffManager : NetworkBehaviour
         if (UIManager.Instance.buffTimerFillImage != null) timerFillImage = UIManager.Instance.buffTimerFillImage;
         if (UIManager.Instance.buffTimerText != null) timerText = UIManager.Instance.buffTimerText;
         if (UIManager.Instance.buffSlotParent != null) buffSlotParent = UIManager.Instance.buffSlotParent;
+        if (UIManager.Instance.buffVoteTitleText != null) voteTitleText = UIManager.Instance.buffVoteTitleText;
     }
 
     void Start()
@@ -158,48 +161,42 @@ public class BuffManager : NetworkBehaviour
             if (timerText != null) timerText.text = $"{contractVoteTime:F0}";
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
-            if (contractVoteTime <= 0)
+
+            // 타이머가 끝났는데 아직 선택을 안 했으면 첫 번째 옵션 자동 선택
+            if (contractVoteTime <= 0 && !_hasChosenContract)
             {
-                if (!isContractBuffTransmission)
-                {
-                    isContractBuffTransmission = true;
-                    playerVotes.TryGet(Runner.LocalPlayer, out int myVoteOrder);
-                    foreach (var buff in myContractBuff)
-                    {
-                        if(myVoteOrder == buff.Value)
-                        {
-                            for(int i = 0; i < contractAvailableBuffs.Length; i++)
-                            {
-                                if(buff.Key == contractAvailableBuffs[i])
-                                {
-                                    RPC_ContractBuffTransmission(i);
-                                    break;
-                                }
-                            }
-                        }
+                ChooseContractBuff(1);
+            }
 
-                    }
-                }
-                else
-                {
-                    // 모든 플레이어의 선택이 수집되면 (contractChosenBuff는 씬 권한자에만 쌓이므로
-                    // 이 조건은 사실상 씬 권한자에서만 참이 된다)
-                    if (Runner.IsSceneAuthority && contractChosenBuff.Count == Runner.ActivePlayers.Count())
-                    {
-                        // 선택된 계약 인덱스를 모든 클라에 브로드캐스트 → 각 클라가 자기 플레이어에 적용 + UI 종료
-                        contractApplyBuff();
+            // 모든 플레이어의 선택이 수집되면 (contractChosenBuff는 씬 권한자에만 쌓이므로
+            // 이 조건은 사실상 씬 권한자에서만 참이 된다) 타이머와 무관하게 즉시 종료
+            if (Runner.IsSceneAuthority && contractChosenBuff.Count >= Runner.ActivePlayers.Count())
+            {
+                // 선택된 계약 인덱스를 모든 클라에 브로드캐스트 → 각 클라가 자기 플레이어에 적용 + UI 종료
+                contractApplyBuff();
 
-                        // 권한자 전용 네트워크 상태 정리
-                        isContractBuffActive = false;
-                        playerVotes.Clear();
-                        contractChosenBuff.Clear();
-                    }
-                }
+                // 권한자 전용 네트워크 상태 정리
+                isContractBuffActive = false;
+                contractChosenBuff.Clear();
             }
         }
         
         if (isImprintBuffActive)
         {
+            // 권한 동기화가 지연/실패해서 결과 발표 단계에서 영원히 못 빠져나오는 경우를 막는 안전장치.
+            // 결과 발표 시간(voteResultTime)의 3배 이상 지나면 권한 여부와 무관하게 로컬에서 강제로 닫는다.
+            _imprintStuckTimer += Time.deltaTime;
+            if (isVoteFinished && _imprintStuckTimer > voteResultTime * 3f)
+            {
+                Debug.LogWarning("[BuffManager] 각인 UI가 비정상적으로 오래 열려있어 강제로 닫습니다.");
+                isImprintBuffActive = false;
+                _imprintStuckTimer = 0f;
+                if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+                    UIManager.Instance.buffUI.SetActive(false);
+                EnablePlayerInput();
+                return;
+            }
+
             imprintVoteTime -= Time.deltaTime;
             if (timerFillImage != null) timerFillImage.fillAmount = imprintVoteTime / imprintVoteTimeMax;
             if (timerText != null) timerText.text = $"{imprintVoteTime:F0}";
@@ -229,6 +226,8 @@ public class BuffManager : NetworkBehaviour
                         isVoteFinished = false;
                         playerVotes.Clear();
                     }
+
+                    _imprintStuckTimer = 0f;
 
                     // 로컬 UI/타이머 초기화 (모든 클라)
                     imprintVoteTimeMax = 30f;
@@ -388,7 +387,7 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
         }
 
         // 모든 클라 UI/입력/로컬 상태 초기화
-        isContractBuffTransmission = false;
+        _hasChosenContract = false;
         contractVoteTime = contractVoteTimeMax;
         if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
             UIManager.Instance.buffUI.SetActive(false);
@@ -413,28 +412,8 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
         {
             if (change == nameof(playerVotes))
             {
-                UpdateVoteVisualsSelf();
+                UpdateVoteVisuals();
             }
-        }
-    }
-
-    private void UpdateVoteVisualsSelf()
-    {
-        if (buffSlots == null || buffSlots.Count == 0) return;
-
-        foreach (var slot in buffSlots)
-        {
-            string names = "";
-            playerVotes.TryGet(Runner.LocalPlayer, out int myVoteOrder);
-            if (myVoteOrder == slot.Order)
-            {
-                PlayerRef playerRef = Runner.LocalPlayer;
-                string playerName = GameManager.Instance.GetPlayerName(playerRef);
-
-                names = playerName;
-            }
-            // names = names.TrimEnd(',', ' '); // 마지막 쉼표와 공백 제거
-            slot.UpdateVotePlayer(names);
         }
     }
 
@@ -570,9 +549,11 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
     private void RPC_ContractBuffVote(int[] buffIndices)
     {
         myContractBuff.Clear(); // 기존 UI 데이터만 초기화
+        _hasChosenContract = false;
         if (buffSlotParent != null && buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
         buffSlots.Clear();
 
+        if (voteTitleText != null) voteTitleText.text = "Contract";
         if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
             UIManager.Instance.buffUI.SetActive(true);
         DisablePlayerInput(); // 플레이어 입력 비활성화
@@ -613,9 +594,11 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
     private void RPC_ImprintBuffVote(int[] buffIndices)
     {
         isImprintBuffActive = true;
+        _imprintStuckTimer = 0f;
         if (buffSlotParent != null && buffSlotParent.childCount > 0) foreach (Transform child in buffSlotParent) Destroy(child.gameObject);
         buffSlots.Clear();
 
+        if (voteTitleText != null) voteTitleText.text = "Imprint";
         if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
             UIManager.Instance.buffUI.SetActive(true);
         DisablePlayerInput(); // 플레이어 입력 비활성화
@@ -639,7 +622,39 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
 
     public void OnVoteButtonClicked(int buffOrder)
     {
-        RPC_SubmitVote(Runner.LocalPlayer, buffOrder);
+        if (isContractBuffActive)
+        {
+            ChooseContractBuff(buffOrder);
+        }
+        else
+        {
+            RPC_SubmitVote(Runner.LocalPlayer, buffOrder);
+        }
+    }
+
+    // 계약 증강: 고른 사람만 즉시 등록 + UI 닫기 (다른 사람이 누구를 골랐는지는 표시하지 않음)
+    private void ChooseContractBuff(int buffOrder)
+    {
+        if (_hasChosenContract) return;
+
+        foreach (var buff in myContractBuff)
+        {
+            if (buff.Value != buffOrder) continue;
+            for (int i = 0; i < contractAvailableBuffs.Length; i++)
+            {
+                if (buff.Key == contractAvailableBuffs[i])
+                {
+                    _hasChosenContract = true;
+                    RPC_ContractBuffTransmission(i);
+                    break;
+                }
+            }
+            break;
+        }
+
+        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+            UIManager.Instance.buffUI.SetActive(false);
+        EnablePlayerInput();
     }
 
     [Rpc(RpcSources.All, RpcTargets.StateAuthority)]

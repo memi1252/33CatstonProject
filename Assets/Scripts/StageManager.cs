@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using Fusion;
 using UnityEngine;
 
@@ -439,7 +440,10 @@ private void SpawnBoss(StageDefinition def)
                 break;
             }
             case StageReward.Weapon:
-                if (_weaponRewardTimer.Expired(Runner)) OnStageFullyCleared();
+                // 전원이 무기를 다 골랐으면 타이머가 남아있어도 바로 진행한다.
+                bool allVoted = WeaponManager.Instance != null &&
+                                 WeaponManager.Instance.playerWeaponVotes.Count >= Runner.ActivePlayers.Count();
+                if (allVoted || _weaponRewardTimer.Expired(Runner)) OnStageFullyCleared();
                 break;
             default:
                 OnStageFullyCleared();
@@ -447,12 +451,17 @@ private void SpawnBoss(StageDefinition def)
         }
     }
 
+    [Header("클리어 보상")]
+    [Tooltip("스테이지/보스 클리어 시 최대 체력 대비 회복 비율")]
+    public float clearHealPercent = 0.2f;
+
     private void OnStageFullyCleared()
     {
         _phase = StagePhase.Cleared;
 
         // 다음 스테이지로 가는 출구 포탈 해제 (모든 클라이언트)
         RPC_SetPortalLocked(CurrentStageIndex, false);
+        RPC_HealAllPlayers(clearHealPercent);
         Announce($"[{stages[CurrentStageIndex].stageName}] 클리어! 포탈이 열렸습니다.");
     }
 
@@ -466,9 +475,20 @@ private void OnBossDefeated()
         else
         {
             RPC_SetPortalLocked(CurrentStageIndex, false);
+            RPC_HealAllPlayers(clearHealPercent);
             Announce($"[{stages[CurrentStageIndex].stageName}] 보스 처치! 포탈이 열렸습니다.");
             SoundManager.Instance?.PlayStageClear();
         }
+    }
+
+    // 스테이지/보스 클리어 보상: 모든 클라이언트가 각자 자기 플레이어에게만 회복을 적용한다 (Shared 모드 권한 규칙).
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_HealAllPlayers(float percent)
+    {
+        if (Runner == null) return;
+        NetworkObject playerObj = Runner.GetPlayerObject(Runner.LocalPlayer);
+        if (playerObj != null && playerObj.TryGetComponent(out Starter.Platformer.Player player))
+            player.HealPercent(percent);
     }
 
     // ===== 다음 스테이지 진입 (출구 포탈 사용 시 호출) =====

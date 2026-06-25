@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BuffScripableObject
   buffID: I_008
   buffName: "\uB108\uBB34 \uC27D\uB2E4\uACE0?"
-  buffIcon: {fileID: 0}
+  buffIcon: {fileID: 21300000, guid: 4d13d9486cdd09e45abe34be00afa686, type: 3}
   buffDescription: "\uB108\uBB34 \uC27D\uAC8C \uB290\uAEF4\uC9C0\uB098\uC694? \uADF8\uB7FC
     \uBAA8\uB4E0 \uC801\uB4E4\uC5D0 \uAC00\uD558\uB294 \uD53C\uD574\uB7C9, \uCCB4\uB825,
     \uC774\uB3D9\uC18D\uB3C4\uB97C \uC99D\uAC00\uC2DC\uCF1C\uBCF4\uC138\uC694! \uBAA8\uB450

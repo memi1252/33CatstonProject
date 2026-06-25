@@ -41,7 +41,7 @@ public class WeaponController : NetworkBehaviour
         {
             if (localStatsUI == null)
             {
-                localStatsUI = FindAnyObjectByType<StatsUI>();
+                localStatsUI = FindAnyObjectByType<StatsUI>(FindObjectsInactive.Include);
             }
 
             if (localStatsUI != null)
@@ -109,8 +109,14 @@ public class WeaponController : NetworkBehaviour
         //equippedWeapon = weaponObject.GetComponent<Weapon>();
         equippedWeapon = weaponObject.GetComponent<Weapon_NetworkObject>();
         equippedWeapon.WeaponSO = newWeapon;
-        // 임시
-        FindAnyObjectByType<StatsUI>().Set(newWeapon.weaponType, newWeapon.grade, newWeapon.targetAttribute);
+
+        // 로컬(입력 권한 보유) 플레이어만 자신의 속성 UI 갱신
+        if (HasInputAuthority)
+        {
+            if (localStatsUI == null)
+                localStatsUI = FindAnyObjectByType<StatsUI>(FindObjectsInactive.Include);
+            localStatsUI?.Set(newWeapon.weaponType, newWeapon.grade, newWeapon.targetAttribute);
+        }
         // 네트워크 객체를 소유한 플레이어를 무기에 연결합니다 (필요 시 Player 참조용)
         equippedWeapon.ownerPlayer = GetComponent<Starter.Platformer.Player>(); 
         equippedWeapon.transform.parent = weaponHold;

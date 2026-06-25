@@ -21,7 +21,7 @@ MonoBehaviour:
   description: 
   enemyType: 0
   projectileType: 0
-  range: 5
+  range: 2.2
   size: 1
   hp: 50
   damage: 10

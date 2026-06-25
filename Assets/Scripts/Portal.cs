@@ -59,11 +59,29 @@ public class Portal : MonoBehaviour
         if (worldPromptObject != null) worldPromptObject.SetActive(false);
     }
 
+    // 트리거 범위 안에 있는 동안 포털 GameObject가 비활성화되면(스테이지 전환 시 잠금/해제 등)
+    // OnTriggerExit가 호출되지 않아 _localPlayerInRange가 그대로 남는다.
+    // 이 상태로 포털이 다시 활성화되면 플레이어가 어디 있든 F키만 눌러도 텔레포트가 발동하는 버그가 생긴다.
+    private void OnDisable()
+    {
+        _localPlayerInRange = null;
+        if (worldPromptObject != null) worldPromptObject.SetActive(false);
+    }
+
 private void Update()
     {
         if (_localPlayerInRange == null) return;
         if (destination == null) return;
         if (TeleportManager.Instance != null && TeleportManager.Instance.IsBusy) return;
+
+        // 안전장치: 실제로 포털 근처에 있는지 거리로 한 번 더 확인 (위 OnDisable로도 막히지만 이중 방어)
+        const float rangeCheckDist = 5f;
+        if (Vector3.Distance(transform.position, _localPlayerInRange.transform.position) > rangeCheckDist)
+        {
+            _localPlayerInRange = null;
+            if (worldPromptObject != null) worldPromptObject.SetActive(false);
+            return;
+        }
 
         if (Input.GetKeyDown(interactKey))
         {

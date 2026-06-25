@@ -41,7 +41,7 @@ public class SlimeEnemy : Enemy
 
         float finalDamage = EnemyGlobalBuffs.ScaledReceived(damage, isBoss);
         Debug.Log(finalDamage);
-        Rpc_ShowDamagePopup(finalDamage);
+        Rpc_ShowDamagePopup(finalDamage, attackerObj != null ? attackerObj.transform.position : default);
         health -= finalDamage;
         animator.SetTrigger("hit");
         SoundManager.Instance?.PlayEnemyHit();

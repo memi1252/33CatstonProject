@@ -82,7 +82,7 @@ namespace Starter.Platformer
 			}
 			else
 			{
-				AudioSource.PlayClipAtPoint(FallAudioClip, transform.position, FallAudioVolume);
+				SoundManager.Instance?.PlaySFX(FallAudioClip);
 				Platform.AddForce(Vector3.down * 30f, ForceMode.Impulse);
 			}
 		}

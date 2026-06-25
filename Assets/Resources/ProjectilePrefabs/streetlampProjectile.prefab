@@ -99,7 +99,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 557cae761425cb14889fd6727e77f8ce, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Projectiles.NetworkObjectExample.PhysicsProjectile
-  _initialImpulse: 100
+  _initialImpulse: 30
   _lifeTime: 4
   _visualsRoot: {fileID: 0}
   _hitEffect: {fileID: 0}
@@ -215,6 +215,7 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
 --- !u!135 &6737403180131587760
 SphereCollider:

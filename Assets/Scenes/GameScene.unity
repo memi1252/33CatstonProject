@@ -8678,6 +8678,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 551656625}
+  - component: {fileID: 551656626}
   m_Layer: 0
   m_Name: Fence
   m_TagString: Untagged
@@ -8722,6 +8723,27 @@ Transform:
   - {fileID: 8829550}
   m_Father: {fileID: 708968956}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!65 &551656626
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 551656624}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 18.936121, y: 1, z: 0.6568749}
+  m_Center: {x: 5.4966154, y: 0, z: 0.17156258}
 --- !u!1 &560685349 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 919132149155446097, guid: 75b168f02f27e2c4fafe39b166ad9dd3,
@@ -9987,6 +10009,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 620642839}
+  - component: {fileID: 620642840}
   m_Layer: 0
   m_Name: Fence
   m_TagString: Untagged
@@ -10031,6 +10054,27 @@ Transform:
   - {fileID: 652635801}
   m_Father: {fileID: 708968956}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!65 &620642840
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 620642838}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 17.99991, y: 1, z: 0.721278}
+  m_Center: {x: 5.234668, y: 0, z: 0.13936102}
 --- !u!1001 &628716265
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -16957,6 +17001,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1048786401}
+  - component: {fileID: 1048786402}
   m_Layer: 0
   m_Name: Fence
   m_TagString: Untagged
@@ -17001,6 +17046,27 @@ Transform:
   - {fileID: 487431383}
   m_Father: {fileID: 708968956}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!65 &1048786402
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1048786400}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 18.18909, y: 1, z: 0.562908}
+  m_Center: {x: 5.259613, y: 0, z: -0.21854606}
 --- !u!1 &1056003239
 GameObject:
   m_ObjectHideFlags: 0
@@ -19267,6 +19333,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1243226034}
+  - component: {fileID: 1243226035}
   m_Layer: 0
   m_Name: Fence
   m_TagString: Untagged
@@ -19302,6 +19369,27 @@ Transform:
   - {fileID: 763559210}
   m_Father: {fileID: 708968956}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1243226035
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1243226033}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 10.130737, y: 1, z: 0.3481598}
+  m_Center: {x: 1.2485809, y: 0, z: 0.060539246}
 --- !u!1001 &1247298719
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -19522,6 +19610,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1250425158}
+  - component: {fileID: 1250425159}
   m_Layer: 0
   m_Name: Fence
   m_TagString: Untagged
@@ -19566,6 +19655,27 @@ Transform:
   - {fileID: 284351972}
   m_Father: {fileID: 708968956}
   m_LocalEulerAnglesHint: {x: 0, y: 90, z: 0}
+--- !u!65 &1250425159
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1250425157}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 16.826073, y: 1, z: 0.70085067}
+  m_Center: {x: 4.7889433, y: 0, z: -0.14957468}
 --- !u!1001 &1259714661
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -20598,6 +20708,7 @@ MonoBehaviour:
   contractVoteTime: 15
   timerFillImage: {fileID: 0}
   timerText: {fileID: 0}
+  voteTitleText: {fileID: 0}
   imprintAvailableBuffs:
   - {fileID: 11400000, guid: 870d7d729541ab349870968873a0a82c, type: 2}
   - {fileID: 11400000, guid: 1bfd88b5161c4ba42bd7f5ae23544fd4, type: 2}
@@ -21808,6 +21919,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1371982366}
+  - component: {fileID: 1371982367}
   m_Layer: 0
   m_Name: Fence
   m_TagString: Untagged
@@ -21843,6 +21955,27 @@ Transform:
   - {fileID: 1608701879}
   m_Father: {fileID: 708968956}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!65 &1371982367
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1371982365}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 9.912628, y: 1, z: 0.5835571}
+  m_Center: {x: 1.2998352, y: 0, z: 0.20822144}
 --- !u!1001 &1382242369
 PrefabInstance:
   m_ObjectHideFlags: 0

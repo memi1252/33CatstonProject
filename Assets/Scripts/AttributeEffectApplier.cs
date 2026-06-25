@@ -40,6 +40,9 @@ public class AttributeEffectApplier : NetworkBehaviour
     public float vfxLifetime = 2f;
     public LayerMask targetLayerMask; // Inspector에서 Player와 Enemy 레이어를 모두 체크하세요!
 
+    // 대상별로 진행 중인 화염 도트 코루틴을 추적해, 새로 불이 붙으면 중첩 대신 갱신한다.
+    private readonly System.Collections.Generic.Dictionary<IDamageable, Coroutine> _activeFireDoTs = new();
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -71,7 +74,10 @@ public class AttributeEffectApplier : NetworkBehaviour
         switch (attribute)
         {
             case TargetAttribute.Fire:
-                StartCoroutine(FireDoTDamage(target, owner));
+                // 이미 불타고 있으면 중첩시키지 않고 지속시간만 갱신(리프레시)한다.
+                if (_activeFireDoTs.TryGetValue(target, out var existingDoT) && existingDoT != null)
+                    StopCoroutine(existingDoT);
+                _activeFireDoTs[target] = StartCoroutine(FireDoTDamage(target, owner));
                 break;
             case TargetAttribute.Ice:
                 if (target is MonoBehaviour mb)
@@ -142,6 +148,7 @@ public class AttributeEffectApplier : NetworkBehaviour
             elapsed += fireDoTInterval;
             yield return new WaitForSeconds(fireDoTInterval);
         }
+        if (target != null) _activeFireDoTs.Remove(target);
     }
 
     private IEnumerator SlowPlayer(Starter.Platformer.Player player)

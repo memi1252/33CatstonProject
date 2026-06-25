@@ -19,6 +19,21 @@ public class BuffSlot : MonoBehaviour
     public ContractScriptableObject contractScriptableObject;
 
 
+    // {Ratio:N} / {Voted_Raito:N} 태그 개수가 실제 ratio 배열 길이보다 많으면(데이터 작성 누락)
+    // 안 치환된 raw 태그가 그대로 보이는 버그가 있었다. 남은 태그를 안전하게 제거한다.
+    private static readonly Regex UnresolvedTagPattern = new Regex(@"\{?(Ratio|Voted_Raito):\d+\}");
+
+    private static string CleanupUnresolvedTags(string text)
+    {
+        if (string.IsNullOrEmpty(text)) return text;
+        if (UnresolvedTagPattern.IsMatch(text))
+        {
+            Debug.LogWarning($"[BuffSlot] 치환 안 된 태그가 남아있습니다 (ratio 배열 길이 부족 또는 '{{' 오타): \"{text}\"");
+            text = UnresolvedTagPattern.Replace(text, "0%");
+        }
+        return text;
+    }
+
     void Awake()
     {
         voteButton.onClick.AddListener(() =>
@@ -43,20 +58,24 @@ public class BuffSlot : MonoBehaviour
             string resultText = originalText;
 
             // 2. 반복문을 돌며 모든 Ratio 태그 치환
+            // valueType이 Count면 원래 숫자 그대로(예: 25), Percent면 ×100 + "%"(예: 0.5 -> 50%)로 표시한다.
+            // (이전엔 항상 ×100 + "%"로 처리해서 Count 타입 계약이 2000% 같은 식으로 잘못 표시됐었음)
+            bool isCount = buffScripableObject.valueType == ValueType.Count;
             for (int i = 0; i < buffScripableObject.contractBuffs.Length; i++)
             {
                 string targetTag = "{Ratio:" + i + "}";
-                string value = (buffScripableObject.contractBuffs[i].ratio * 100).ToString(); // 0.5일 경우 50으로 변환
-        
-                resultText = resultText.Replace(targetTag, value + "%");
+                float raw = buffScripableObject.contractBuffs[i].ratio;
+                string value = isCount ? raw.ToString() : (raw * 100).ToString();
+
+                resultText = resultText.Replace(targetTag, value + (isCount ? "" : "%"));
             }
 
             // 3. 로그로 치환 결과 최종 확인 (이게 콘솔에 어떻게 찍히는지 보세요!)
             Debug.Log($"[치환 완료]: {resultText}");
 
-            description = resultText;
+            description = CleanupUnresolvedTags(resultText);
         }
-        
+
         if (BuffDescriptionText != null)
         {
             BuffDescriptionText.GetComponent<TypewriterComponent>().ShowText(description);
@@ -93,9 +112,9 @@ public class BuffSlot : MonoBehaviour
             // 3. 로그로 치환 결과 최종 확인 (이게 콘솔에 어떻게 찍히는지 보세요!)
             Debug.Log($"[치환 완료]: {resultText}");
 
-            description = resultText;
+            description = CleanupUnresolvedTags(resultText);
         }
-        
+
         if (BuffDescriptionText != null)
         {
             BuffDescriptionText.GetComponent<TypewriterComponent>().ShowText(description);
@@ -123,7 +142,7 @@ public class BuffSlot : MonoBehaviour
             // 3. 로그로 치환 결과 최종 확인 (이게 콘솔에 어떻게 찍히는지 보세요!)
             Debug.Log($"[치환 완료]: {resultText}");
 
-            conditionDescription = resultText;
+            conditionDescription = CleanupUnresolvedTags(resultText);
             BuffConditionsText.text = conditionDescription;
         }
         else
@@ -139,6 +158,7 @@ public class BuffSlot : MonoBehaviour
         if (votingPlayerText != null)
         {
             votingPlayerText.text = $"{playerName}";
+            if (votingPlayerText.fontSize > 16f) votingPlayerText.fontSize = 16f;
         }
     }
 }

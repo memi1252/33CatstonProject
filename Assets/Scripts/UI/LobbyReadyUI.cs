@@ -33,6 +33,13 @@ public class LobbyReadyUI : MonoBehaviour
 
     private void Update()
     {
+        // 로비 씬이 아니면(게임 시작됨) 버튼이 "대기 중..."으로 남아있지 않도록 통째로 숨긴다.
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex != 1)
+        {
+            if (gameObject.activeSelf) gameObject.SetActive(false);
+            return;
+        }
+
         if (LobbyReadyManager.Instance == null)
         {
             SetDisabled(LabelWaiting);

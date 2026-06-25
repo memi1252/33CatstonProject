@@ -229,6 +229,7 @@ GameObject:
   - component: {fileID: 8261807108443789817}
   - component: {fileID: 6744880684058088246}
   - component: {fileID: 6263971509055261721}
+  - component: {fileID: 7648178658286494796}
   m_Layer: 6
   m_Name: Player
   m_TagString: Player
@@ -282,6 +283,7 @@ MonoBehaviour:
   - {fileID: 1526919877228550752}
   - {fileID: 8887271899658672753}
   - {fileID: 8261807108443789817}
+  - {fileID: 7648178658286494796}
   ForceRemoteRenderTimeframe: 0
 --- !u!114 &731081082244027627
 MonoBehaviour:
@@ -547,6 +549,23 @@ MonoBehaviour:
   m_DefaultActionMap: Player
   m_SplitScreenIndex: -1
   m_Camera: {fileID: 0}
+--- !u!114 &7648178658286494796
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3123905968297068043}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f80e5944fa6cac047becb0fb42fc641a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RevivalInteraction
+  detectionRange: 5
+  revivalDuration: 3
+  revivalKey: 101
+  revivalHpPercent: 0.3
+  revivalUI: {fileID: 4438059599591979666}
 --- !u!1 &3705037834873240319
 GameObject:
   m_ObjectHideFlags: 0
@@ -5992,6 +6011,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 97417f8bdfe346859fc185e4912ec997, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RevivalUI
+  progressBar: {fileID: 7544602458068774199}
+  revivalHintText: {fileID: 819067290288549943}
+  keyImage: {fileID: 874733338321156118}
 --- !u!1 &6811760387940338879
 GameObject:
   m_ObjectHideFlags: 0

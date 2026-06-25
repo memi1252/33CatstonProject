@@ -221,6 +221,12 @@ namespace Projectiles.NetworkObjectExample
                                       (ownerEnemy != null ? ownerEnemy.gameObject : null);
                 damageableObject.TakeHit(damageValue, new RaycastHit(), attacker);
 
+                // 타격감: 내가 쏜 투사체가 적을 맞추면 내 카메라를 살짝 흔든다 (적이 나를 맞췄을 때와는 별개)
+                if (ownerPlayer != null && ownerPlayer.HasInputAuthority && GameManager.Instance != null && GameManager.Instance.cameraShack != null)
+                {
+                    GameManager.Instance.cameraShack.Shake(0.12f, 0.1f);
+                }
+
                 if (AttributeEffectApplier.Instance != null)
                 {
 
@@ -287,6 +293,12 @@ namespace Projectiles.NetworkObjectExample
 
                             Debug.Log($"[PhysicsProjectile]   - hit {hitCollider.name} -> {damageableObject.GetType().Name} dmg={explosionDamage}");
                             damageableObject.TakeHit(explosionDamage, new RaycastHit(), explosionAttacker);
+                        }
+
+                        // 폭발 한 번당 한 번만 흔들기 (맞은 대상 수와 무관)
+                        if (damaged.Count > 0 && ownerPlayer != null && ownerPlayer.HasInputAuthority && GameManager.Instance != null && GameManager.Instance.cameraShack != null)
+                        {
+                            GameManager.Instance.cameraShack.Shake(0.18f, 0.18f);
                         }
                     }
                 }
@@ -366,6 +378,11 @@ namespace Projectiles.NetworkObjectExample
           GameObject attacker = (ownerPlayer != null) ? ownerPlayer.gameObject :
                                 (ownerEnemy != null ? ownerEnemy.gameObject : null);
           dmg.TakeHit(damageValue, default, attacker);
+
+          if (ownerPlayer != null && ownerPlayer.HasInputAuthority && GameManager.Instance != null && GameManager.Instance.cameraShack != null)
+          {
+             GameManager.Instance.cameraShack.Shake(0.12f, 0.1f);
+          }
 
           if (AttributeEffectApplier.Instance != null)
           {

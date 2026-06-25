@@ -16,6 +16,10 @@ public class ChatManager : NetworkBehaviour
     // InputField의 isFocused는 Enter 제출 시 같은 프레임에 풀리므로, 채팅 열림 상태를 직접 추적한다.
     private bool _chatOpen;
 
+    // CloseChat()이 호출된 프레임을 기록해, 같은 프레임에 Update()의 Enter-열기 체크가
+    // 다시 채팅을 여는 재오픈 레이스를 막는다 (OnSubmit과 Update가 같은 Enter를 같은 프레임에 처리할 때 발생).
+    private int _lastCloseFrame = -1;
+
 
     private void Awake()
     {
@@ -44,32 +48,39 @@ public class ChatManager : NetworkBehaviour
     private void ResolveUIReferences()
     {
         if (UIManager.Instance == null) return;
-        if (UIManager.Instance.chatInput != null) inputChat = UIManager.Instance.chatInput;
+        if (UIManager.Instance.chatInput != null)
+        {
+            if (inputChat != null) inputChat.onEndEdit.RemoveListener(OnChatEndEdit);
+            inputChat = UIManager.Instance.chatInput;
+            // onEndEdit: Enter 제출이든 다른 곳 클릭으로 포커스를 잃든 입력이 끝나면 항상 호출된다.
+            // (OnSubmit이 New Input System UI 모듈 바인딩에 따라 안 먹는 경우가 있어, 이걸 유일한 종료 경로로 둔다.)
+            inputChat.onEndEdit.RemoveListener(OnChatEndEdit);
+            inputChat.onEndEdit.AddListener(OnChatEndEdit);
+        }
         if (UIManager.Instance.chatMessageText != null) messageText = UIManager.Instance.chatMessageText;
+    }
+
+    private void OnChatEndEdit(string text)
+    {
+        if (_chatOpen) SendChatMessage();
     }
 
     private void Update()
     {
         if (inputChat == null) return;
 
-        if (Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter))
+        bool enterPressed = Input.GetKeyDown(KeyCode.Return) || Input.GetKeyDown(KeyCode.KeypadEnter);
+        if (!enterPressed) return;
+
+        if (_chatOpen)
         {
-            // InputField는 Enter 입력 시 같은 프레임에 포커스를 잃으므로 isFocused로 판단하면
-            // 전송이 누락된다. 자체 _chatOpen 플래그로 열림/닫힘을 판단한다.
-            if (_chatOpen)
-            {
-                // 입력 중 Enter → 내용이 있으면 전송하고 채팅 닫기
-                if (!string.IsNullOrEmpty(inputChat.text))
-                {
-                    SendChatMessage();
-                }
-                CloseChat();
-            }
-            else
-            {
-                // 닫힌 상태 Enter → 채팅 열고 포커스 (입력 중에는 플레이어 이동 입력을 막는다)
-                OpenChat();
-            }
+            // Enter로 닫기/전송 (OnSubmit/onEndEdit이 같은 프레임에 이미 처리했어도 SendChatMessage는 안전하게 재호출 가능)
+            SendChatMessage();
+        }
+        else if (Time.frameCount != _lastCloseFrame)
+        {
+            // 방금 같은 프레임에 닫힌 게 아니면 Enter로 채팅을 연다.
+            OpenChat();
         }
     }
 
@@ -86,6 +97,7 @@ public class ChatManager : NetworkBehaviour
     private void CloseChat()
     {
         _chatOpen = false;
+        _lastCloseFrame = Time.frameCount;
         if (inputChat != null)
         {
             inputChat.text = "";
@@ -111,7 +123,7 @@ public class ChatManager : NetworkBehaviour
 
     public void SendChatMessage()
     {
-        // 채팅 UI(DontDestroyOnLoad) 버튼의 OnClick이 씬 전환으로 무효화된 ChatManager를
+        // 채팅 UI(DontDestroyOnLoad) 버튼의 OnClick/OnSubmit이 씬 전환으로 무효화된 ChatManager를
         // 가리킬 수 있으므로, 항상 현재 씬의 유효한 Instance를 통해 전송한다.
         ChatManager mgr = (Instance != null) ? Instance : this;
         if (mgr.Object == null || !mgr.Object.IsValid)
@@ -119,10 +131,14 @@ public class ChatManager : NetworkBehaviour
             Debug.LogWarning("[ChatManager] 유효한 NetworkObject가 없어 채팅을 전송할 수 없습니다.");
             return;
         }
-        if (mgr.inputChat == null || string.IsNullOrEmpty(mgr.inputChat.text)) return;
 
-        mgr.RPC_SendChatMessage(mgr.inputChat.text);
-        mgr.inputChat.text = "";
+        if (mgr.inputChat != null && !string.IsNullOrEmpty(mgr.inputChat.text))
+        {
+            mgr.RPC_SendChatMessage(mgr.inputChat.text);
+        }
+
+        // 전송 여부와 무관하게 항상 채팅을 닫고 입력을 복구한다 (이 메서드가 닫기의 유일한 경로).
+        mgr.CloseChat();
     }
 
     [Rpc(RpcSources.All, RpcTargets.All)]

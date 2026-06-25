@@ -165,7 +165,7 @@ namespace Starter.Platformer
 				}
 				damage += props.damage;
 				attackSpeed = (attackSpeed + props.attackSpeed);
-				moveSpeed = WalkSpeed * (1 + props.moveSpeed);
+				moveSpeed *= (1 + props.moveSpeed);
 				allDamage += props.allDamage;
 				damageReceived += props.damageReceived;
 				criticalDamage += props.criticalDamage;
@@ -201,7 +201,7 @@ namespace Starter.Platformer
 				}
 				damage += props.damage;
 				attackSpeed = (attackSpeed + props.attackSpeed);
-				moveSpeed = WalkSpeed * (1 + props.moveSpeed);
+				moveSpeed *= (1 + props.moveSpeed);
 				allDamage += props.allDamage;
 				damageReceived += props.damageReceived;
 				criticalDamage += props.criticalDamage;
@@ -290,6 +290,12 @@ namespace Starter.Platformer
 			// In case the nickname is already changed,
 			// we need to trigger the change manually
 			OnNicknameChanged();
+		}
+
+		[Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+		public void RPC_Revive(string reviverName, float revivalHpPercent = 0.3f)
+		{
+			Revive(reviverName, revivalHpPercent);
 		}
 
 		public override void FixedUpdateNetwork()
@@ -496,8 +502,44 @@ namespace Starter.Platformer
 		[Rpc(RpcSources.StateAuthority, RpcTargets.All)]
 		private void Rpc_ShowDamagePopup(float _damage)
 		{
+			PlayHitFlash();
+			// 히트 펀치: 맞는 순간 살짝 찌그러뜸. Render()의 ScalingRoot 자동 보정 Lerp가 원래 크기로 되돌려준다.
+			if (ScalingRoot != null) ScalingRoot.localScale = new Vector3(1.2f, 0.8f, 1.2f);
 			if (damagePopup == null) return;
 			damagePopup.Spawn(transform.position + Vector3.up, _damage);
+		}
+
+		private Coroutine _hitFlashCoroutine;
+
+		// 피격 시 짧게 빨간색으로 반짝이는 타격감 효과 (Enemy.cs와 동일한 방식)
+		private void PlayHitFlash()
+		{
+			if (_hitFlashCoroutine != null) StopCoroutine(_hitFlashCoroutine);
+			_hitFlashCoroutine = StartCoroutine(HitFlashRoutine());
+		}
+
+		private IEnumerator HitFlashRoutine()
+		{
+			var renderers = GetComponentsInChildren<Renderer>(true);
+			var blocks = new MaterialPropertyBlock[renderers.Length];
+			for (int i = 0; i < renderers.Length; i++)
+			{
+				blocks[i] = new MaterialPropertyBlock();
+				renderers[i].GetPropertyBlock(blocks[i]);
+				blocks[i].SetColor("_BaseColor", Color.red);
+				blocks[i].SetColor("_Color", Color.red);
+				renderers[i].SetPropertyBlock(blocks[i]);
+			}
+
+			yield return new WaitForSeconds(0.35f);
+
+			for (int i = 0; i < renderers.Length; i++)
+			{
+				if (renderers[i] == null) continue;
+				blocks[i].Clear();
+				renderers[i].SetPropertyBlock(blocks[i]);
+			}
+			_hitFlashCoroutine = null;
 		}
 
 public void TakeDamage(float _damage)
@@ -527,6 +569,20 @@ public void TakeDamage(float _damage)
 					ChatManager.Instance.SendSystemMessage(Nickname + "님이 사망했습니다.", Color.red);
 				Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
 			}
+		}
+
+		/// <summary>
+		/// 최대 체력 대비 비율만큼 회복한다 (예: 스테이지 클리어 보상). 죽은 상태에서는 적용 안 함(Revive 사용).
+		/// </summary>
+		public void HealPercent(float percent)
+		{
+			if (HasStateAuthority == false) return;
+			if (dead) return;
+
+			float healAmount = maxHp * percent;
+			hp = Mathf.Min(maxHp, hp + healAmount);
+			SoundManager.Instance?.PlayBuffApply();
+			Debug.Log($"[Player 회복] 유저({Nickname})가 {healAmount:F1}만큼 회복했습니다. (HP : {hp}/{maxHp})");
 		}
 
 		public void Revive(string reviverName, float revivalHpPercent = 0.3f)
@@ -560,14 +616,14 @@ private void OnJumpingChanged()
 		{
 			if (_isJumping)
 			{
+				// SoundManager가 이미 사운드를 재생한다 (믹서 라우팅을 거쳐 볼륨 슬라이더가 적용됨).
+				// PlayClipAtPoint로 한 번 더 재생하면 볼륨 조절이 안 되는 중복 사운드가 들린다.
 				SoundManager.Instance?.PlayPlayerJump();
-				if (JumpAudioClip != null) AudioSource.PlayClipAtPoint(JumpAudioClip, KCC.Position, 1f);
 				ScalingRoot.localScale = new Vector3(0.5f, 1.5f, 0.5f);
 			}
 			else
 			{
 				SoundManager.Instance?.PlayPlayerLand();
-				if (LandAudioClip != null) AudioSource.PlayClipAtPoint(LandAudioClip, KCC.Position, 1f);
 				ScalingRoot.localScale = new Vector3(1.25f, 0.75f, 1.25f);
 			}
 		}
@@ -582,7 +638,7 @@ private void OnJumpingChanged()
 			if (CollectedCoins <= 0)
 				return; // Just coins reset
 
-			AudioSource.PlayClipAtPoint(CoinCollectedAudioClip, KCC.Position, 1f);
+			SoundManager.Instance?.PlaySFX(CoinCollectedAudioClip);
 		}
 
 		private void OnNicknameChanged()
@@ -702,7 +758,7 @@ private void OnJumpingChanged()
 			}
 			if (sfx != null)
 			{
-				AudioSource.PlayClipAtPoint(sfx, pos, 1f);
+				SoundManager.Instance?.PlaySFX(sfx);
 			}
 		}
 	}

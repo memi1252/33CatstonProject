@@ -16,6 +16,7 @@ public class UIManager : MonoBehaviour
     public Image buffTimerFillImage;
     public TextMeshProUGUI buffTimerText;
     public Transform buffSlotParent;
+    public TextMeshProUGUI buffVoteTitleText;
 
     [Header("Chat UI (ChatManager가 런타임에 사용)")]
     public InputField chatInput;
@@ -80,6 +81,7 @@ public class UIManager : MonoBehaviour
         if (src.buffTimerFillImage != null)    buffTimerFillImage = src.buffTimerFillImage;
         if (src.buffTimerText != null)         buffTimerText = src.buffTimerText;
         if (src.buffSlotParent != null)        buffSlotParent = src.buffSlotParent;
+        if (src.buffVoteTitleText != null)     buffVoteTitleText = src.buffVoteTitleText;
         if (src.chatInput != null)             chatInput = src.chatInput;
         if (src.chatMessageText != null)       chatMessageText = src.chatMessageText;
         if (src.weaponSelectPanel != null)     weaponSelectPanel = src.weaponSelectPanel;
