@@ -59,6 +59,10 @@ public class BuffManager : NetworkBehaviour
     private bool _hasChosenContract = false;
     private float _imprintStuckTimer = 0f;
 
+    // 투표종료->결과발표 전환은 RPC 도착에 의존하지 않고 각 클라이언트가 자기 로컬 타이머로 독립적으로
+    // 한 번만 전환한다(아래 isImprintBuffActive 블록 설명 참고). 네트워크 동기화된 값이 아니라 순수 로컬 플래그.
+    private bool _localImprintRevealStarted = false;
+
     // 증강 UI가 막 떠서 슬롯이 자리잡기 전에 실수로(또는 이전 클릭이 겹쳐서) 바로 눌리는 것을 막기 위한 입력 차단 시간.
     [SerializeField] private float voteClickGuardDuration = 1.5f;
     private float _voteUIOpenedTime = -999f;
@@ -192,72 +196,47 @@ public class BuffManager : NetworkBehaviour
         
         if (isImprintBuffActive)
         {
-            // 권한 동기화가 지연/실패해서 결과 발표 단계에서 영원히 못 빠져나오는 경우를 막는 안전장치.
-            // 결과 발표 시간(voteResultTime)의 3배 이상 지나면 권한 여부와 무관하게 로컬에서 강제로 닫는다.
-            _imprintStuckTimer += Time.deltaTime;
-            if (isVoteFinished && _imprintStuckTimer > voteResultTime * 3f)
-            {
-                Debug.LogWarning("[BuffManager] 각인 UI가 비정상적으로 오래 열려있어 강제로 닫습니다.");
-                isImprintBuffActive = false;
-                _imprintStuckTimer = 0f;
-                if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
-                    UIManager.Instance.buffUI.SetActive(false);
-                EnablePlayerInput();
-                return;
-            }
-
             imprintVoteTime -= Time.deltaTime;
             if (timerFillImage != null) timerFillImage.fillAmount = imprintVoteTime / imprintVoteTimeMax;
             if (timerText != null) timerText.text = $"{imprintVoteTime:F0}";
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
-            // 단계 전환(투표종료->결과발표, 결과발표->닫기) 판단은 씬 권한자만 하고, 그 결과를 RPC로 모두에게
-            // 명시적으로 알린다. 예전엔 각 클라가 네트워크로 동기화된 isVoteFinished 값을 직접 보고 스스로
-            // 판단했는데, 그 값이 클라이언트에 제대로 전달이 안 되면 클라는 영원히 "투표 종료 안 됨" 상태로
-            // 보여서 매번 !isVoteFinished 분기로 다시 들어가 타이머만 결과발표 시간으로 계속 리셋하는
-            // 무한 루프에 빠졌다(겉보기엔 타이머가 멈춘 것처럼 보임). RPC 기반으로 바꿔서 동기화 의존을 없앤다.
-            if (imprintVoteTime <= 0 && Runner.IsSceneAuthority)
+            // 단계 전환(투표종료->결과발표->닫기)은 RPC 도착에 기대지 않고 각 클라이언트가 자기 로컬
+            // 타이머만 보고 독립적으로 처리한다. 예전엔 호스트가 RPC로 "결과발표 시작"/"닫기"를 알렸는데,
+            // 그 RPC가 클라이언트에 늦게 도착하거나 누락되면 클라는 영원히 0에서 멈춘 것처럼 보였다.
+            // 실제 투표 결과 계산/버프 적용처럼 정확성이 중요한 부분만 호스트가 전담하고(RPC_ApplyImprintBuffs는
+            // 그대로 유지), UI 타이머 전환 자체는 전적으로 로컬로 처리해 네트워크 지연/유실에 영향받지 않게 한다.
+            if (imprintVoteTime <= 0)
             {
-                if (!isVoteFinished)
+                if (!_localImprintRevealStarted)
                 {
-                    isVoteFinished = true;
-                    RPC_BeginImprintResultReveal();
+                    _localImprintRevealStarted = true;
+                    imprintVoteTimeMax = voteResultTime;
+                    imprintVoteTime = voteResultTime; // 결과 발표 시간
+                    UpdateVoteVisuals();
                 }
                 else
                 {
-                    // 가장 많은 표를 받은 버프 + 조건 충족 버프를 모든 클라에 브로드캐스트 (각자 자기에게 적용)
-                    ImprintFinishVoting();
+                    _localImprintRevealStarted = false;
+                    _imprintStuckTimer = 0f;
+                    imprintVoteTimeMax = 30f;
+                    imprintVoteTime = imprintVoteTimeMax;
+                    if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+                        UIManager.Instance.buffUI.SetActive(false);
+                    EnablePlayerInput();
 
-                    // 권한자 전용 네트워크 상태 정리
-                    isImprintBuffActive = false;
-                    isVoteFinished = false;
-                    playerVotes.Clear();
-                    RPC_CloseImprintUI();
+                    // 결과 계산 + 버프 적용 브로드캐스트 + 전역 네트워크 상태 정리는 호스트만.
+                    if (Runner.IsSceneAuthority)
+                    {
+                        ImprintFinishVoting();
+                        isImprintBuffActive = false;
+                        isVoteFinished = false;
+                        playerVotes.Clear();
+                    }
                 }
             }
         }
-    }
-
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RPC_BeginImprintResultReveal()
-    {
-        imprintVoteTimeMax = voteResultTime;
-        imprintVoteTime = voteResultTime; // 결과 발표 시간
-        UpdateVoteVisuals();
-    }
-
-    // RpcSources.All: Runner.IsSceneAuthority와 이 NetworkObject의 HasStateAuthority가 어긋나는 경우를
-    // 방지하기 위해 StateAuthority 제약 없이 보낸다 (GameManager의 방장-퇴장 처리와 같은 이유).
-    [Rpc(RpcSources.All, RpcTargets.All)]
-    private void RPC_CloseImprintUI()
-    {
-        _imprintStuckTimer = 0f;
-        imprintVoteTimeMax = 30f;
-        imprintVoteTime = imprintVoteTimeMax;
-        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
-            UIManager.Instance.buffUI.SetActive(false);
-        EnablePlayerInput(); // 플레이어 입력 다시 활성화
     }
 
     private void ImprintFinishVoting()

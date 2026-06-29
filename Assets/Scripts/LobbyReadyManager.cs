@@ -146,6 +146,8 @@ public class LobbyReadyManager : NetworkBehaviour
 
     public bool IsReady(PlayerRef p)
     {
+        // Spawned() 이전에 [Networked] 프로퍼티(Ready)에 접근하면 InvalidOperationException이 난다.
+        if (Object == null || !Object.IsValid) return false;
         return Ready.TryGet(p, out var v) && v;
     }
 

@@ -95,7 +95,9 @@ public class LobbyPlayerListUI : MonoBehaviour
                 if (!string.IsNullOrEmpty(nick)) return nick;
             }
         }
-        if (GameManager.Instance != null)
+        // Spawned()가 아직 호출되기 전(네트워크 오브젝트가 아직 유효하지 않은 시점)에 [Networked] 프로퍼티에
+        // 접근하면 InvalidOperationException이 매 프레임 발생한다.
+        if (GameManager.Instance != null && GameManager.Instance.Object != null && GameManager.Instance.Object.IsValid)
         {
             string name = GameManager.Instance.GetPlayerName(p);
             if (!string.IsNullOrEmpty(name) && name != "Unknown") return name;

@@ -34400,7 +34400,7 @@ MonoBehaviour:
   target: {fileID: 0}
   occluderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 512
   maxDissolve: 0.85
   fadeSpeed: 6
   targetHeightOffset: 1.2

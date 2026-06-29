@@ -14,7 +14,9 @@ public class ActiveBuffDisplayUI : MonoBehaviour
     [Header("슬롯 설정")]
     public GameObject buffIconSlotPrefab;
     public Transform slotParent;
-    public int maxSlots = 20;
+    // 스테이지를 많이 진행하면 증강이 20개를 넘게 쌓일 수 있는데, 예전 기본값(20)을 넘기면
+    // 조용히 무시되어 "증강이 몇 개는 안 보인다"는 버그로 이어졌다. 충분히 크게 올림.
+    public int maxSlots = 60;
 
     private readonly List<GameObject> _slots = new();
 
@@ -28,8 +30,16 @@ public class ActiveBuffDisplayUI : MonoBehaviour
 
     public void AddBuff(Sprite icon, string buffName, string description)
     {
-        if (_slots.Count >= maxSlots) return;
-        if (buffIconSlotPrefab == null || slotParent == null) return;
+        if (_slots.Count >= maxSlots)
+        {
+            Debug.LogWarning($"[ActiveBuffDisplayUI] maxSlots({maxSlots})를 넘어서 '{buffName}' 아이콘이 표시되지 않습니다.");
+            return;
+        }
+        if (buffIconSlotPrefab == null || slotParent == null)
+        {
+            Debug.LogWarning($"[ActiveBuffDisplayUI] buffIconSlotPrefab 또는 slotParent가 비어있어 '{buffName}' 아이콘을 표시할 수 없습니다.");
+            return;
+        }
 
         var slot = Instantiate(buffIconSlotPrefab, slotParent);
 

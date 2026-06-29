@@ -178,7 +178,10 @@ namespace Starter.Platformer
 			}
 
 			ClampVitalStats();
-			ActiveBuffDisplayUI.Instance?.AddBuff(buff.contractIcon, buff.contractName, BuffSlot.FormatContractDescription(buff));
+			if (ActiveBuffDisplayUI.Instance != null)
+				ActiveBuffDisplayUI.Instance.AddBuff(buff.contractIcon, buff.contractName, BuffSlot.FormatContractDescription(buff));
+			else
+				Debug.LogWarning($"[Player] ActiveBuffDisplayUI.Instance가 null이라 '{buff.contractName}' 아이콘을 표시할 수 없습니다.");
 			Debug.Log($"[ContractBuff] {buff.contractName}: dmgReceived={damageReceived} dmg={damage} allDmg={allDamage}");
 		}
 
@@ -225,7 +228,10 @@ namespace Starter.Platformer
 			}
 
 			ClampVitalStats();
-			ActiveBuffDisplayUI.Instance?.AddBuff(buff.buffIcon, buff.buffName, BuffSlot.FormatBuffDescription(buff));
+			if (ActiveBuffDisplayUI.Instance != null)
+				ActiveBuffDisplayUI.Instance.AddBuff(buff.buffIcon, buff.buffName, BuffSlot.FormatBuffDescription(buff));
+			else
+				Debug.LogWarning($"[Player] ActiveBuffDisplayUI.Instance가 null이라 '{buff.buffName}' 아이콘을 표시할 수 없습니다.");
 			Debug.Log($"[Buff] {Nickname}에게 {buff.buffName} 적용 완료!");
 		}
 
@@ -252,7 +258,10 @@ namespace Starter.Platformer
 			}
 
 			ClampVitalStats();
-			ActiveBuffDisplayUI.Instance?.AddBuff(buff.buffIcon, buff.buffName, BuffSlot.FormatBuffDescription(buff));
+			if (ActiveBuffDisplayUI.Instance != null)
+				ActiveBuffDisplayUI.Instance.AddBuff(buff.buffIcon, buff.buffName, BuffSlot.FormatBuffDescription(buff));
+			else
+				Debug.LogWarning($"[Player] ActiveBuffDisplayUI.Instance가 null이라 '{buff.buffName}' 아이콘을 표시할 수 없습니다.");
 			Debug.Log($"[Buff] {Nickname}에게 {buff.buffName} 적용 완료!");
 		}
 
@@ -279,6 +288,8 @@ namespace Starter.Platformer
 			}
 		}
 
+		[Networked] public bool Invincible { get; set; }
+
 		public override async void Spawned()
 		{
 			Debug.Log($"[Player.Spawned] damageReceived={damageReceived} damage={damage} allDamage={allDamage} HasStateAuthority={HasStateAuthority}");
@@ -292,6 +303,15 @@ namespace Starter.Platformer
 				while (GameManager.Instance == null) await System.Threading.Tasks.Task.Delay(100);
 
 				GameManager.Instance.RPC_RegisterPlayerName(Runner.LocalPlayer, Nickname);
+
+				// 무적모드 치트는 방에 입장하기 전에 켜놓은 사람한테만 적용된다.
+				// 내 Player 오브젝트는 내가 StateAuthority를 가지므로 RPC 없이 바로 적용 가능.
+				if (GameManager.PendingInvincibleCheat)
+				{
+					GameManager.PendingInvincibleCheat = false;
+					Invincible = true;
+					ChatManager.Instance?.SendSystemMessage($"{Nickname}님에게 무적모드가 적용되었습니다.", Color.cyan);
+				}
 			}
 
 			// 로컬 플레이어(InputAuthority) 스폰 완료 시점에 StatsUI 활성화
@@ -331,7 +351,10 @@ namespace Starter.Platformer
 				return; // 같은 틱에 입력 처리하지 않음
 			}
 
-			if (ChatManager.Instance.inputChat.isFocused)
+			// ChatManager.Instance나 inputChat이 null인 순간(예: 다른 플레이어가 나가는 시점 등)에
+			// 그대로 접근하면 NullReferenceException이 매 네트워크 틱마다 반복돼서 멈춘 것처럼 보이는
+			// 치명적인 버그가 있었다.
+			if (ChatManager.Instance != null && ChatManager.Instance.inputChat != null && ChatManager.Instance.inputChat.isFocused)
 			{
 				// 채팅입력중이면 움직임 X
 				return;
@@ -566,6 +589,7 @@ namespace Starter.Platformer
 public void TakeDamage(float _damage)
 		{
 			if (dead) return;
+			if (Invincible) return;
 
 			float actualDamage = damageReceived * _damage;
 			Debug.Log($"[TakeDamage] _damage={_damage} damageReceived={damageReceived} actual={actualDamage}");

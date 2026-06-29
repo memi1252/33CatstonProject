@@ -30,7 +30,18 @@ namespace Starter.UI
             // 실제 플레이(런타임) 중에만 Feel 셋업을 한다.
             if (!Application.isPlaying) return;
 
-            _player = gameObject.AddComponent<MMF_Player>();
+            // 슬롯에 이미 다른 용도의 MMF_Player가 붙어있으면 AddComponent가 실패해서 _player가 null로
+            // 남고 곧바로 NullReferenceException이 났다(BuffSlot 등에서 반복 발생). 전용 자식에 따로 만든다.
+            if (GetComponent<MMF_Player>() != null)
+            {
+                var holder = new GameObject("ScalePopInFeel");
+                holder.transform.SetParent(transform, false);
+                _player = holder.AddComponent<MMF_Player>();
+            }
+            else
+            {
+                _player = gameObject.AddComponent<MMF_Player>();
+            }
             _spring = new MMF_ScaleSpring
             {
                 AnimateScaleTarget = _rect,

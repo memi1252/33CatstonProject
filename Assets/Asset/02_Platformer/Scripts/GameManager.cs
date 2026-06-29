@@ -178,6 +178,11 @@ public sealed class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 	public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
 	public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
 
+	// 로비의 방 검색창에 "GBSWM"을 입력하고 엔터를 치면 켜지는 치트 플래그.
+	// 정적 필드라 씬을 넘어가도(로비->게임) 유지된다. 입력한 사람한테만 적용되도록 Player.Spawned()에서
+	// (각자 자기 Player 오브젝트의 StateAuthority를 가지므로) 직접 소비해서 본인의 Invincible만 켠다.
+	public static bool PendingInvincibleCheat = false;
+
 	private void Update()
 	{
 		// 테스트용: T 키로 모든 죽은 플레이어 부활 (로컬 플레이어만)

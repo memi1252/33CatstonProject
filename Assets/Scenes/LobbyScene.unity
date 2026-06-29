@@ -2759,7 +2759,7 @@ MonoBehaviour:
   target: {fileID: 0}
   occluderMask:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 512
   maxDissolve: 0.85
   fadeSpeed: 6
   targetHeightOffset: 1.2
@@ -3304,9 +3304,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7480fd60a78b0db438081a5a7fc30483, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Starter.UI.UIInputBump
-  bumpScale: 1.025
-  damping: 0.7
-  frequency: 12
+  bumpScale: 1.015
+  damping: 0.85
+  frequency: 9
 --- !u!1 &410087039
 GameObject:
   m_ObjectHideFlags: 0

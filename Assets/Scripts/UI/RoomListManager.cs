@@ -53,12 +53,30 @@ namespace Starter
         private float _repaintCooldown;
         private const float RepaintMinInterval = 0.4f;
 
+        // 방 검색창에 이 문자열을 입력하고 엔터를 치면 무적모드 치트가 켜진다(다음에 방을 만들거나 들어갈 때 적용).
+        private const string InvincibleCheatCode = "GBSWM";
+
         private void Awake()
         {
             if (RefreshButton != null)
                 RefreshButton.onClick.AddListener(Refresh);
             if (SearchInputField != null)
+            {
                 SearchInputField.onValueChanged.AddListener(OnSearchChanged);
+                SearchInputField.onEndEdit.AddListener(OnSearchEndEdit);
+            }
+        }
+
+        private void OnSearchEndEdit(string text)
+        {
+            if (!string.Equals(text, InvincibleCheatCode, System.StringComparison.OrdinalIgnoreCase))
+                return;
+
+            GameManager.PendingInvincibleCheat = true;
+            SearchInputField.SetTextWithoutNotify("");
+            _searchKeyword = "";
+            RequestRepaint();
+            Debug.Log("[Cheat] 무적모드 치트 활성화 — 다음에 방을 만들거나 들어가면 적용됩니다.");
         }
 
         private void OnSearchChanged(string keyword)
