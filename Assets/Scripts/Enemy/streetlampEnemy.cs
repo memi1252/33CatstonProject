@@ -19,6 +19,9 @@ public class streetlampEnemy : Enemy
     public LayerMask raycastLayerMask;
     public bool _useBuffer;
 
+    [Tooltip("바닥을 찾기 위한 레이캐스트 레이어. 비워두면 Default+Building을 기본값으로 사용한다.")]
+    public LayerMask groundLayerMask;
+
     private MeshRenderer meshRenderer;
     private Rigidbody _rb;
     private bool _landed = false;
@@ -34,36 +37,31 @@ public class streetlampEnemy : Enemy
     public override void Spawned()
     {
         base.Spawned();
-        // StateAuthority(호스트)에서만 물리 낙하 처리. 클라이언트는 NetworkPosition 보간으로 따라옴.
+        // StateAuthority(호스트)에서만 처리. 클라이언트는 NetworkPosition 보간으로 따라옴.
         if (HasStateAuthority && _rb != null)
         {
-            _rb.isKinematic = false;
-            _rb.useGravity = true;
-            StartCoroutine(LandingTimeout());
+            // 예전엔 물리로 낙하시키다가 바닥과 충돌을 못 감지하면(콜라이더 누락/타이밍 문제)
+            // 5초 타임아웃에 걸려 공중에 뜬 채로 멈췄다 — 데미지 판정 콜라이더도 그 높이에 고정되어
+            // 플레이어가 때릴 수 없는 버그로 이어졌다. 레이캐스트로 바닥을 즉시 찾아 그 자리에 고정한다.
+            if (groundLayerMask.value == 0)
+                groundLayerMask = (1 << LayerMask.NameToLayer("Default")) | (1 << LayerMask.NameToLayer("Building"));
+
+            Vector3 origin = transform.position + Vector3.up * 10f;
+            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 100f, groundLayerMask))
+            {
+                transform.position = hit.point;
+            }
+            else
+            {
+                Debug.LogWarning($"[streetlampEnemy] {name}: 아래쪽에서 바닥을 못 찾아 스폰 위치 그대로 둡니다.");
+            }
+
+            _rb.linearVelocity = Vector3.zero;
+            _rb.angularVelocity = Vector3.zero;
+            _rb.useGravity = false;
+            _rb.isKinematic = true;
+            _landed = true;
         }
-    }
-
-    // 바닥에 닿는 순간 kinematic으로 전환 — 투사체가 맞출 수 있는 정확한 위치에 고정
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (_landed || _rb == null || _rb.isKinematic) return;
-        FreezeRigidbody();
-    }
-
-    private void FreezeRigidbody()
-    {
-        if (_rb == null || _landed) return;
-        _rb.linearVelocity = Vector3.zero;
-        _rb.angularVelocity = Vector3.zero;
-        _rb.isKinematic = true;
-        _landed = true;
-    }
-
-    // OnCollisionEnter가 어떤 이유로 안 불릴 경우 대비한 안전 타임아웃 (5초)
-    private System.Collections.IEnumerator LandingTimeout()
-    {
-        yield return new WaitForSeconds(5f);
-        FreezeRigidbody();
     }
 
     protected override void Start()

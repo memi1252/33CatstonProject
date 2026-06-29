@@ -26,6 +26,10 @@ namespace Starter.UI
             _rect = GetComponent<RectTransform>();
             _baseScale = _rect.localScale;
 
+            // 에디터에서 플레이 중이 아닐 때 AddComponent<MMF_Player>()가 실패해서 에러가 나던 문제를 막기 위해
+            // 실제 플레이(런타임) 중에만 Feel 셋업을 한다.
+            if (!Application.isPlaying) return;
+
             _player = gameObject.AddComponent<MMF_Player>();
             _spring = new MMF_ScaleSpring
             {
@@ -46,6 +50,7 @@ namespace Starter.UI
 
         private void OnEnable()
         {
+            if (_player == null) return;
             _rect.localScale = Vector3.zero;
             _player.Initialization(); // 0으로 만든 현재 스케일을 새 시작점으로 다시 캐싱
             _player.PlayFeedbacks();

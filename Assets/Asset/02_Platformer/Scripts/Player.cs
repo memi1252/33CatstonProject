@@ -167,7 +167,7 @@ namespace Starter.Platformer
 				attackSpeed = (attackSpeed + props.attackSpeed);
 				moveSpeed *= (1 + props.moveSpeed);
 				allDamage += props.allDamage;
-				damageReceived += props.damageReceived;
+				damageReceived *= (1 + props.damageReceived);
 				criticalDamage += props.criticalDamage;
 				criticalChance += props.criticalChance;
 			}
@@ -177,8 +177,24 @@ namespace Starter.Platformer
 				AddSpecialEffect(buff.specialEffect, buff.specialEffectValue);
 			}
 
-			ActiveBuffDisplayUI.Instance?.AddBuff(buff.contractIcon, buff.contractName);
+			ClampVitalStats();
+			ActiveBuffDisplayUI.Instance?.AddBuff(buff.contractIcon, buff.contractName, BuffSlot.FormatContractDescription(buff));
 			Debug.Log($"[ContractBuff] {buff.contractName}: dmgReceived={damageReceived} dmg={damage} allDmg={allDamage}");
+		}
+
+		// 증강 조합에 따라 스탯이 극단적인 값으로 깨지는 걸 막는 안전장치.
+		// 예: maxHp가 마이너스 고정값 누적으로 0 이하가 되면 hp/maxHp가 NaN이 되고,
+		// moveSpeed가 0 이하가 되면 영구적으로 못 움직이고, damageReceived가 0 이하가 되면
+		// 데미지를 받을 때 오히려 회복(actualDamage가 음수)되는 치명적인 버그로 이어진다.
+		private void ClampVitalStats()
+		{
+			maxHp = Mathf.Max(maxHp, 1f);
+			maxMp = Mathf.Max(maxMp, 0f);
+			hp = Mathf.Min(hp, maxHp);
+			moveSpeed = Mathf.Max(moveSpeed, 1f);
+			attackSpeed = Mathf.Max(attackSpeed, 0.05f);
+			damageReceived = Mathf.Max(damageReceived, 0.01f);
+			criticalChance = Mathf.Clamp01(criticalChance);
 		}
 
 		public void ApplyImprintBuff(BuffScripableObject buff)
@@ -203,12 +219,13 @@ namespace Starter.Platformer
 				attackSpeed = (attackSpeed + props.attackSpeed);
 				moveSpeed *= (1 + props.moveSpeed);
 				allDamage += props.allDamage;
-				damageReceived += props.damageReceived;
+				damageReceived *= (1 + props.damageReceived);
 				criticalDamage += props.criticalDamage;
 				criticalChance += props.criticalChance;
 			}
 
-			ActiveBuffDisplayUI.Instance?.AddBuff(buff.buffIcon, buff.buffName);
+			ClampVitalStats();
+			ActiveBuffDisplayUI.Instance?.AddBuff(buff.buffIcon, buff.buffName, BuffSlot.FormatBuffDescription(buff));
 			Debug.Log($"[Buff] {Nickname}에게 {buff.buffName} 적용 완료!");
 		}
 
@@ -223,15 +240,19 @@ namespace Starter.Platformer
 				maxHp += props.maxHp;
 				maxMp += props.maxMp;
 				damage += props.damage;
-				attackSpeed = (props.attackSpeed / (attackSpeed / 100f));
-				moveSpeed += props.moveSpeed;
+				// 기존엔 props.attackSpeed / (attackSpeed / 100f) 였는데, attackSpeed가 0이 되는 순간
+				// 0으로 나누기가 발생해 NaN/Infinity로 깨지고(공격속도 무한대 등) 다른 두 적용 경로
+				// (ApplyContractBuff/ApplyImprintBuff)와도 식이 달라서 일관성이 없었다. 누적 방식으로 통일.
+				attackSpeed = (attackSpeed + props.attackSpeed);
+				moveSpeed *= (1 + props.moveSpeed);
 				allDamage += props.allDamage;
-				damageReceived += props.damageReceived;
+				damageReceived *= (1 + props.damageReceived);
 				criticalDamage += props.criticalDamage;
 				criticalChance += props.criticalChance;
 			}
 
-			ActiveBuffDisplayUI.Instance?.AddBuff(buff.buffIcon, buff.buffName);
+			ClampVitalStats();
+			ActiveBuffDisplayUI.Instance?.AddBuff(buff.buffIcon, buff.buffName, BuffSlot.FormatBuffDescription(buff));
 			Debug.Log($"[Buff] {Nickname}에게 {buff.buffName} 적용 완료!");
 		}
 
@@ -583,6 +604,30 @@ public void TakeDamage(float _damage)
 			hp = Mathf.Min(maxHp, hp + healAmount);
 			SoundManager.Instance?.PlayBuffApply();
 			Debug.Log($"[Player 회복] 유저({Nickname})가 {healAmount:F1}만큼 회복했습니다. (HP : {hp}/{maxHp})");
+		}
+
+		/// <summary>
+		/// 누군가 나를 부활시키는 중일 때, 그 진행률을 내 RevivalUI 게이지에 반영한다.
+		/// 살리는 사람의 RevivalInteraction이 호출하며, RpcTargets.All로 보내지만
+		/// 본인(HasInputAuthority) 클라이언트에서만 실제로 UI를 갱신한다.
+		/// </summary>
+		[Rpc(RpcSources.All, RpcTargets.All)]
+		public void RPC_ShowReviveProgress(float progress01)
+		{
+			if (!HasInputAuthority) return;
+			if (RevivalUI == null) return;
+			var ui = RevivalUI.GetComponent<RevivalUI>();
+			if (ui == null) return;
+
+			if (progress01 <= 0f)
+			{
+				ui.SetProgress(0f);
+			}
+			else
+			{
+				if (!RevivalUI.activeSelf) RevivalUI.SetActive(true);
+				ui.SetProgress(progress01);
+			}
 		}
 
 		public void Revive(string reviverName, float revivalHpPercent = 0.3f)

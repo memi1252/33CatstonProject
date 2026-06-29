@@ -1,15 +1,16 @@
 using System;
 using UnityEngine;
 using Fusion;
+using Fusion.Sockets;
 using Starter.Platformer;
 using TMPro;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
 
-public class ChatManager : NetworkBehaviour
+public class ChatManager : NetworkBehaviour, INetworkRunnerCallbacks
 {
     public static ChatManager Instance { get; private set; }
-    
+
     public InputField inputChat;
     public TextMeshProUGUI messageText;
 
@@ -41,6 +42,25 @@ public class ChatManager : NetworkBehaviour
     public override void Spawned()
     {
         ResolveUIReferences();
+        Runner.AddCallbacks(this);
+    }
+
+    public override void Despawned(NetworkRunner runner, bool hasState)
+    {
+        if (runner != null) runner.RemoveCallbacks(this);
+        if (Instance == this) Instance = null;
+    }
+
+    // ChatManager는 씬에 배치된 단일 네트워크 오브젝트라 누군가 한 명이 StateAuthority를 들고 있다.
+    // HostMigration이 꺼져있어 그 권한자가 방장이 아니어도 나가면 아무도 권한을 못 받는 상태가 될 수 있는데,
+    // 그러면 RPC 송수신 주체(Object)가 끊긴 것처럼 동작해 채팅이 먹통이 된다(겉보기엔 "사라진" 것처럼 보임).
+    // 권한자가 나가면 현재 씬 권한자(방장)가 즉시 다시 받아오게 한다.
+    public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
+    {
+        if (Object == null || !Object.IsValid) return;
+        if (Object.StateAuthority != player) return;
+        if (runner.IsSceneAuthority)
+            Object.RequestStateAuthority();
     }
 
     // 게임 씬에 배치된 ChatManager는 영구(DontDestroyOnLoad) 채팅 UI를 에디터에서 연결할 수 없으므로
@@ -177,4 +197,23 @@ public class ChatManager : NetworkBehaviour
         if (messageText != null)
             messageText.text += $"<color=#{ColorUtility.ToHtmlStringRGB(color)}>{senderName} : {msg}</color> \n";
     }
+
+    public void OnInput(NetworkRunner runner, NetworkInput input) { }
+    public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
+    public void OnPlayerJoined(NetworkRunner runner, PlayerRef player) { }
+    public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }
+    public void OnConnectedToServer(NetworkRunner runner) { }
+    public void OnDisconnectedFromServer(NetworkRunner runner, NetDisconnectReason reason) { }
+    public void OnConnectRequest(NetworkRunner runner, NetworkRunnerCallbackArgs.ConnectRequest request, byte[] token) { }
+    public void OnConnectFailed(NetworkRunner runner, NetAddress remoteAddress, NetConnectFailedReason reason) { }
+    public void OnUserSimulationMessage(NetworkRunner runner, SimulationMessagePtr message) { }
+    public void OnSessionListUpdated(NetworkRunner runner, System.Collections.Generic.List<SessionInfo> sessionList) { }
+    public void OnCustomAuthenticationResponse(NetworkRunner runner, System.Collections.Generic.Dictionary<string, object> data) { }
+    public void OnHostMigration(NetworkRunner runner, HostMigrationToken hostMigrationToken) { }
+    public void OnSceneLoadDone(NetworkRunner runner) { }
+    public void OnSceneLoadStart(NetworkRunner runner) { }
+    public void OnObjectExitAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+    public void OnObjectEnterAOI(NetworkRunner runner, NetworkObject obj, PlayerRef player) { }
+    public void OnReliableDataReceived(NetworkRunner runner, PlayerRef player, ReliableKey key, ArraySegment<byte> data) { }
+    public void OnReliableDataProgress(NetworkRunner runner, PlayerRef player, ReliableKey key, float progress) { }
 }

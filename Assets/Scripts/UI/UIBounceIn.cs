@@ -32,6 +32,10 @@ namespace Starter.UI
 
         private void BuildPlayer()
         {
+            // 에디터에서 플레이 중이 아닐 때 AddComponent<MMF_Player>()가 실패해서 에러가 나던 문제를 막기 위해
+            // 실제 플레이(런타임) 중에만 Feel 셋업을 한다.
+            if (!Application.isPlaying) return;
+
             _player = gameObject.AddComponent<MMF_Player>();
             _spring = new MMF_PositionSpring
             {
@@ -51,6 +55,7 @@ namespace Starter.UI
 
         private void OnEnable()
         {
+            if (_player == null) return;
             _restPosition = _rect.anchoredPosition;
 
             // 시작 위치를 위쪽으로 옮겨두고, 목표 위치(원래 자리)로 스프링 이동시킨다.

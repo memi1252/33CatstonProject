@@ -34,6 +34,39 @@ public class BuffSlot : MonoBehaviour
         return text;
     }
 
+    // 다른 곳(예: ActiveBuffDisplayUI 툴팁)에서도 같은 {Ratio:N} 치환이 필요해서 재사용 가능하게 뺐다.
+    public static string FormatContractDescription(ContractScriptableObject buff)
+    {
+        if (buff == null) return "";
+        string resultText = buff.description ?? "";
+        if (buff.contractBuffs == null) return resultText;
+
+        bool isCount = buff.valueType == global::ValueType.Count;
+        for (int i = 0; i < buff.contractBuffs.Length; i++)
+        {
+            string targetTag = "{Ratio:" + i + "}";
+            float raw = buff.contractBuffs[i].ratio;
+            string value = isCount ? raw.ToString() : (raw * 100).ToString();
+            resultText = resultText.Replace(targetTag, value + (isCount ? "" : "%"));
+        }
+        return CleanupUnresolvedTags(resultText);
+    }
+
+    public static string FormatBuffDescription(BuffScripableObject buff)
+    {
+        if (buff == null) return "";
+        string resultText = buff.buffDescription ?? "";
+        if (buff.buffProperties == null) return resultText;
+
+        for (int i = 0; i < buff.buffProperties.Length; i++)
+        {
+            string targetTag = "{Ratio:" + i + "}";
+            string value = (buff.buffProperties[i].ratio * 100).ToString();
+            resultText = resultText.Replace(targetTag, value + "%");
+        }
+        return CleanupUnresolvedTags(resultText);
+    }
+
     void Awake()
     {
         voteButton.onClick.AddListener(() =>
@@ -121,28 +154,31 @@ public class BuffSlot : MonoBehaviour
         }
 
         string conditionDescription = buffScripableObject.voteDesc;
-        if (buffScripableObject.isVotingCondition)
+        // isVotingCondition은 BuffManager의 득표 조건부 적용 로직에 쓰이는 플래그일 뿐,
+        // voteDesc에 {Voted_Raito:N} 태그가 있는지와는 무관하다. 이걸로 치환 여부를 가르면
+        // isVotingCondition=false인데 태그가 있는 경우(I_003, I_004, I_005, I_009 등) 치환이 안 돼서
+        // 화면에 "{Voted_Raito:0}" 같은 raw 태그가 그대로 보이는 버그가 있었다.
+        // votingAbility 배열이 있으면 항상 치환을 시도한다.
+        if (buffScripableObject.votingAbility != null && buffScripableObject.votingAbility.Length > 0)
         {
-            if (buffScripableObject == null) return;
-
             string originalText = buffScripableObject.voteDesc;
-    
-            // 1. 결과물을 담을 변수 생성
             string resultText = originalText;
 
-            // 2. 반복문을 돌며 모든 Ratio 태그 치환
             for (int i = 0; i < buffScripableObject.votingAbility.Length; i++)
             {
                 string targetTag = "{Voted_Raito:" + i + "}";
                 string value = (buffScripableObject.votingAbility[i].ratio * 100).ToString(); // 0.5일 경우 50으로 변환
-        
+
                 resultText = resultText.Replace(targetTag, value + "%");
             }
 
-            // 3. 로그로 치환 결과 최종 확인 (이게 콘솔에 어떻게 찍히는지 보세요!)
             Debug.Log($"[치환 완료]: {resultText}");
 
             conditionDescription = CleanupUnresolvedTags(resultText);
+        }
+
+        if (buffScripableObject.isVotingCondition)
+        {
             BuffConditionsText.text = conditionDescription;
         }
         else

@@ -565,23 +565,27 @@ protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = def
 
     private Coroutine _hitFlashCoroutine;
     private Coroutine _hitPunchCoroutine;
+    private Vector3? _originalVisualScale;
 
     /// <summary>
     /// 피격 시 살짝 찌그러졌다 돌아오는 펀치 스케일 효과 (히트 플래시와 함께 타격감을 만든다).
     /// 콜라이더/NavMeshAgent가 붙은 루트가 아니라 첫 번째 자식(비주얼)만 스케일한다.
+    /// 연속으로 맞아서 애니메이션이 끝나기 전에 또 재생되면, "현재(이미 찌그러진 중간값) 스케일"을
+    /// 새 기준으로 잡아서 매번 곱해지며 한없이 커지는 버그가 있었다 — 원래 스케일을 한 번만 캐싱해서 고정한다.
     /// </summary>
     private void PlayHitPunch()
     {
         Transform visual = transform.childCount > 0 ? transform.GetChild(0) : null;
         if (visual == null) return;
 
+        if (_originalVisualScale == null) _originalVisualScale = visual.localScale;
+
         if (_hitPunchCoroutine != null) StopCoroutine(_hitPunchCoroutine);
-        _hitPunchCoroutine = StartCoroutine(HitPunchRoutine(visual));
+        _hitPunchCoroutine = StartCoroutine(HitPunchRoutine(visual, _originalVisualScale.Value));
     }
 
-    private IEnumerator HitPunchRoutine(Transform visual)
+    private IEnumerator HitPunchRoutine(Transform visual, Vector3 baseScale)
     {
-        Vector3 baseScale = visual.localScale;
         Vector3 punchScale = Vector3.Scale(baseScale, new Vector3(1.2f, 0.8f, 1.2f));
         float duration = 0.18f;
         float t = 0f;
@@ -597,10 +601,12 @@ protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = def
     }
 
     private Coroutine _hitKnockbackCoroutine;
+    private Vector3? _originalVisualLocalPos;
 
     /// <summary>
     /// 피격 시 공격자 반대 방향으로 살짝 밀려나는 스태거 효과 (비주얼 전용 — 콜라이더/NavMeshAgent 위치는 그대로 유지).
     /// attackerPos가 비어있으면(default) 방향을 알 수 없으니 건너뛴다.
+    /// 펀치 스케일과 같은 이유로, 원래 위치를 한 번만 캐싱해서 기준으로 쓴다(연속 피격 시 위치가 계속 밀려나는 버그 방지).
     /// </summary>
     private void PlayHitKnockback(Vector3 attackerPos)
     {
@@ -613,13 +619,14 @@ protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = def
         if (dir.sqrMagnitude < 0.0001f) return;
         dir.Normalize();
 
+        if (_originalVisualLocalPos == null) _originalVisualLocalPos = visual.localPosition;
+
         if (_hitKnockbackCoroutine != null) StopCoroutine(_hitKnockbackCoroutine);
-        _hitKnockbackCoroutine = StartCoroutine(HitKnockbackRoutine(visual, dir));
+        _hitKnockbackCoroutine = StartCoroutine(HitKnockbackRoutine(visual, dir, _originalVisualLocalPos.Value));
     }
 
-    private IEnumerator HitKnockbackRoutine(Transform visual, Vector3 worldDir)
+    private IEnumerator HitKnockbackRoutine(Transform visual, Vector3 worldDir, Vector3 basePos)
     {
-        Vector3 basePos = visual.localPosition;
         Vector3 punchOffset = visual.InverseTransformDirection(worldDir) * 0.25f;
         float duration = 0.15f;
         float t = 0f;

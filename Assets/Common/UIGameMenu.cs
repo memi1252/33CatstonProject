@@ -77,6 +77,19 @@ namespace Starter
 
 			var settings = t.Find("SettingsButton")?.GetComponent<UnityEngine.UI.Button>();
 			if (settings != null) settings.onClick.AddListener(OpenSettings);
+
+			var quit = t.Find("QuitGameButton")?.GetComponent<UnityEngine.UI.Button>();
+			if (quit != null) quit.onClick.AddListener(QuitGame);
+		}
+
+		public async void QuitGame()
+		{
+			await Disconnect(loadLobby: false);
+#if UNITY_EDITOR
+			UnityEditor.EditorApplication.isPlaying = false;
+#else
+			Application.Quit();
+#endif
 		}
 
 		public void OpenSettings()
@@ -89,9 +102,13 @@ namespace Starter
 		{
 			if (RoomMenuPanel == null) return;
 			var t = RoomMenuPanel.transform;
-			string[] roomOnly = { "RoomNameText", "PlayerCountText", "LeaveRoomButton", "MainMenuButton", "Divider" };
+			// 메인 메뉴로 가는 버튼은 방에 있든 로비에 있든 항상 보여야 한다.
+			string[] roomOnly = { "RoomNameText", "PlayerCountText", "LeaveRoomButton", "Divider" };
 			foreach (var n in roomOnly)
 				t.Find(n)?.gameObject.SetActive(inRoom);
+
+			// 방에 입장 안 했을 땐 게임 종료, 입장했으면 방 나가기만 보이게 (같은 자리, 겹치지 않게)
+			t.Find("QuitGameButton")?.gameObject.SetActive(!inRoom);
 		}
 
 		private void OnDestroy()
@@ -106,8 +123,10 @@ namespace Starter
 
 		public async void JoinRoom(string sessionName)
 		{
+			// .text = 로 바꾸면 onValueChanged가 발생해서 타이핑용 통통 효과(UIInputBump)와
+			// 방 검색 필터(RoomListManager)가 의도치 않게 같이 트리거된다. 코드에서 값만 바꿀 땐 알림 없이 설정.
 			if (!string.IsNullOrEmpty(sessionName) && RoomText != null)
-				RoomText.text = sessionName;
+				RoomText.SetTextWithoutNotify(sessionName);
 			await StartGameAsync(sessionName);
 		}
 
@@ -134,7 +153,7 @@ namespace Starter
 			{
 				var nick = !string.IsNullOrWhiteSpace(NicknameText.text) ? NicknameText.text.Trim() : "Player";
 				sessionName = $"{nick}'s Room";
-				if (RoomText != null) RoomText.text = sessionName;
+				if (RoomText != null) RoomText.SetTextWithoutNotify(sessionName);
 			}
 
 			var startArguments = new StartGameArgs()
@@ -265,6 +284,12 @@ namespace Starter
 			PanelGroup.interactable = true;
 
 			SceneManager.LoadScene(1);
+
+			// 정상적으로 나갈 때(Disconnect())와 동일하게 영구 UI를 통째로 정리한다.
+			// 안 그러면 게임 시작 도중 예기치 않게 끊겼을 때(방장이 방 닫음 등) 낡은 UI가 그대로 남아
+			// 로비로 돌아와도 새로 생성되지 않고 깨진 상태로 유지된다.
+			if (UIManager.Instance != null) Destroy(UIManager.Instance.gameObject);
+			Destroy(transform.root.gameObject);
 		}
 
 		// ─── 방 선택 패널용 기존 토글 (MenuButton 없을 때 호환) ────
@@ -283,7 +308,10 @@ namespace Starter
 			var nickname = PlayerPrefs.GetString("PlayerName");
 			if (string.IsNullOrEmpty(nickname))
 				nickname = "Player" + Random.Range(10000, 100000);
-			NicknameText.text = nickname;
+			// .text = 로 바꾸면 onValueChanged가 발생해서 UIInputBump의 통통 효과가 트리거된다.
+			// 방을 나갔다가 다시 들어올 때 OnEnable이 다시 호출되며 이게 반복/중첩 트리거되어
+			// 스프링 값이 Infinity/NaN까지 깨지는 버그가 있었다(닉네임 칸이 이상하게 표시/터지는 원인).
+			NicknameText.SetTextWithoutNotify(nickname);
 			StatusText.text = _shutdownStatus != null ? _shutdownStatus : string.Empty;
 			_shutdownStatus = null;
 		}

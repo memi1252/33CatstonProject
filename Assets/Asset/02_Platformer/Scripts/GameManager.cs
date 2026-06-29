@@ -110,10 +110,20 @@ public sealed class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 		}
 	}
 
+	[Networked] public PlayerRef HostPlayerRef { get; set; }
+
 	public override void Spawned()
 	{
 		Runner.AddCallbacks(this);
 		SpawnLocalPlayer();
+
+		// 씬에 배치된 이 GameManager의 State Authority를 가진 클라이언트가 곧 방장(씬 권한자)이다.
+		// HostMigration이 꺼져있어 방장이 나가면 씬 권한이 아무에게도 없는 상태가 되어 적/스테이지 진행이
+		// 멈출 수 있으므로, 누가 방장인지 기록해뒀다가 OnPlayerLeft에서 감지해 전원을 로비로 내보낸다.
+		if (HasStateAuthority)
+		{
+			HostPlayerRef = Runner.LocalPlayer;
+		}
 	}
 
 	public override void Despawned(NetworkRunner runner, bool hasState)
@@ -131,8 +141,25 @@ public sealed class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 		}
 	}
 
-	// INetworkRunnerCallbacks 나머지 빈 구현
-	public void OnPlayerLeft(NetworkRunner runner, PlayerRef player) { }
+	// 방장(씬 권한자)이 나가면 나머지 플레이어들도 전부 로비로 내보낸다.
+	public void OnPlayerLeft(NetworkRunner runner, PlayerRef player)
+	{
+		if (player == HostPlayerRef)
+		{
+			RPC_HostLeftKickAll();
+		}
+	}
+
+	// RpcSources.All: 방장이 나간 시점엔 씬 권한자가 없을 수 있어(HostMigration 비활성) StateAuthority 제약 없이 보낸다.
+	[Rpc(RpcSources.All, RpcTargets.All)]
+	private void RPC_HostLeftKickAll()
+	{
+		if (ChatManager.Instance != null)
+			ChatManager.Instance.SendSystemMessage("방장이 나가서 로비로 돌아갑니다.", Color.red);
+
+		if (Starter.UIGameMenu._instance != null)
+			_ = Starter.UIGameMenu._instance.Disconnect(true);
+	}
 	public void OnInput(NetworkRunner runner, NetworkInput input) { }
 	public void OnInputMissing(NetworkRunner runner, PlayerRef player, NetworkInput input) { }
 	public void OnShutdown(NetworkRunner runner, ShutdownReason shutdownReason) { }

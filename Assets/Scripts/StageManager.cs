@@ -274,7 +274,10 @@ public class StageManager : NetworkBehaviour
 
     private void SpawnEnemies(StageDefinition def)
     {
-        int count = Mathf.Clamp(Random.Range(def.minEnemies, def.maxEnemies + 1), 1, 99);
+        int baseCount = Random.Range(def.minEnemies, def.maxEnemies + 1);
+        // 스테이지를 진행할수록 적 수도 같이 늘어나도록 — 스테이지 2칸마다 적 1마리 추가.
+        int bonusCount = CurrentStageIndex / 2;
+        int count = Mathf.Clamp(baseCount + bonusCount, 1, 99);
         // 전봇대(streetlampEnemy)는 위치가 겹치면 안 되므로 점유된 스폰 포인트 인덱스를 따로 추적
         var lampOccupied = new System.Collections.Generic.HashSet<int>();
 
@@ -591,7 +594,9 @@ private void RPC_RunComplete()
 
     private void OnStageChanged()
     {
-        // 필요 시 UI(현재 스테이지 표시) 갱신 훅. 현재는 로그만.
+        // [Networked] 콜백이라 모든 클라이언트에서 동일하게 호출된다 — 스테이지 진행에 따라
+        // 적이 자연스럽게 강해지도록 자동 난이도 상승분을 갱신한다.
+        EnemyGlobalBuffs.SetStageScaling(CurrentStageIndex);
         Debug.Log($"[StageManager] 현재 스테이지: {CurrentStageIndex}");
     }
 

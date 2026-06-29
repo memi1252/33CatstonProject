@@ -46,6 +46,13 @@ namespace Starter
         private bool _isJoining;
         private float _pingTimer;
 
+        // 방이 새로 생성되면 Photon이 짧은 시간 안에 세션 속성을 여러 번 연달아 갱신해서 보낸다.
+        // 매번 그대로 Repaint()하면 슬롯이 계속 지워졌다 다시 생기면서(슬롯의 등장 애니메이션도 매번 재생되어)
+        // 깜빡이듯 커졌다 작아졌다 하는 것처럼 보인다. 짧은 시간 안의 중복 갱신은 묶어서 한 번만 그린다.
+        private bool _repaintPending;
+        private float _repaintCooldown;
+        private const float RepaintMinInterval = 0.4f;
+
         private void Awake()
         {
             if (RefreshButton != null)
@@ -57,7 +64,13 @@ namespace Starter
         private void OnSearchChanged(string keyword)
         {
             _searchKeyword = keyword;
-            Repaint();
+            RequestRepaint();
+        }
+
+        private void RequestRepaint()
+        {
+            _repaintPending = true;
+            _repaintCooldown = RepaintMinInterval;
         }
 
         // region → Photon NameServer 호스트 매핑 (ICMP 핑용)
@@ -83,6 +96,16 @@ namespace Starter
 
         private void Update()
         {
+            if (_repaintPending)
+            {
+                _repaintCooldown -= Time.unscaledDeltaTime;
+                if (_repaintCooldown <= 0f)
+                {
+                    _repaintPending = false;
+                    DoRepaint();
+                }
+            }
+
             if (_lobbyRunner == null || _slots.Count == 0) return;
 
             _pingTimer -= Time.unscaledDeltaTime;
@@ -209,32 +232,56 @@ namespace Starter
                 _filteredSessions.Add(s);
             }
 
-            Repaint();
+            RequestRepaint();
         }
 
-        private void Repaint()
+        // 세션 이름 -> 슬롯. 매번 전부 파괴/재생성하지 않고 기존 슬롯을 재사용해서
+        // (방 생성 직후 Photon이 세션 정보를 연달아 갱신할 때) 깜빡이거나 순간적으로 커지는 걸 막는다.
+        private readonly Dictionary<string, RoomSlot> _slotsByName = new();
+
+        private void DoRepaint()
         {
-            for (int i = _slots.Count - 1; i >= 0; i--)
-            {
-                if (_slots[i] != null) Destroy(_slots[i].gameObject);
-            }
-            _slots.Clear();
+            if (RoomSlotPrefab == null || RoomListContent == null) return;
 
             bool hasKeyword = !string.IsNullOrWhiteSpace(_searchKeyword);
-            int shown = 0;
+            var wanted = new HashSet<string>();
+
             foreach (var s in _filteredSessions)
             {
-                if (RoomSlotPrefab == null || RoomListContent == null) break;
                 if (hasKeyword && !s.Name.Contains(_searchKeyword, System.StringComparison.OrdinalIgnoreCase))
                     continue;
-                var slot = Instantiate(RoomSlotPrefab, RoomListContent);
-                slot.Bind(s, OnRoomClicked);
-                _slots.Add(slot);
-                shown++;
+
+                wanted.Add(s.Name);
+
+                if (_slotsByName.TryGetValue(s.Name, out var existing) && existing != null)
+                {
+                    existing.Bind(s, OnRoomClicked); // 기존 슬롯 재사용, 내용만 갱신
+                }
+                else
+                {
+                    var slot = Instantiate(RoomSlotPrefab, RoomListContent);
+                    slot.Bind(s, OnRoomClicked);
+                    _slotsByName[s.Name] = slot;
+                    _slots.Add(slot);
+                }
+            }
+
+            // 더 이상 목록에 없는 방의 슬롯만 제거
+            var staleKeys = new List<string>();
+            foreach (var kv in _slotsByName)
+            {
+                if (!wanted.Contains(kv.Key)) staleKeys.Add(kv.Key);
+            }
+            foreach (var key in staleKeys)
+            {
+                var slot = _slotsByName[key];
+                _slotsByName.Remove(key);
+                _slots.Remove(slot);
+                if (slot != null) Destroy(slot.gameObject);
             }
 
             if (EmptyLabel != null)
-                EmptyLabel.SetActive(shown == 0);
+                EmptyLabel.SetActive(_slots.Count == 0);
         }
 
         private async void OnRoomClicked(SessionInfo session)

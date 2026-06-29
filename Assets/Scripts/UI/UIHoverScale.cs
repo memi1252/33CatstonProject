@@ -29,7 +29,23 @@ namespace Starter.UI
             _rect = GetComponent<RectTransform>();
             _baseScale = _rect.localScale;
 
-            _player = gameObject.AddComponent<MMF_Player>();
+            // 에디터에서 플레이 중이 아닐 때 AddComponent<MMF_Player>()가 실패해서 에러가 나던 문제를 막기 위해
+            // 실제 플레이(런타임) 중에만 Feel 셋업을 한다.
+            if (!Application.isPlaying) return;
+
+            // 슬롯에 이미 다른 용도(등장 애니메이션 등)의 MMF_Player가 붙어있으면 AddComponent가 실패해서
+            // _player가 null로 남고 바로 다음 줄에서 NullReferenceException이 났다. 같은 플레이어를 공유하면
+            // PlayFeedbacks() 호출 시 무관한 다른 효과까지 같이 재생되니, 전용 자식 오브젝트에 따로 만든다.
+            if (GetComponent<MMF_Player>() != null)
+            {
+                var holder = new GameObject("HoverScaleFeel");
+                holder.transform.SetParent(transform, false);
+                _player = holder.AddComponent<MMF_Player>();
+            }
+            else
+            {
+                _player = gameObject.AddComponent<MMF_Player>();
+            }
             _spring = new MMF_ScaleSpring
             {
                 AnimateScaleTarget = _rect,
@@ -57,6 +73,7 @@ namespace Starter.UI
 
         private void PlayTo(Vector3 targetScale)
         {
+            if (_player == null) return;
             _spring.MoveToScaleMin = targetScale;
             _spring.MoveToScaleMax = targetScale;
             _player.PlayFeedbacks();

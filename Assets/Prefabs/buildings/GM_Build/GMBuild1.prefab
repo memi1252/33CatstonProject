@@ -11,7 +11,8 @@ GameObject:
   - component: {fileID: 165193185872705452}
   - component: {fileID: 2947540036448551835}
   - component: {fileID: 3805327874961391656}
-  m_Layer: 0
+  - component: {fileID: 2730217479080324082}
+  m_Layer: 9
   m_Name: Cube.154
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -90,6 +91,28 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &2730217479080324082
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2321728340896595618}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -5239042506358315224, guid: 7b8d878cad9eb154aab9dd16050dad35, type: 3}
 --- !u!1 &2517793580900209727
 GameObject:
   m_ObjectHideFlags: 0
@@ -101,7 +124,8 @@ GameObject:
   - component: {fileID: 8625247238022071684}
   - component: {fileID: 4581030192191102033}
   - component: {fileID: 5907163049692356449}
-  m_Layer: 0
+  - component: {fileID: 4362041971692689701}
+  m_Layer: 9
   m_Name: Cube.007
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -180,6 +204,28 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!64 &4362041971692689701
+MeshCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2517793580900209727}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 0
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 5
+  m_Convex: 0
+  m_CookingOptions: 30
+  m_Mesh: {fileID: -3329902420748629119, guid: 7b8d878cad9eb154aab9dd16050dad35, type: 3}
 --- !u!1 &5675297996721656359
 GameObject:
   m_ObjectHideFlags: 0
@@ -189,7 +235,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2804281525099726012}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: GMBuild1
   m_TagString: Untagged
   m_Icon: {fileID: -1412012063857583412, guid: 0000000000000000d000000000000000, type: 0}

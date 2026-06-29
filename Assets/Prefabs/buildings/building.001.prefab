@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 2869844261037300948}
   - component: {fileID: 5488878058297734427}
   - component: {fileID: 8848732936276595912}
-  m_Layer: 0
+  m_Layer: 9
   m_Name: building.001
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -88,4 +88,5 @@ MeshRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
+  m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}

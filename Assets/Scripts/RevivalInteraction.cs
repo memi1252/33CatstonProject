@@ -90,8 +90,18 @@ using Starter.Platformer;
 
 
 
-			// 주변의 죽은 플레이어 감지
+			// 주변의 죽은 플레이어 감지 (대상이 바뀌기 전에 이전 대상을 기억해둔다 —
+			// 살리다가 범위를 벗어나거나 다른 대상으로 바뀌면 이전 대상의 게이지를 리셋해줘야 한다)
+			Player previousTarget = _targetDeadPlayer;
 			DetectDeadPlayers();
+
+			if (_isReviving && previousTarget != null && previousTarget != _targetDeadPlayer)
+			{
+				_revivalProgress = 0f;
+				_isReviving = false;
+				if (revivalUI != null) revivalUI.SetProgress(0f);
+				previousTarget.RPC_ShowReviveProgress(0f);
+			}
 
 			// 죽은 플레이어가 범위 내에 있으면
 			if (_targetDeadPlayer != null && !_targetDeadPlayer.dead)
@@ -116,6 +126,10 @@ using Starter.Platformer;
 					if (revivalUI != null)
 						revivalUI.SetProgress(_revivalProgress);
 
+					// 죽은 사람 본인에게도 게이지를 보여준다 (안 그러면 살리는 사람만 진행률을 보고
+					// 죽은 사람은 계속 "혼자서는 부활할 수 없습니다" 문구만 보임).
+					_targetDeadPlayer.RPC_ShowReviveProgress(_revivalProgress);
+
 					// 부활 완료
 					if (_revivalProgress >= 1f)
 					{
@@ -133,6 +147,7 @@ using Starter.Platformer;
 						_isReviving = false;
 						if (revivalUI != null)
 							revivalUI.SetProgress(0f);
+						_targetDeadPlayer.RPC_ShowReviveProgress(0f);
 					}
 				}
 			}

@@ -203,18 +203,18 @@ namespace Projectiles.NetworkObjectExample
             float tickRate = 0.1f; // 도중에 들어온 적도 잡기 위해 짧은 주기로 검사
             float timer = 0f;
 
-            // 이펙트 1회 동안 이미 데미지를 입은 대상은 다시 맞지 않도록 추적
-            var alreadyHit = new System.Collections.Generic.HashSet<IDamageable>();
-
             while (timer < lifeTime)
             {
+                // 같은 틱 안에서 콜라이더가 여러 개 겹쳐서 중복으로 맞는 것만 막는다(틱마다 새로 초기화).
+                // 예전엔 이 Set이 while문 밖에 있어서 한 번 맞은 대상은 이펙트가 끝날 때까지 다시 안 맞는 버그가 있었다.
+                var hitThisTick = new System.Collections.Generic.HashSet<IDamageable>();
                 Collider[] hitColliders = Physics.OverlapSphere(targetPos, radius, raycastLayerMask);
 
                 foreach (var hitCollider in hitColliders)
                 {
                     IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
                     if (damageableObject == null) continue;
-                    if (!alreadyHit.Add(damageableObject)) continue;
+                    if (!hitThisTick.Add(damageableObject)) continue;
 
                     float totalDamage = ComputeFinalDamage();
                     damageableObject.TakeHit(totalDamage, new RaycastHit(), GetAttackerGameObject());
@@ -229,25 +229,36 @@ namespace Projectiles.NetworkObjectExample
 
         private IEnumerator DealStrikeDamage(Vector3 targetPos)
         {
-            // 투사체가 땅에 떨어져서 터지기까지의 시간 대기 (VisualStrikeAttack 시간과 동일하게 맞춤)
-            yield return new WaitForSeconds(1.5f);
+            // 투사체가 땅에 떨어져서 터지기까지의 시간 대기 (VisualStrikeAttack의 스코프 표시 시작과 맞춤)
+            yield return new WaitForSeconds(1f);
 
             // attackScope의 크기 기반 반경
             float radius = WeaponSO.tileSize * 0.5f;
+            float tickRate = 0.1f;
+            // 스코프가 화면에 보이는 동안(VisualStrikeAttack에서 비활성화되는 시점까지) 계속 판정한다.
+            float remaining = (1.5f + plusDelay) - 1f;
 
-            Collider[] hitColliders = Physics.OverlapSphere(targetPos, radius, raycastLayerMask);
-
-            foreach (var hitCollider in hitColliders)
+            while (remaining > 0f)
             {
-                IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
-                if (damageableObject != null)
+                // 같은 틱 안에서 콜라이더가 여러 개 겹쳐서 중복으로 맞는 것만 막는다(틱마다 새로 초기화).
+                var hitThisTick = new System.Collections.Generic.HashSet<IDamageable>();
+                Collider[] hitColliders = Physics.OverlapSphere(targetPos, radius, raycastLayerMask);
+
+                foreach (var hitCollider in hitColliders)
                 {
+                    IDamageable damageableObject = hitCollider.GetComponentInParent<IDamageable>();
+                    if (damageableObject == null) continue;
+                    if (!hitThisTick.Add(damageableObject)) continue;
+
                     float totalDamage = ComputeFinalDamage();
                     damageableObject.TakeHit(totalDamage, new RaycastHit(), GetAttackerGameObject());
 
                     // 속성 효과 적용
                     ApplyWeaponAttributeEffect(damageableObject, targetPos, totalDamage);
                 }
+
+                yield return new WaitForSeconds(tickRate);
+                remaining -= tickRate;
             }
         }
 

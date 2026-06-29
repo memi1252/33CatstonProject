@@ -24,7 +24,9 @@ public class ActiveBuffDisplayUI : MonoBehaviour
         else { Destroy(gameObject); return; }
     }
 
-    public void AddBuff(Sprite icon, string buffName)
+    public void AddBuff(Sprite icon, string buffName) => AddBuff(icon, buffName, "");
+
+    public void AddBuff(Sprite icon, string buffName, string description)
     {
         if (_slots.Count >= maxSlots) return;
         if (buffIconSlotPrefab == null || slotParent == null) return;
@@ -36,6 +38,12 @@ public class ActiveBuffDisplayUI : MonoBehaviour
 
         var txt = slot.GetComponentInChildren<TextMeshProUGUI>();
         if (txt != null) txt.text = "";
+
+        // 마우스를 올리면 어떤 증강인지 툴팁으로 보여준다.
+        var tooltip = slot.GetComponent<Starter.UI.UITooltipTrigger>();
+        if (tooltip == null) tooltip = slot.AddComponent<Starter.UI.UITooltipTrigger>();
+        tooltip.title = buffName;
+        tooltip.body = description;
 
         _slots.Add(slot);
     }

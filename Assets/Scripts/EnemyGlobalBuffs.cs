@@ -16,6 +16,21 @@ public static class EnemyGlobalBuffs
     public static float bossHealthBonus  = 0f;
     public static float bossReceivedBonus= 0f;
 
+    // 스테이지를 진행할수록 적이 자연스럽게 강해지도록 하는 자동 난이도 상승분.
+    // 각인/계약 버프(누적 delta)와는 별개로, 현재 스테이지 인덱스로부터 매번 직접 계산한다(중복 누적 방지).
+    public static float stageDamageBonus = 0f;
+    public static float stageHealthBonus = 0f;
+    public static float stageSpeedBonus  = 0f;
+
+    /// <summary>StageManager.OnStageChanged에서 모든 클라이언트가 동일하게 호출한다.</summary>
+    public static void SetStageScaling(int stageIndex)
+    {
+        int n = stageIndex < 0 ? 0 : stageIndex;
+        stageDamageBonus = n * 0.12f; // 스테이지마다 데미지 +12%
+        stageHealthBonus = n * 0.15f; // 스테이지마다 체력 +15%
+        stageSpeedBonus = n * 0.03f;  // 스테이지마다 이동속도 +3% (너무 빨라지지 않게 적게)
+    }
+
     /// <summary>BuffProperties의 적/보스 관련 값을 누적 적용.</summary>
     public static void Apply(BuffProperties props)
     {
@@ -34,17 +49,18 @@ public static class EnemyGlobalBuffs
     {
         damageBonus = speedBonus = healthBonus = receivedBonus = 0f;
         bossDamageBonus = bossHealthBonus = bossReceivedBonus = 0f;
+        stageDamageBonus = stageHealthBonus = stageSpeedBonus = 0f;
     }
 
     // 적용 헬퍼: base * (1 + bonus) — bonus가 0이면 base 그대로
     public static float ScaledDamage(float baseDmg, bool isBoss)
-        => baseDmg * (1f + (isBoss ? bossDamageBonus : damageBonus));
+        => baseDmg * (1f + (isBoss ? bossDamageBonus : damageBonus) + stageDamageBonus);
 
     public static float ScaledSpeed(float baseSpd, bool isBoss)
-        => baseSpd * (1f + speedBonus); // 보스도 일반 speedBonus 사용
+        => baseSpd * (1f + speedBonus + stageSpeedBonus); // 보스도 일반 speedBonus 사용
 
     public static float ScaledHealth(float baseHp, bool isBoss)
-        => baseHp * (1f + (isBoss ? bossHealthBonus : healthBonus));
+        => baseHp * (1f + (isBoss ? bossHealthBonus : healthBonus) + stageHealthBonus);
 
     public static float ScaledReceived(float dmg, bool isBoss)
         => dmg * (1f + (isBoss ? bossReceivedBonus : receivedBonus));

@@ -41,9 +41,14 @@ public class BuffManager : NetworkBehaviour
 
     private Dictionary<ContractScriptableObject, int> myContractBuff = new Dictionary<ContractScriptableObject, int>(); // 현제 보여지고있는 계약 
     
-    private List<ContractScriptableObject> contractChosenBuff = new List<ContractScriptableObject>(); // 선택받은 계약 버프들 
+    private List<ContractScriptableObject> contractChosenBuff = new List<ContractScriptableObject>(); // 선택받은 계약 버프들
     private List<ContractScriptableObject> archiveContractBuffs = new List<ContractScriptableObject>(); // 계약 버프 중복 방지 위한 아카이브
     private List<BuffScripableObject> archiveImprintBuffs = new List<BuffScripableObject>();
+
+    // 누군가에게 실제로 적용된 계약/각인 버프는 풀이 고갈돼서 아카이브가 초기화되더라도 절대 다시 보여주지 않는다.
+    // (그냥 "보여줬던" 것만 추적하는 archive 리스트들은 풀 고갈 시 초기화되어 이미 적용된 증강이 재등장하는 버그가 있었다)
+    private readonly HashSet<ContractScriptableObject> _appliedContractBuffs = new HashSet<ContractScriptableObject>();
+    private readonly HashSet<BuffScripableObject> _appliedImprintBuffs = new HashSet<BuffScripableObject>();
     private List<BuffSlot> buffSlots = new List<BuffSlot>();
     private ChangeDetector _changeDetector;
 
@@ -53,6 +58,10 @@ public class BuffManager : NetworkBehaviour
 
     private bool _hasChosenContract = false;
     private float _imprintStuckTimer = 0f;
+
+    // 증강 UI가 막 떠서 슬롯이 자리잡기 전에 실수로(또는 이전 클릭이 겹쳐서) 바로 눌리는 것을 막기 위한 입력 차단 시간.
+    [SerializeField] private float voteClickGuardDuration = 1.5f;
+    private float _voteUIOpenedTime = -999f;
 
     // N/B 키 입력 신뢰성: Update에서 감지하고 FixedUpdateNetwork에서 소비.
     // (FixedUpdateNetwork의 Input.GetKeyDown은 재시뮬레이션/틱 타이밍 때문에 누락될 수 있음)
@@ -202,44 +211,55 @@ public class BuffManager : NetworkBehaviour
             if (timerText != null) timerText.text = $"{imprintVoteTime:F0}";
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
-            if (imprintVoteTime <= 0)
+
+            // 단계 전환(투표종료->결과발표, 결과발표->닫기) 판단은 씬 권한자만 하고, 그 결과를 RPC로 모두에게
+            // 명시적으로 알린다. 예전엔 각 클라가 네트워크로 동기화된 isVoteFinished 값을 직접 보고 스스로
+            // 판단했는데, 그 값이 클라이언트에 제대로 전달이 안 되면 클라는 영원히 "투표 종료 안 됨" 상태로
+            // 보여서 매번 !isVoteFinished 분기로 다시 들어가 타이머만 결과발표 시간으로 계속 리셋하는
+            // 무한 루프에 빠졌다(겉보기엔 타이머가 멈춘 것처럼 보임). RPC 기반으로 바꿔서 동기화 의존을 없앤다.
+            if (imprintVoteTime <= 0 && Runner.IsSceneAuthority)
             {
                 if (!isVoteFinished)
                 {
-                    if (Runner.IsSceneAuthority)
-                    {
-                        isVoteFinished = true;
-                    }
-                    imprintVoteTimeMax = voteResultTime;
-                    imprintVoteTime = voteResultTime; // 결과 발표 시간
-                    UpdateVoteVisuals();
+                    isVoteFinished = true;
+                    RPC_BeginImprintResultReveal();
                 }
                 else
                 {
-                    if (Runner.IsSceneAuthority)
-                    {
-                        // 가장 많은 표를 받은 버프 + 조건 충족 버프를 모든 클라에 브로드캐스트 (각자 자기에게 적용)
-                        ImprintFinishVoting();
+                    // 가장 많은 표를 받은 버프 + 조건 충족 버프를 모든 클라에 브로드캐스트 (각자 자기에게 적용)
+                    ImprintFinishVoting();
 
-                        // 권한자 전용 네트워크 상태 정리
-                        isImprintBuffActive = false;
-                        isVoteFinished = false;
-                        playerVotes.Clear();
-                    }
-
-                    _imprintStuckTimer = 0f;
-
-                    // 로컬 UI/타이머 초기화 (모든 클라)
-                    imprintVoteTimeMax = 30f;
-                    imprintVoteTime = imprintVoteTimeMax;
-                    if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
-                        UIManager.Instance.buffUI.SetActive(false);
-                    EnablePlayerInput(); // 플레이어 입력 다시 활성화
+                    // 권한자 전용 네트워크 상태 정리
+                    isImprintBuffActive = false;
+                    isVoteFinished = false;
+                    playerVotes.Clear();
+                    RPC_CloseImprintUI();
                 }
             }
         }
     }
-    
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RPC_BeginImprintResultReveal()
+    {
+        imprintVoteTimeMax = voteResultTime;
+        imprintVoteTime = voteResultTime; // 결과 발표 시간
+        UpdateVoteVisuals();
+    }
+
+    // RpcSources.All: Runner.IsSceneAuthority와 이 NetworkObject의 HasStateAuthority가 어긋나는 경우를
+    // 방지하기 위해 StateAuthority 제약 없이 보낸다 (GameManager의 방장-퇴장 처리와 같은 이유).
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RPC_CloseImprintUI()
+    {
+        _imprintStuckTimer = 0f;
+        imprintVoteTimeMax = 30f;
+        imprintVoteTime = imprintVoteTimeMax;
+        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+            UIManager.Instance.buffUI.SetActive(false);
+        EnablePlayerInput(); // 플레이어 입력 다시 활성화
+    }
+
     private void ImprintFinishVoting()
     {
         //if (!Runner.IsServer) return; 
@@ -322,6 +342,8 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                 {
                     var buff = imprintAvailableBuffs[idx];
                     me.ApplyImprintConditionBuff(buff);
+                    _appliedImprintBuffs.Add(buff);
+                    archiveImprintBuffs.Add(buff);
                     // EnemyGlobalBuffs는 씬 권한자(호스트)에서만 1회 적용 — 멀티플레이어에서 중복 stacking 방지
                     if (Runner.IsSceneAuthority && buff.votingAbility != null)
                         foreach (var entry in buff.votingAbility)
@@ -334,6 +356,8 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
         {
             var winner = imprintAvailableBuffs[winnerIndex];
             me.ApplyImprintBuff(winner);
+            _appliedImprintBuffs.Add(winner);
+            archiveImprintBuffs.Add(winner);
             if (Runner.IsSceneAuthority && winner.buffProperties != null)
                 foreach (var entry in winner.buffProperties)
                     EnemyGlobalBuffs.Apply(entry.targetAbilities);
@@ -349,6 +373,8 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
         if (buffIndex < 0 || buffIndex >= contractAvailableBuffs.Length) return;
         ContractScriptableObject chosenBuff = contractAvailableBuffs[buffIndex];
         contractChosenBuff.Add(chosenBuff);
+        _appliedContractBuffs.Add(chosenBuff);
+        archiveContractBuffs.Add(chosenBuff);
         Debug.Log($"[Buff] {chosenBuff.contractName}");
     }
 
@@ -459,17 +485,17 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                 int neededBuffCount = Runner.ActivePlayers.Count() * 3;
                 int[] buffIndices = new int[neededBuffCount];
                 
-                // 사용 가능한 버프 인덱스 리스트 생성
+                // 사용 가능한 버프 인덱스 리스트 생성 (이미 누군가에게 적용된 증강은 항상 제외)
                 List<int> availableIndices = new List<int>();
                 for (int j = 0; j < contractAvailableBuffs.Length; j++)
                 {
-                    if (!archiveContractBuffs.Contains(contractAvailableBuffs[j]))
+                    if (!archiveContractBuffs.Contains(contractAvailableBuffs[j]) && !_appliedContractBuffs.Contains(contractAvailableBuffs[j]))
                     {
                         availableIndices.Add(j);
                     }
                 }
-                
-                // 사용 가능한 버프가 부족하면 archiveBuffs 초기화
+
+                // 사용 가능한 버프가 부족하면 archiveBuffs만 초기화 (적용된 증강은 그대로 계속 제외)
                 if (availableIndices.Count < neededBuffCount)
                 {
                     Debug.Log($"[BuffManager] 계약 버프 풀 초기화 (필요: {neededBuffCount}, 남음: {availableIndices.Count})");
@@ -477,7 +503,15 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                     availableIndices.Clear();
                     for (int j = 0; j < contractAvailableBuffs.Length; j++)
                     {
-                        availableIndices.Add(j);
+                        if (!_appliedContractBuffs.Contains(contractAvailableBuffs[j]))
+                            availableIndices.Add(j);
+                    }
+
+                    // 그래도 부족하면(이미 적용된 게 너무 많아서) 어쩔 수 없이 적용된 것도 다시 포함시킨다.
+                    if (availableIndices.Count < neededBuffCount)
+                    {
+                        for (int j = 0; j < contractAvailableBuffs.Length; j++)
+                            if (!availableIndices.Contains(j)) availableIndices.Add(j);
                     }
                 }
                 
@@ -489,7 +523,7 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                     int randomListIndex = Random.Range(0, availableIndices.Count);
                     int randomIndex = availableIndices[randomListIndex];
                     buffIndices[i] = randomIndex;
-                    archiveContractBuffs.Add(contractAvailableBuffs[randomIndex]);
+                    // 보여주기만 한 것은 아카이브에 넣지 않는다 (실제로 고른 것만 RPC_ContractBuffTransmission에서 넣음)
                     availableIndices.RemoveAt(randomListIndex);
                 }
                 RPC_ContractBuffVote(buffIndices);
@@ -509,17 +543,17 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                 
                 int[] buffIndices = new int[3];
                 
-                // 사용 가능한 버프 인덱스 리스트 생성
+                // 사용 가능한 버프 인덱스 리스트 생성 (이미 적용된 각인은 항상 제외)
                 List<int> availableIndices = new List<int>();
                 for (int j = 0; j < imprintAvailableBuffs.Length; j++)
                 {
-                    if (!archiveImprintBuffs.Contains(imprintAvailableBuffs[j]))
+                    if (!archiveImprintBuffs.Contains(imprintAvailableBuffs[j]) && !_appliedImprintBuffs.Contains(imprintAvailableBuffs[j]))
                     {
                         availableIndices.Add(j);
                     }
                 }
-                
-                // 사용 가능한 버프가 부족하면 archiveBuffs 초기화
+
+                // 사용 가능한 버프가 부족하면 archiveBuffs만 초기화 (적용된 각인은 그대로 계속 제외)
                 if (availableIndices.Count < 3)
                 {
                     Debug.Log($"[BuffManager] 각인 버프 풀 초기화 (필요: 3, 남음: {availableIndices.Count})");
@@ -527,7 +561,15 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                     availableIndices.Clear();
                     for (int j = 0; j < imprintAvailableBuffs.Length; j++)
                     {
-                        availableIndices.Add(j);
+                        if (!_appliedImprintBuffs.Contains(imprintAvailableBuffs[j]))
+                            availableIndices.Add(j);
+                    }
+
+                    // 그래도 부족하면 어쩔 수 없이 적용된 것도 다시 포함시킨다.
+                    if (availableIndices.Count < 3)
+                    {
+                        for (int j = 0; j < imprintAvailableBuffs.Length; j++)
+                            if (!availableIndices.Contains(j)) availableIndices.Add(j);
                     }
                 }
                 
@@ -537,7 +579,7 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
                     int randomListIndex = Random.Range(0, availableIndices.Count);
                     int randomIndex = availableIndices[randomListIndex];
                     buffIndices[i] = randomIndex;
-                    archiveImprintBuffs.Add(imprintAvailableBuffs[randomIndex]);
+                    // 보여주기만 한 것은 아카이브에 넣지 않는다 (실제로 적용된 것만 RPC_ApplyImprintBuffs에서 넣음)
                     availableIndices.RemoveAt(randomListIndex);
                 }
                 RPC_ImprintBuffVote(buffIndices);
@@ -557,6 +599,7 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
         if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
             UIManager.Instance.buffUI.SetActive(true);
         DisablePlayerInput(); // 플레이어 입력 비활성화
+        _voteUIOpenedTime = Time.time;
 
         // 현재 접속한 플레이어들을 ID 순서대로 정렬하여 리스트로 만듭니다.
         var sortedPlayers = Runner.ActivePlayers.OrderBy(p => p.PlayerId).ToList();
@@ -602,6 +645,7 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
         if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
             UIManager.Instance.buffUI.SetActive(true);
         DisablePlayerInput(); // 플레이어 입력 비활성화
+        _voteUIOpenedTime = Time.time;
 
         int Order = 1;
         foreach (int index in buffIndices)
@@ -622,6 +666,10 @@ private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
 
     public void OnVoteButtonClicked(int buffOrder)
     {
+        // UI가 뜬 직후 일정 시간 동안은 클릭을 무시한다 (오클릭/연속 클릭 방지).
+        if (Time.time - _voteUIOpenedTime < voteClickGuardDuration)
+            return;
+
         if (isContractBuffActive)
         {
             ChooseContractBuff(buffOrder);

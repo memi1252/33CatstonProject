@@ -98,6 +98,14 @@ public class LobbyReadyManager : NetworkBehaviour
     {
         if (HasStateAuthority == false) return;
 
+        // 게임이 시작되면 세션을 닫아서 중간 참여(이미 진행 중인 방에 새로 들어오는 것)를 막는다.
+        // 로비 목록에서도 더는 보이지 않도록 IsVisible도 함께 끈다.
+        if (Runner.SessionInfo != null)
+        {
+            Runner.SessionInfo.IsOpen = false;
+            Runner.SessionInfo.IsVisible = false;
+        }
+
         SceneRef sceneRef = GameSceneBuildIndex >= 0
             ? SceneRef.FromIndex(GameSceneBuildIndex)
             : SceneRef.FromIndex(SceneUtility.GetBuildIndexByScenePath(GameSceneName));
@@ -116,6 +124,10 @@ public class LobbyReadyManager : NetworkBehaviour
 
     private int CountActivePlayers()
     {
+        // 방을 나가는 도중/직후에는 Runner가 이미 null이거나 객체가 유효하지 않을 수 있다
+        // (LobbyReadyUI.Update가 매 프레임 CanReady()를 통해 이걸 호출하므로 매번 체크해야 한다).
+        if (Runner == null || Object == null || !Object.IsValid) return 0;
+
         int count = 0;
         foreach (var _ in Runner.ActivePlayers) count++;
         return count;
