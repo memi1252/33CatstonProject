@@ -136,19 +136,7 @@ namespace Starter.Platformer
 			if (HasStateAuthority == false) return;
 			if (buff == null || buff.contractBuffs == null) return;
 
-			// 무기 타입 조건 체크 (TargetType.None(4) 이면 모든 무기에 적용)
-			if (buff.targetType != TargetType.None)
-			{
-				var weaponSO = GetComponent<WeaponController>()?.CurrentWeaponSO;
-				if (weaponSO == null || (WeaponType)buff.targetType != weaponSO.weaponType) return;
-			}
-
-			// 무기 속성 조건 체크 (TargetAttribute.None(0) 이면 모든 속성에 적용)
-			if (buff.targetAttribute != TargetAttribute.None)
-			{
-				var weaponSO = GetComponent<WeaponController>()?.CurrentWeaponSO;
-				if (weaponSO == null || buff.targetAttribute != weaponSO.targetAttribute) return;
-			}
+			// 전원이 고른 계약은 무기 타입/속성과 무관하게 전원에게 전부 적용된다 (의도된 동작).
 
 			for (int i = 0; i < buff.contractBuffs.Length; i++)
 			{

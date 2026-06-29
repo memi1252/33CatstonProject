@@ -121,6 +121,36 @@ namespace Starter
 			await StartGameAsync(null);
 		}
 
+		// 개발자 모드 치트: 로비 방의 LobbyReadyManager.SoloTestMode를 켜서 혼자(1명)여도
+		// 준비/시작이 가능하게 한다. 방에 들어가기 전엔 아직 LobbyReadyManager가 없으니 적용 대상 없음 →
+		// 방에 들어간 뒤(대기 화면)에 눌러야 한다.
+		public void DevMode_EnableSoloTest()
+		{
+			if (LobbyReadyManager.Instance == null) return;
+			LobbyReadyManager.Instance.SoloTestMode = true;
+			Debug.Log("[Cheat] F4: SoloTestMode 활성화 — 혼자서도 준비/시작 가능");
+		}
+
+		// 개발자 모드일 때 화면에 사용 가능한 치트키 목록을 항상 보여준다.
+		private void OnGUI()
+		{
+			bool devModeInGame = GameManager.Instance != null && GameManager.Instance.LocalPlayer != null && GameManager.Instance.LocalPlayer.Invincible;
+			bool devModeActive = GameManager.PendingInvincibleCheat || devModeInGame;
+			if (!devModeActive) return;
+
+			string text = devModeInGame
+				? "[개발자 모드]\nF1 : 체력 완전 회복\nF2 : 스테이지 강제 클리어 (낀 적 처치)\nF3 : 멈춘 증강/무기 선택 UI 강제 종료"
+				: "[개발자 모드 대기 중]\nF4 : 혼자서도 준비/시작 가능하게 (방 안에서)";
+
+			GUIStyle style = new GUIStyle(GUI.skin.box)
+			{
+				alignment = TextAnchor.UpperLeft,
+				fontSize = 16,
+				normal = { textColor = Color.yellow }
+			};
+			GUI.Box(new Rect(10, 10, 320, 110), text, style);
+		}
+
 		public async void JoinRoom(string sessionName)
 		{
 			// .text = 로 바꾸면 onValueChanged가 발생해서 타이핑용 통통 효과(UIInputBump)와
@@ -210,6 +240,12 @@ namespace Starter
 			// ESC → 항상 RoomMenuPanel 토글
 			if (Input.GetKeyDown(KeyCode.Escape))
 				ToggleRoomMenu();
+
+			// 개발자 모드(GBSWM 치트) 상태로 방 안(대기 화면)에 있으면 F4로 SoloTestMode를 켜서 혼자서도 시작 가능하게 한다.
+			if (inRoom && GameManager.PendingInvincibleCheat && Input.GetKeyDown(KeyCode.F4))
+			{
+				DevMode_EnableSoloTest();
+			}
 
 			// 방 안 메뉴 패널이 열려있을 때 방 정보 갱신
 			if (inRoom && RoomMenuPanel != null && RoomMenuPanel.activeSelf)

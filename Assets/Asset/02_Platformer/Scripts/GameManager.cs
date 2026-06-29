@@ -191,6 +191,29 @@ public sealed class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 			ReviveAllDeadPlayers();
 			Debug.Log("[TEST] 모든 죽은 플레이어 부활 요청");
 		}
+
+		// 무적모드 치트키 (F1~F12). 무적모드가 적용된 로컬 플레이어만 사용 가능.
+		if (LocalPlayer != null && LocalPlayer.HasInputAuthority && LocalPlayer.Invincible)
+		{
+			if (Input.GetKeyDown(KeyCode.F1))
+			{
+				LocalPlayer.HealPercent(1f);
+				Debug.Log("[Cheat] F1: 체력 완전 회복");
+			}
+
+			if (Input.GetKeyDown(KeyCode.F2))
+			{
+				StageManager.Instance?.CheatForceClearStage();
+				Debug.Log("[Cheat] F2: 스테이지 강제 클리어 (맵 밖/공중에 낀 적도 강제 처치)");
+			}
+
+			if (Input.GetKeyDown(KeyCode.F3))
+			{
+				BuffManager.Instance?.CheatForceCloseUI();
+				WeaponManager.Instance?.CheatForceCloseUI();
+				Debug.Log("[Cheat] F3: 멈춰있는 증강/무기 선택 UI 강제 종료");
+			}
+		}
 	}
 
 	public override void FixedUpdateNetwork()

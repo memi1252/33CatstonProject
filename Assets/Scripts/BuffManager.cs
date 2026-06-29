@@ -139,6 +139,30 @@ public class BuffManager : NetworkBehaviour
         }
     }
 
+    // 치트(F3): 증강 투표 UI가 어떤 이유로든 안 닫히고 멈춰있을 때 강제로 닫고 입력을 복구한다.
+    public void CheatForceCloseUI()
+    {
+        _hasChosenContract = false;
+        contractVoteTime = contractVoteTimeMax;
+        _localImprintRevealStarted = false;
+        imprintVoteTimeMax = 30f;
+        imprintVoteTime = imprintVoteTimeMax;
+
+        if (UIManager.Instance != null && UIManager.Instance.buffUI != null)
+            UIManager.Instance.buffUI.SetActive(false);
+        EnablePlayerInput();
+
+        // 씬 권한자라면 모두를 묶어두는 네트워크 상태도 같이 풀어준다.
+        if (Runner != null && Runner.IsSceneAuthority)
+        {
+            isContractBuffActive = false;
+            isImprintBuffActive = false;
+            isVoteFinished = false;
+            contractChosenBuff.Clear();
+            playerVotes.Clear();
+        }
+    }
+
     // ===== 외부(StageManager 등) 연동 진입점 =====
     // 계약/각인 투표를 코드로 시작한다. 실제 시작은 씬 권한자의 FixedUpdateNetwork 에서 소비된다.
     public void RequestContractVote()

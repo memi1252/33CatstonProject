@@ -364,6 +364,7 @@ MonoBehaviour:
   teleportVfxAnchor: {fileID: 3883338834670720258}
   teleportVfxOffset: {x: 0, y: 0, z: 0}
   teleportVfxLifetime: 3
+  _Invincible: 0
 --- !u!114 &8887271899658672753
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -135,6 +135,15 @@ public class WeaponManager : NetworkBehaviour
         WeaponSelect();
     }
 
+    // 치트(F3): 무기 선택 UI가 멈춰있을 때 강제로 닫고 입력을 복구한다 (아직 못 골랐으면 랜덤 무기 장착).
+    public void CheatForceCloseUI()
+    {
+        if (!_localUIActive) return;
+
+        AutoSelectRandomWeapon();
+        CloseWeaponUI();
+    }
+
     // StageManager 등 외부에서 무기 선택을 시작하기 위한 진입점. (씬 권한자 → 모든 클라이언트에 오픈)
     public void RequestWeaponSelect()
     {

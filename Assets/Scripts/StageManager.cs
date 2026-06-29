@@ -148,7 +148,10 @@ public class StageManager : NetworkBehaviour
 
         if (_initialWeaponSelectPending)
         {
-            if (_initialWeaponSelectTimer.Expired(Runner))
+            // 전원이 이미 무기를 골랐으면 타이머가 남아있어도 바로 카운트다운 시작 (TickReward의 Weapon 케이스와 동일한 패턴).
+            bool allVoted = WeaponManager.Instance != null &&
+                             WeaponManager.Instance.playerWeaponVotes.Count >= Runner.ActivePlayers.Count();
+            if (allVoted || _initialWeaponSelectTimer.Expired(Runner))
             {
                 _initialWeaponSelectPending = false;
                 RPC_StartCountdown();
@@ -383,6 +386,18 @@ private void SpawnBoss(StageDefinition def)
         }
 
         StartReward(def);
+    }
+
+    /// <summary>
+    /// 치트(F2): 현재 스테이지의 적을 전부 즉사시켜 클리어를 강제한다. 기존 전멸 처리 흐름(TickCombat)을 그대로 탄다.
+    /// </summary>
+    public void CheatForceClearStage()
+    {
+        if (!HasStateAuthority) return;
+        foreach (var e in _aliveEnemies.ToArray())
+        {
+            if (e != null) e.CheatKill();
+        }
     }
 
     private void CleanDeadEnemies()

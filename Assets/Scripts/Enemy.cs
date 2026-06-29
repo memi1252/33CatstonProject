@@ -486,6 +486,15 @@ protected virtual void ApplyDamage(float damage, NetworkObject attackerObj = def
     }
 
     /// <summary>
+    /// 치트(스테이지 강제 클리어)용: 즉시 사망 처리한다.
+    /// </summary>
+    public void CheatKill()
+    {
+        if (!HasStateAuthority || isDead) return;
+        ApplyDamage(health);
+    }
+
+    /// <summary>
     /// 피격 시 호출. 공격자가 플레이어면 그를 타겟으로 잡고, 아니면 가장 가까운 생존 플레이어로 전환.
     /// </summary>
     protected virtual void AggroOnHit(GameObject attacker = null)

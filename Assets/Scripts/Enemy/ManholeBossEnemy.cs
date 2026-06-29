@@ -24,8 +24,18 @@ public enum ManholeBossPhase
 public class ManholeBossEnemy : Enemy
 {
     [Header("맨홀 위치")]
-    [Tooltip("씬에 배치된 맨홀 뚜껑들. 비워두면 ManholeCover 가 붙은 모든 오브젝트를 자동 수집한다.")]
+    [Tooltip("설정하면 보스가 스폰될 때 자신이 속한 보스 스테이지의 enemySpawnPoints(이미 벽 안 끼도록 검증된 " +
+             "적 스폰 위치들) 전부에 맨홀을 직접 생성해서 등록한다 (manholeCoverPrefab 필요). 보스 자신도 그 " +
+             "지점들 중 하나에서 스폰되므로 임의 오프셋과 달리 벽에 낄 위험이 없다. 씬에 별도 배치 불필요. " +
+             "비워두면 아래 manholeCovers 인스펙터 값을 쓰고, 그것도 비어있으면 씬에 미리 배치된 ManholeCover를 " +
+             "전부 자동 수집한다(구버전 호환).")]
+    public ManholeCover manholeCoverPrefab;
+
+    [Tooltip("씬에 배치된 맨홀 뚜껑들(구버전 호환). 비워두면 ManholeCover 가 붙은 모든 오브젝트를 자동 수집한다.")]
     public List<ManholeCover> manholeCovers = new List<ManholeCover>();
+
+    // manholeSpawnPoints로 직접 스폰한 맨홀들 — 보스가 사라질 때 같이 정리한다.
+    private readonly List<GameObject> _spawnedManholeObjects = new List<GameObject>();
 
     [Header("외형(숨김/노출 토글 대상)")]
     [Tooltip("Hidden 상태에서 비활성화될 시각/콜라이더 루트. 비워두면 자신을 사용한다.")]
@@ -131,7 +141,25 @@ public class ManholeBossEnemy : Enemy
         dontMove = true; // 보스는 직접 이동하지 않음
         base.Start();
 
-        if (manholeCovers == null || manholeCovers.Count == 0)
+        // 보스가 스폰될 때 자신이 속한 스테이지의 enemySpawnPoints(이미 벽 안 끼는 위치로 검증된 지점들)에
+        // 맨홀도 같이 만든다. 임의 오프셋이 아니라 기존 적 스폰 포인트를 그대로 재사용하므로 벽 안에 생기는
+        // 문제가 없고, 보스 자신도 그 지점들 중 하나에서 스폰된다(StageManager.SpawnBoss). 위치 동기화가
+        // 필요 없는 순수 비주얼 마커라 Runner.Spawn 없이 각 클라이언트가 로컬로 만든다 — 스폰 포인트가
+        // 스테이지 정의(씬 데이터)로 모든 클라이언트에 동일하므로 결과 순서도 일치해 Rpc_NotifyCover(index)가
+        // 모든 클라에서 같은 맨홀을 가리킨다.
+        Transform[] spawnPoints = GetCurrentStageSpawnPoints();
+        if (spawnPoints != null && spawnPoints.Length > 0 && manholeCoverPrefab != null)
+        {
+            manholeCovers = new List<ManholeCover>();
+            foreach (var pt in spawnPoints)
+            {
+                if (pt == null) { manholeCovers.Add(null); continue; }
+                ManholeCover cover = Instantiate(manholeCoverPrefab, pt.position, pt.rotation);
+                _spawnedManholeObjects.Add(cover.gameObject);
+                manholeCovers.Add(cover);
+            }
+        }
+        else if (manholeCovers == null || manholeCovers.Count == 0)
         {
             manholeCovers = new List<ManholeCover>(ManholeCover.All);
         }
@@ -141,6 +169,20 @@ public class ManholeBossEnemy : Enemy
 
         // 초기 비주얼: 숨김 상태로 시작
         ApplyVisualForPhase(ManholeBossPhase.Hidden);
+    }
+
+    // 현재 진행 중인(이 보스가 속한) 스테이지의 enemySpawnPoints를 가져온다.
+    // StageManager.stages/CurrentStageIndex는 모든 클라이언트에서 동일한 값을 보므로
+    // (stages는 씬 데이터로 동일, CurrentStageIndex는 [Networked]) 클라이언트마다 다른 결과가 나오지 않는다.
+    private Transform[] GetCurrentStageSpawnPoints()
+    {
+        var stageManager = StageManager.Instance;
+        if (stageManager == null) return null;
+
+        int index = stageManager.CurrentStageIndex;
+        if (index < 0 || index >= stageManager.stages.Count) return null;
+
+        return stageManager.stages[index].enemySpawnPoints;
     }
 
     public override void Spawned()
@@ -446,6 +488,14 @@ public class ManholeBossEnemy : Enemy
         // 즉시 Despawn 하면 Dies 모션이 안 보이므로, 애니메이션 재생 후 디스폰한다.
         Rpc_PlayDeathAnim();
         StartCoroutine(DespawnAfterDeath());
+    }
+
+    // 보스가 디스폰/파괴될 때(승리, 강제 처치 등 모든 경로) 직접 스폰했던 맨홀들도 같이 정리한다.
+    private void OnDestroy()
+    {
+        foreach (var go in _spawnedManholeObjects)
+            if (go != null) Destroy(go);
+        _spawnedManholeObjects.Clear();
     }
 
     private IEnumerator DespawnAfterDeath()

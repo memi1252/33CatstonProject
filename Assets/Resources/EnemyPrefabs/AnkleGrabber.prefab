@@ -4090,6 +4090,8 @@ MonoBehaviour:
   dontMove: 0
   isBoss: 0
   despawnDelay: 0.12
+  manholeCoverPrefab: {fileID: 5568089917002586439, guid: 6e990a068958d654894539bcae46cebe,
+    type: 3}
   manholeCovers:
   - {fileID: 0}
   - {fileID: 0}
