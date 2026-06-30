@@ -30,7 +30,7 @@ MonoBehaviour:
   damageRatio: 1
   weaponDamage: 25
   tileSize: 10
-  attackSpeed: 10
+  attackSpeed: 1
   playerSpeed: 15
   projectileSpeed: 1
   projectileDis: 10

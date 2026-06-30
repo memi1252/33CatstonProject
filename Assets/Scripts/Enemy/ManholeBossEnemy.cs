@@ -37,6 +37,9 @@ public class ManholeBossEnemy : Enemy
     // manholeSpawnPoints로 직접 스폰한 맨홀들 — 보스가 사라질 때 같이 정리한다.
     private readonly List<GameObject> _spawnedManholeObjects = new List<GameObject>();
 
+    // StageManager가 맨홀을 미리 생성해서 등록했으면 true — Start()에서 중복 생성 생략
+    private bool _manholesInjected;
+
     [Header("외형(숨김/노출 토글 대상)")]
     [Tooltip("Hidden 상태에서 비활성화될 시각/콜라이더 루트. 비워두면 자신을 사용한다.")]
     public GameObject visualRoot;
@@ -78,6 +81,8 @@ public class ManholeBossEnemy : Enemy
     [Tooltip("(구버전 호환) minionPrefabs 가 비어있으면 이 단일 프리팹을 사용한다.")]
     public Enemy minionPrefab;
     public int maxAliveMinions = 4;
+    [Tooltip("보스 생애주기 동안 소환 가능한 잡몹의 총 누적 한도. 살아있는 수와 무관하게 한 번 도달하면 더 이상 소환하지 않는다.")]
+    public int maxTotalMinions = 50;
     public float minionSpawnInterval = 1.5f;
     public Vector3 minionSpawnOffset = new Vector3(0f, 0.5f, 0f);
 
@@ -134,6 +139,7 @@ public class ManholeBossEnemy : Enemy
     [Networked] private int currentManholeIndex { get; set; } = -1;
 
     private readonly List<Enemy> _aliveMinions = new List<Enemy>();
+    private int _totalSpawnedMinions;
     private Collider[] _bodyColliders;
 
     protected override void Start()
@@ -147,21 +153,24 @@ public class ManholeBossEnemy : Enemy
         // 필요 없는 순수 비주얼 마커라 Runner.Spawn 없이 각 클라이언트가 로컬로 만든다 — 스폰 포인트가
         // 스테이지 정의(씬 데이터)로 모든 클라이언트에 동일하므로 결과 순서도 일치해 Rpc_NotifyCover(index)가
         // 모든 클라에서 같은 맨홀을 가리킨다.
-        Transform[] spawnPoints = GetCurrentStageSpawnPoints();
-        if (spawnPoints != null && spawnPoints.Length > 0 && manholeCoverPrefab != null)
+        if (!_manholesInjected)
         {
-            manholeCovers = new List<ManholeCover>();
-            foreach (var pt in spawnPoints)
+            Transform[] spawnPoints = GetCurrentStageSpawnPoints();
+            if (spawnPoints != null && spawnPoints.Length > 0 && manholeCoverPrefab != null)
             {
-                if (pt == null) { manholeCovers.Add(null); continue; }
-                ManholeCover cover = Instantiate(manholeCoverPrefab, pt.position, pt.rotation);
-                _spawnedManholeObjects.Add(cover.gameObject);
-                manholeCovers.Add(cover);
+                manholeCovers = new List<ManholeCover>();
+                foreach (var pt in spawnPoints)
+                {
+                    if (pt == null) { manholeCovers.Add(null); continue; }
+                    ManholeCover cover = Instantiate(manholeCoverPrefab, pt.position, pt.rotation);
+                    _spawnedManholeObjects.Add(cover.gameObject);
+                    manholeCovers.Add(cover);
+                }
             }
-        }
-        else if (manholeCovers == null || manholeCovers.Count == 0)
-        {
-            manholeCovers = new List<ManholeCover>(ManholeCover.All);
+            else if (manholeCovers == null || manholeCovers.Count == 0)
+            {
+                manholeCovers = new List<ManholeCover>(ManholeCover.All);
+            }
         }
 
         if (visualRoot == null) visualRoot = gameObject;
@@ -235,6 +244,7 @@ public class ManholeBossEnemy : Enemy
     {
         CleanDeadMinions();
         if (_aliveMinions.Count >= maxAliveMinions) return;
+        if (_totalSpawnedMinions >= maxTotalMinions) return;
         if (manholeCovers.Count == 0) return;
 
         Enemy prefab = PickRandomMinionPrefab();
@@ -248,6 +258,7 @@ public class ManholeBossEnemy : Enemy
         if (minion != null)
         {
             _aliveMinions.Add(minion);
+            _totalSpawnedMinions++;
             SoundManager.Instance?.PlayEnemyMinionSpawn();
         }
     }
@@ -319,6 +330,8 @@ public class ManholeBossEnemy : Enemy
         {
             transform.position = cover.transform.position;
             NetworkPosition = transform.position;
+            // 텔레포트이므로 모든 클라이언트에서 Lerp 없이 즉시 스냅
+            Rpc_SnapPosition(cover.transform.position, cover.transform.rotation);
             Rpc_NotifyCover(chosen, true);
         }
 
@@ -442,6 +455,14 @@ public class ManholeBossEnemy : Enemy
 
         Phase = ManholeBossPhase.Submerging;
         phaseTimer = TickTimer.CreateFromSeconds(Runner, submergingDuration);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void Rpc_SnapPosition(Vector3 pos, Quaternion rot)
+    {
+        // 텔레포트: Lerp 없이 즉시 위치 확정
+        transform.position = pos;
+        transform.rotation = rot;
     }
 
     [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
@@ -671,6 +692,13 @@ public class ManholeBossEnemy : Enemy
             if (d < min) { min = d; closest = p.transform; }
         }
         return closest;
+    }
+
+    // StageManager가 미리 생성한 맨홀 리스트를 주입한다. Start() 전에 호출해야 한다.
+    public void SetManholeCovers(List<ManholeCover> covers)
+    {
+        _manholesInjected = true;
+        manholeCovers = new List<ManholeCover>(covers);
     }
 
     private void OnDrawGizmosSelected()

@@ -29,10 +29,10 @@ MonoBehaviour:
   targetAttribute: 4
   grade: 2
   damageRatio: 1
-  weaponDamage: 5
+  weaponDamage: 10
   tileSize: 7
-  attackSpeed: 0.5
-  playerSpeed: 20
-  projectileSpeed: 35
+  attackSpeed: 0.4
+  playerSpeed: 30
+  projectileSpeed: 40
   projectileDis: 50
   fireSound: {fileID: 8300000, guid: 686449a60be836447a7fffc268c09547, type: 3}

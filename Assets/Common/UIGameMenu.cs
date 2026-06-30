@@ -127,20 +127,24 @@ namespace Starter
 		public void DevMode_EnableSoloTest()
 		{
 			if (LobbyReadyManager.Instance == null) return;
-			LobbyReadyManager.Instance.SoloTestMode = true;
-			Debug.Log("[Cheat] F4: SoloTestMode 활성화 — 혼자서도 준비/시작 가능");
+			// 방장이 아니어도 적용되도록 RPC로 요청한다 (직접 대입하면 방장이 아닌 인스턴스에서는 무시됨).
+			LobbyReadyManager.Instance.RequestSoloTestMode();
+			Debug.Log("[Cheat] F4: SoloTestMode 활성화 요청 — 혼자서도 준비/시작 가능");
 		}
 
 		// 개발자 모드일 때 화면에 사용 가능한 치트키 목록을 항상 보여준다.
 		private void OnGUI()
 		{
-			bool devModeInGame = GameManager.Instance != null && GameManager.Instance.LocalPlayer != null && GameManager.Instance.LocalPlayer.Invincible;
-			bool devModeActive = GameManager.PendingInvincibleCheat || devModeInGame;
-			if (!devModeActive) return;
+			// Invincible 자체는 F5로 껐다 켰다 할 수 있으므로 메뉴 표시 여부는 항상 유지되는
+			// PendingInvincibleCheat(GBSWM으로 켠 개발자 모드 활성화 여부)로만 판단한다.
+			if (!GameManager.PendingInvincibleCheat) return;
 
+			bool devModeInGame = GameManager.Instance != null && GameManager.Instance.LocalPlayer != null;
+
+			bool invincibleOn = devModeInGame && GameManager.Instance.LocalPlayer.Invincible;
 			string text = devModeInGame
-				? "[개발자 모드]\nF1 : 체력 완전 회복\nF2 : 스테이지 강제 클리어 (낀 적 처치)\nF3 : 멈춘 증강/무기 선택 UI 강제 종료"
-				: "[개발자 모드 대기 중]\nF4 : 혼자서도 준비/시작 가능하게 (방 안에서)";
+				? $"[개발자 모드]\nF1 : 전원 체력 완전 회복\nF2 : 스테이지 강제 클리어 (낀 적 처치)\nF3 : 멈춘 증강/무기 선택 UI 강제 종료\nF4 : 혼자서도 진행 가능 (SoloTestMode)\nF5 : 전원 무적모드 {(invincibleOn ? "ON" : "OFF")} 토글\nF6 : 상태이상 꼬임(둔화 등) 강제 해제\nF7 : 보스 HP UI 강제 갱신\nF8 : 전원 최대 체력 +20\nF9 : 전원 공격력 +5"
+				: "[개발자 모드 대기 중]";
 
 			GUIStyle style = new GUIStyle(GUI.skin.box)
 			{
@@ -148,7 +152,8 @@ namespace Starter
 				fontSize = 16,
 				normal = { textColor = Color.yellow }
 			};
-			GUI.Box(new Rect(10, 10, 320, 110), text, style);
+			// 항목이 늘어난 만큼(F8/F9 추가) 박스 높이도 같이 늘린다.
+			GUI.Box(new Rect(10, 10, 320, 230), text, style);
 		}
 
 		public async void JoinRoom(string sessionName)
@@ -241,11 +246,8 @@ namespace Starter
 			if (Input.GetKeyDown(KeyCode.Escape))
 				ToggleRoomMenu();
 
-			// 개발자 모드(GBSWM 치트) 상태로 방 안(대기 화면)에 있으면 F4로 SoloTestMode를 켜서 혼자서도 시작 가능하게 한다.
-			if (inRoom && GameManager.PendingInvincibleCheat && Input.GetKeyDown(KeyCode.F4))
-			{
-				DevMode_EnableSoloTest();
-			}
+			// F4: 게임 안에서만 허용 (로비 대기실은 LobbyReadyManager가 살아있으므로 거기선 차단)
+			// 인게임 F4 처리는 GameManager.Update()에서 담당한다.
 
 			// 방 안 메뉴 패널이 열려있을 때 방 정보 갱신
 			if (inRoom && RoomMenuPanel != null && RoomMenuPanel.activeSelf)

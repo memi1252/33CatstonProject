@@ -27,6 +27,9 @@ public class UIManager : MonoBehaviour
     public Image weaponTimerFillImage;
     public TextMeshProUGUI weaponTimerText;
 
+    [Header("보스 HP UI")]
+    public BossHPUI bossHPUI;
+
     [Header("게임오버 / 클리어 UI")]
     public GameOverUI gameOverUI;
     public GameClearUI gameClearUI;

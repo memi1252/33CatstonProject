@@ -23212,7 +23212,7 @@ MonoBehaviour:
   rewardTimeout: 60
   weaponSelectOnStart: 1
   _CurrentStageIndex: -1
-  clearHealPercent: 0.2
+  clearHealPercent: 0.5
 --- !u!4 &1425251879
 Transform:
   m_ObjectHideFlags: 0

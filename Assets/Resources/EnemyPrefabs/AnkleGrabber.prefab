@@ -4082,7 +4082,7 @@ MonoBehaviour:
   _NetworkPosition: {x: 0, y: 0, z: 0}
   _NetworkRotation: {x: 0, y: 0, z: 0, w: 0}
   detectionMultiplier: 3
-  enemyData: {fileID: 11400000, guid: c038e696122bd9b4f9b272d96a2d3e7a, type: 2}
+  enemyData: {fileID: 11400000, guid: 8cf3565cfb171ec4cb1247a518049ced, type: 2}
   agent: {fileID: 0}
   dieEffect: {fileID: 0}
   alwaysChase: 1

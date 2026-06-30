@@ -25,7 +25,7 @@ MonoBehaviour:
   - targetAbilities:
       maxHp: 0
       maxMp: 0
-      damage: 20
+      damage: 50
       attackSpeed: 0
       moveSpeed: 0
       allDamage: 0
@@ -39,5 +39,5 @@ MonoBehaviour:
       boosDamage: 0
       boosReceived: 0
       boosHp: 0
-    ratio: 20
+    ratio: 50
   valueType: 2

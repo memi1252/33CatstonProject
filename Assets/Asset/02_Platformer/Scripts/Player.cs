@@ -152,7 +152,10 @@ namespace Starter.Platformer
 					maxMp += props.maxMp;
 				}
 				damage += props.damage;
-				attackSpeed = (attackSpeed + props.attackSpeed);
+				// moveSpeed/damageReceived와 같은 곱연산 방식으로 통일. 예전엔 덧셈이라
+				// "-50%" 증강 2개만 겹쳐도 1.0-0.5-0.5=0(바닥 0.05로 클램프)까지 떨어져
+				// 공격속도가 20배 가까이 느려지는 극단적인 결과가 나왔다.
+				attackSpeed *= (1 + props.attackSpeed);
 				moveSpeed *= (1 + props.moveSpeed);
 				allDamage += props.allDamage;
 				damageReceived *= (1 + props.damageReceived);
@@ -182,7 +185,9 @@ namespace Starter.Platformer
 			maxHp = Mathf.Max(maxHp, 1f);
 			maxMp = Mathf.Max(maxMp, 0f);
 			hp = Mathf.Min(hp, maxHp);
-			moveSpeed = Mathf.Max(moveSpeed, 1f);
+			// 기존 하한(1f = 기본 속도의 10%)은 "단단한 갑옷"(-90%) 같은 증강 하나만 걸려도
+			// 거의 멈춘 것처럼 느껴질 만큼 낮았다. 기본 속도(10f)의 30% 선까지만 떨어지게 완화.
+			moveSpeed = Mathf.Max(moveSpeed, 3f);
 			attackSpeed = Mathf.Max(attackSpeed, 0.05f);
 			damageReceived = Mathf.Max(damageReceived, 0.01f);
 			criticalChance = Mathf.Clamp01(criticalChance);
@@ -207,7 +212,10 @@ namespace Starter.Platformer
 					maxMp *= (1 + props.maxMp);
 				}
 				damage += props.damage;
-				attackSpeed = (attackSpeed + props.attackSpeed);
+				// moveSpeed/damageReceived와 같은 곱연산 방식으로 통일. 예전엔 덧셈이라
+				// "-50%" 증강 2개만 겹쳐도 1.0-0.5-0.5=0(바닥 0.05로 클램프)까지 떨어져
+				// 공격속도가 20배 가까이 느려지는 극단적인 결과가 나왔다.
+				attackSpeed *= (1 + props.attackSpeed);
 				moveSpeed *= (1 + props.moveSpeed);
 				allDamage += props.allDamage;
 				damageReceived *= (1 + props.damageReceived);
@@ -237,7 +245,10 @@ namespace Starter.Platformer
 				// 기존엔 props.attackSpeed / (attackSpeed / 100f) 였는데, attackSpeed가 0이 되는 순간
 				// 0으로 나누기가 발생해 NaN/Infinity로 깨지고(공격속도 무한대 등) 다른 두 적용 경로
 				// (ApplyContractBuff/ApplyImprintBuff)와도 식이 달라서 일관성이 없었다. 누적 방식으로 통일.
-				attackSpeed = (attackSpeed + props.attackSpeed);
+				// moveSpeed/damageReceived와 같은 곱연산 방식으로 통일. 예전엔 덧셈이라
+				// "-50%" 증강 2개만 겹쳐도 1.0-0.5-0.5=0(바닥 0.05로 클램프)까지 떨어져
+				// 공격속도가 20배 가까이 느려지는 극단적인 결과가 나왔다.
+				attackSpeed *= (1 + props.attackSpeed);
 				moveSpeed *= (1 + props.moveSpeed);
 				allDamage += props.allDamage;
 				damageReceived *= (1 + props.damageReceived);
@@ -292,11 +303,9 @@ namespace Starter.Platformer
 
 				GameManager.Instance.RPC_RegisterPlayerName(Runner.LocalPlayer, Nickname);
 
-				// 무적모드 치트는 방에 입장하기 전에 켜놓은 사람한테만 적용된다.
-				// 내 Player 오브젝트는 내가 StateAuthority를 가지므로 RPC 없이 바로 적용 가능.
+				// 무적모드 치트: 플래그를 소비하지 않고 유지해서 씬 전환 후 재스폰 시에도 계속 적용
 				if (GameManager.PendingInvincibleCheat)
 				{
-					GameManager.PendingInvincibleCheat = false;
 					Invincible = true;
 					ChatManager.Instance?.SendSystemMessage($"{Nickname}님에게 무적모드가 적용되었습니다.", Color.cyan);
 				}
@@ -602,6 +611,42 @@ public void TakeDamage(float _damage)
 					ChatManager.Instance.SendSystemMessage(Nickname + "님이 사망했습니다.", Color.red);
 				Debug.Log($"[Player 사망] 유저({Nickname})가 사망했습니다!");
 			}
+		}
+
+		/// <summary>
+		/// 치트(F6): 얼음 둔화 같은 상태이상이 꼬여서 멈춘 것처럼 보일 때, 진행 중인 상태이상을 강제로
+		/// 정리하고 스탯 하한선을 다시 적용한다. (이전에 있었던 "둔화 중첩으로 속도 0" 류의 버그가
+		/// 또 다른 형태로 재발해도 플레이어가 직접 풀 수 있게 하는 안전장치)
+		/// </summary>
+		public void CheatClearStuckStatus()
+		{
+			if (HasStateAuthority == false) return;
+			if (AttributeEffectApplier.Instance != null)
+				AttributeEffectApplier.Instance.CheatClearStatusEffects(this, v => moveSpeed = v);
+			ClampVitalStats();
+			Debug.Log($"[Cheat] F6: {Nickname} 상태이상 정리 + 스탯 하한 재적용 (moveSpeed={moveSpeed}, attackSpeed={attackSpeed})");
+		}
+
+		/// <summary>
+		/// 치트(F8): 최대 체력을 고정값만큼 늘린다. 늘어난 만큼 현재 체력도 같이 채워준다.
+		/// </summary>
+		public void CheatAddMaxHp(float amount)
+		{
+			if (HasStateAuthority == false) return;
+			maxHp += amount;
+			hp = Mathf.Min(maxHp, hp + amount);
+			ClampVitalStats();
+			Debug.Log($"[Cheat] F8: {Nickname} 최대 체력 +{amount} (maxHp={maxHp})");
+		}
+
+		/// <summary>
+		/// 치트(F9): 공격력을 고정값만큼 늘린다.
+		/// </summary>
+		public void CheatAddDamage(float amount)
+		{
+			if (HasStateAuthority == false) return;
+			damage += amount;
+			Debug.Log($"[Cheat] F9: {Nickname} 공격력 +{amount} (damage={damage})");
 		}
 
 		/// <summary>

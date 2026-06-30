@@ -59,7 +59,7 @@ MonoBehaviour:
   _NetworkPosition: {x: 0, y: 0, z: 0}
   _NetworkRotation: {x: 0, y: 0, z: 0, w: 0}
   detectionMultiplier: 3
-  enemyData: {fileID: 11400000, guid: 490918d6905d9884487677cc06498005, type: 2}
+  enemyData: {fileID: 11400000, guid: edd454e7ce5f45b6929d7d87563e53da, type: 2}
   agent: {fileID: 2512268448641870466}
   dieEffect: {fileID: 0}
   alwaysChase: 1

@@ -29,8 +29,8 @@ MonoBehaviour:
   grade: 2
   damageRatio: 1.5
   weaponDamage: 25
-  tileSize: 10
-  attackSpeed: 5
+  tileSize: 20
+  attackSpeed: 1.5
   playerSpeed: 10
   projectileSpeed: 1
   projectileDis: 1

@@ -171,15 +171,40 @@ namespace Starter.Platformer
 
                 return;
 
-			// 마우스가 UI(버튼 등) 위에 있을 때는 공격하지 않는다.
-			if (value.isPressed
-			    && UnityEngine.EventSystems.EventSystem.current != null
-			    && UnityEngine.EventSystems.EventSystem.current.IsPointerOverGameObject())
+			// 마우스가 버튼 등 "클릭 가능한" UI 위에 있을 때만 공격을 막는다.
+			// IsPointerOverGameObject()는 채팅창/증강 표시/팀원 정보 같은 비인터랙티브 표시용
+			// 패널 위에 있어도 true가 되어 평소 화면 어디서든 공격이 막히는 문제가 있었다.
+			if (value.isPressed && IsPointerOverInteractableUI())
 			{
 				return;
 			}
 
 			_input.Attack = value.isPressed;
+		}
+
+		private static readonly System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult> _uiRaycastResults
+			= new System.Collections.Generic.List<UnityEngine.EventSystems.RaycastResult>();
+
+		private bool IsPointerOverInteractableUI()
+		{
+			var eventSystem = UnityEngine.EventSystems.EventSystem.current;
+			if (eventSystem == null) return false;
+
+			var pointerData = new UnityEngine.EventSystems.PointerEventData(eventSystem)
+			{
+				position = Mouse.current != null ? Mouse.current.position.ReadValue() : Vector2.zero
+			};
+
+			_uiRaycastResults.Clear();
+			eventSystem.RaycastAll(pointerData, _uiRaycastResults);
+
+			foreach (var result in _uiRaycastResults)
+			{
+				// 버튼, 토글, 슬라이더, 입력창 등 실제로 클릭/조작 가능한 UI 위에 있을 때만 차단한다.
+				if (result.gameObject.GetComponentInParent<UnityEngine.UI.Selectable>() != null)
+					return true;
+			}
+			return false;
 		}
 
 		private Vector2 ClampLookRotation(Vector2 lookRotation)

@@ -192,17 +192,22 @@ public sealed class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 			Debug.Log("[TEST] 모든 죽은 플레이어 부활 요청");
 		}
 
-		// 무적모드 치트키 (F1~F12). 무적모드가 적용된 로컬 플레이어만 사용 가능.
-		if (LocalPlayer != null && LocalPlayer.HasInputAuthority && LocalPlayer.Invincible)
+		// 치트키 (F1~F5). 개발자 모드(GBSWM 입력으로 PendingInvincibleCheat가 켜진 상태)가 활성화된
+		// 로컬 플레이어만 사용 가능. Invincible 자체를 게이트로 쓰면 F5로 무적을 끄는 순간
+		// 나머지 치트키까지 전부 막혀버리므로, 무적 여부와 무관하게 유지되는 PendingInvincibleCheat로 게이트한다.
+		if (LocalPlayer != null && LocalPlayer.HasInputAuthority && PendingInvincibleCheat)
 		{
 			if (Input.GetKeyDown(KeyCode.F1))
 			{
-				LocalPlayer.HealPercent(1f);
-				Debug.Log("[Cheat] F1: 체력 완전 회복");
+				// 누른 사람만이 아니라 전원의 체력을 회복시킨다 (Shared 모드라 각자 자기 Player에만
+				// 적용 가능하므로 RpcTargets.All로 보내 모든 클라이언트가 각자 자기 Player를 회복).
+				RPC_CheatHealAllPlayers();
+				Debug.Log("[Cheat] F1: 전원 체력 완전 회복");
 			}
 
 			if (Input.GetKeyDown(KeyCode.F2))
 			{
+				// StageManager.CheatForceClearStage 내부에서 RPC로 방장에게 요청하므로 방장이 아니어도 동작한다.
 				StageManager.Instance?.CheatForceClearStage();
 				Debug.Log("[Cheat] F2: 스테이지 강제 클리어 (맵 밖/공중에 낀 적도 강제 처치)");
 			}
@@ -212,6 +217,51 @@ public sealed class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 				BuffManager.Instance?.CheatForceCloseUI();
 				WeaponManager.Instance?.CheatForceCloseUI();
 				Debug.Log("[Cheat] F3: 멈춰있는 증강/무기 선택 UI 강제 종료");
+			}
+
+			if (Input.GetKeyDown(KeyCode.F4))
+			{
+				// 게임 씬에서는 LobbyReadyManager가 없으므로 정적 플래그로 예약
+				// → 로비로 돌아갈 때 LobbyReadyManager.Spawned()에서 자동 RPC 요청
+				LobbyReadyManager.PendingSoloMode = true;
+				// 방장이 아니어도 적용되도록 RPC로 요청 (직접 대입은 방장이 아닌 인스턴스에서 무시됨)
+				if (LobbyReadyManager.Instance != null)
+					LobbyReadyManager.Instance.RequestSoloTestMode();
+				Debug.Log("[Cheat] F4: SoloTestMode 활성화 요청");
+			}
+
+			if (Input.GetKeyDown(KeyCode.F5))
+			{
+				// 개발자 모드(치트 메뉴) 자체는 끄지 않고 무적 여부만 토글한다.
+				// 누른 사람만이 아니라 방에 있는 전원에게 적용되도록 RPC로 보낸다.
+				RPC_CheatToggleInvincibleAll();
+				Debug.Log("[Cheat] F5: 전원 무적모드 토글");
+			}
+
+			if (Input.GetKeyDown(KeyCode.F6))
+			{
+				// 둔화 중첩 등으로 속도가 꼬여서 멈춘 것처럼 보이는 부류의 버그에 대한 안전장치.
+				LocalPlayer.CheatClearStuckStatus();
+			}
+
+			if (Input.GetKeyDown(KeyCode.F8))
+			{
+				// 전원의 최대 체력을 20씩 늘린다.
+				RPC_CheatAddMaxHpAll(20f);
+				Debug.Log("[Cheat] F8: 전원 최대 체력 +20");
+			}
+
+			if (Input.GetKeyDown(KeyCode.F9))
+			{
+				// 전원의 공격력을 5씩 늘린다.
+				RPC_CheatAddDamageAll(5f);
+				Debug.Log("[Cheat] F9: 전원 공격력 +5");
+			}
+
+			if (Input.GetKeyDown(KeyCode.F7))
+			{
+				// 보스 HP UI가 타이밍 문제로 안 떴을 때 강제로 다시 표시.
+				StageManager.Instance?.CheatRefreshBossUI();
 			}
 		}
 	}
@@ -238,6 +288,35 @@ public sealed class GameManager : NetworkBehaviour, INetworkRunnerCallbacks
 	private void RPC_RespawnPlayer([RpcTarget] PlayerRef playerRef, Vector3 position, bool resetCoins)
 	{
 		LocalPlayer.Respawn(position, resetCoins);
+	}
+
+	// 치트(F1): 전원 체력 완전 회복. Shared 모드에서는 각자 자기 Player에만 StateAuthority가 있으므로
+	// RpcSources.All/RpcTargets.All로 보내 모든 클라이언트가 각자 자기 LocalPlayer를 회복하게 한다.
+	[Rpc(RpcSources.All, RpcTargets.All)]
+	private void RPC_CheatHealAllPlayers()
+	{
+		if (LocalPlayer != null) LocalPlayer.HealPercent(1f);
+	}
+
+	// 치트(F5): 전원 무적모드 토글. 아래 치트들과 같은 이유로 RpcSources.All/RpcTargets.All 사용.
+	[Rpc(RpcSources.All, RpcTargets.All)]
+	private void RPC_CheatToggleInvincibleAll()
+	{
+		if (LocalPlayer != null) LocalPlayer.Invincible = !LocalPlayer.Invincible;
+	}
+
+	// 치트(F8): 전원 최대 체력 증가.
+	[Rpc(RpcSources.All, RpcTargets.All)]
+	private void RPC_CheatAddMaxHpAll(float amount)
+	{
+		LocalPlayer?.CheatAddMaxHp(amount);
+	}
+
+	// 치트(F9): 전원 공격력 증가.
+	[Rpc(RpcSources.All, RpcTargets.All)]
+	private void RPC_CheatAddDamageAll(float amount)
+	{
+		LocalPlayer?.CheatAddDamage(amount);
 	}
 
 	private void OnDrawGizmosSelected()

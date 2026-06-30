@@ -9,6 +9,9 @@ public class LobbyReadyManager : NetworkBehaviour
 {
     public static LobbyReadyManager Instance { get; private set; }
 
+    // 게임 씬에서 F4를 눌렀을 때 다음 로비 세션에 자동 적용되도록 보존하는 플래그
+    public static bool PendingSoloMode = false;
+
     [Header("Game Start")]
     [Tooltip("최소 시작 인원")]
     public int MinPlayers = 2;
@@ -41,10 +44,33 @@ public class LobbyReadyManager : NetworkBehaviour
         if (Instance == this) Instance = null;
     }
 
+    // 누가 눌렀든(방장 여부 무관) 적용되도록 StateAuthority(방장)에게 RPC로 요청한다.
+    // SoloTestMode 자체를 로컬에서 직접 대입하면, FixedUpdateNetwork의 모든 체크가
+    // HasStateAuthority인 인스턴스 기준으로만 동작하므로 방장이 아닌 클라이언트가 누르면 아무 효과가 없었다.
+    public void RequestSoloTestMode()
+    {
+        RPC_SetSoloTestMode(true);
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_SetSoloTestMode(bool value)
+    {
+        SoloTestMode = value;
+        Debug.Log($"[Cheat] SoloTestMode {(value ? "활성화" : "비활성화")} (요청자 무관, 방장에서 적용)");
+    }
+
     public override void Spawned()
     {
         // 등록은 FixedUpdateNetwork에서 ActivePlayers 기준으로 일괄 처리.
         // 여기서 LocalPlayer를 미리 넣으면 클라이언트 입장 타이밍에 PlayerRef.None이 섞이는 경우가 있음.
+
+        // 게임 씬에서 F4로 예약된 경우 자동 적용. RPC는 Spawned() 이후에만 보낼 수 있어 여기서 처리한다.
+        if (PendingSoloMode)
+        {
+            PendingSoloMode = false;
+            RequestSoloTestMode();
+            Debug.Log("[Cheat] SoloTestMode 자동 적용 (게임 씬에서 F4 예약됨)");
+        }
     }
 
     public override void FixedUpdateNetwork()

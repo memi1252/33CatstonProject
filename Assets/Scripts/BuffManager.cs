@@ -140,7 +140,16 @@ public class BuffManager : NetworkBehaviour
     }
 
     // 치트(F3): 증강 투표 UI가 어떤 이유로든 안 닫히고 멈춰있을 때 강제로 닫고 입력을 복구한다.
+    // 예전엔 로컬에서만 닫고, 네트워크 상태(isContractBuffActive 등) 초기화는 누른 사람이 씬 권한자(호스트)일
+    // 때만 실행됐다. 즉 호스트가 아닌 사람이 F3을 누르면 자기 화면만 닫히고 다른 사람 화면은 그대로 남아있는
+    // 버그가 있었다. RPC로 바꿔서 누가 눌러도 전원에게 똑같이 적용되게 한다.
     public void CheatForceCloseUI()
+    {
+        RPC_CheatForceCloseUI();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.All)]
+    private void RPC_CheatForceCloseUI()
     {
         _hasChosenContract = false;
         contractVoteTime = contractVoteTimeMax;
@@ -261,6 +270,21 @@ public class BuffManager : NetworkBehaviour
                 }
             }
         }
+
+        // 안전망: 호스트가 isImprintBuffActive/isContractBuffActive를 false로 되돌리는 네트워크 갱신이
+        // 클라이언트의 로컬 결과발표 타이머가 끝나기 "전에" 먼저 도착하면, 위 블록들이 isImprintBuffActive/
+        // isContractBuffActive가 true일 때만 닫기 로직을 실행하므로 그 프레임에 닫기 코드 자체가 스킵되어
+        // 클라이언트 화면에 버프 UI가 영원히 남는 문제가 있었다. 두 플래그가 모두 꺼졌는데 UI가 아직
+        // 떠 있다면 여기서 무조건 닫아서 어떤 타이밍에도 클라이언트에서 UI가 닫히도록 보장한다.
+        if (!isContractBuffActive && !isImprintBuffActive)
+        {
+            if (UIManager.Instance != null && UIManager.Instance.buffUI != null && UIManager.Instance.buffUI.activeSelf)
+            {
+                UIManager.Instance.buffUI.SetActive(false);
+                EnablePlayerInput();
+            }
+            _localImprintRevealStarted = false;
+        }
     }
 
     private void ImprintFinishVoting()
@@ -332,7 +356,11 @@ public class BuffManager : NetworkBehaviour
     }
 
     // 각인 버프 적용: 모든 클라가 받아 자기 플레이어에만 적용 (Shared 모드 권한 규칙)
-private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
+    // [Rpc] 어트리뷰트가 빠져있어서 실제로는 그냥 일반 메서드 호출이었다. 호출부(ImprintFinishVoting)가
+    // 호스트(씬 권한자)에서만 실행되므로, 이 메서드도 호스트에서만 돌고 다른 클라이언트에는 전혀 전파되지
+    // 않아 "각인 버프가 호스트한테만 적용된다"는 버그의 원인이었다.
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ApplyImprintBuffs(int winnerIndex, int[] conditionIndices)
     {
         Player me = GetLocalPlayer();
         if (me == null) return;

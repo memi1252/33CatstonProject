@@ -43,6 +43,12 @@ public class AttributeEffectApplier : NetworkBehaviour
     // 대상별로 진행 중인 화염 도트 코루틴을 추적해, 새로 불이 붙으면 중첩 대신 갱신한다.
     private readonly System.Collections.Generic.Dictionary<IDamageable, Coroutine> _activeFireDoTs = new();
 
+    // 대상별 둔화 상태 추적: 이미 둔화 중일 때 또 얼음 공격을 맞아도 속도를 또 곱하지 않고
+    // (원래 속도 * (1 - iceSlowAmount)) 값을 유지한 채 지속시간만 갱신한다.
+    // 예전엔 맞을 때마다 "현재(이미 느려진) 속도"에 다시 (1-iceSlowAmount)를 곱해서 중첩 적용했기 때문에,
+    // 연속으로 여러 번 맞으면 속도가 기하급수적으로 줄어 0에 가까워져 캐릭터가 움직이지 못하는 버그가 있었다.
+    private readonly System.Collections.Generic.Dictionary<IDamageable, (Coroutine co, float originalSpeed)> _activeIceSlows = new();
+
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -84,10 +90,10 @@ public class AttributeEffectApplier : NetworkBehaviour
                 {
                     // 타겟이 플레이어인 경우
                     if (mb.TryGetComponent<Starter.Platformer.Player>(out var p))
-                        StartCoroutine(SlowPlayer(p));
+                        ApplyIceSlow(target, p.moveSpeed, () => p != null ? p.moveSpeed : 0f, v => { if (p != null) p.moveSpeed = v; });
                     // 타겟이 적인 경우
                     else if (mb.TryGetComponent<Enemy>(out var e))
-                        StartCoroutine(SlowEnemy(e));
+                        ApplyIceSlow(target, e.agent.speed, () => e != null && e.agent != null ? e.agent.speed : 0f, v => { if (e != null && e.agent != null) e.agent.speed = v; });
                 }
                 break;
             case TargetAttribute.Electric:
@@ -151,22 +157,51 @@ public class AttributeEffectApplier : NetworkBehaviour
         if (target != null) _activeFireDoTs.Remove(target);
     }
 
-    private IEnumerator SlowPlayer(Starter.Platformer.Player player)
+    // target: Dictionary 키로만 사용 (플레이어/적 공용 식별자), currentSpeed: 첫 적용 시점의 현재 속도(=원래 속도),
+    // getSpeed/setSpeed: 플레이어냐 적이냐에 따라 다른 속도 필드를 다루기 위한 콜백.
+    private void ApplyIceSlow(IDamageable target, float currentSpeed, System.Func<float> getSpeed, System.Action<float> setSpeed)
     {
-        if (player == null) yield break;
-        float originalSpeed = player.moveSpeed;
-        player.moveSpeed *= (1f - iceSlowAmount);
-        yield return new WaitForSeconds(iceSlowDuration);
-        if (player != null) player.moveSpeed = originalSpeed;
+        if (_activeIceSlows.TryGetValue(target, out var existing))
+        {
+            // 이미 둔화 중: 속도를 또 곱하지 않고 지속시간만 갱신한다.
+            if (existing.co != null) StopCoroutine(existing.co);
+            var refreshed = StartCoroutine(IceSlowRoutine(target, setSpeed, existing.originalSpeed));
+            _activeIceSlows[target] = (refreshed, existing.originalSpeed);
+        }
+        else
+        {
+            float originalSpeed = currentSpeed;
+            setSpeed(originalSpeed * (1f - iceSlowAmount));
+            var co = StartCoroutine(IceSlowRoutine(target, setSpeed, originalSpeed));
+            _activeIceSlows[target] = (co, originalSpeed);
+        }
     }
 
-    private IEnumerator SlowEnemy(Enemy enemy)
+    private IEnumerator IceSlowRoutine(IDamageable target, System.Action<float> setSpeed, float originalSpeed)
     {
-        if (enemy == null) yield break;
-        float originalSpeed = enemy.agent.speed;
-        enemy.agent.speed *= (1f - iceSlowAmount);
         yield return new WaitForSeconds(iceSlowDuration);
-        if (enemy != null) enemy.agent.speed = originalSpeed;
+        setSpeed(originalSpeed);
+        _activeIceSlows.Remove(target);
+    }
+
+    /// <summary>
+    /// 치트(F6): 대상에게 걸려있는 화염 도트/얼음 둔화를 강제로 즉시 해제한다.
+    /// 둔화는 원래 속도로 복원하고, 도트는 더 이상 틱이 들어가지 않게 코루틴만 정지한다.
+    /// </summary>
+    public void CheatClearStatusEffects(IDamageable target, System.Action<float> setSpeed)
+    {
+        if (_activeIceSlows.TryGetValue(target, out var slow))
+        {
+            if (slow.co != null) StopCoroutine(slow.co);
+            setSpeed(slow.originalSpeed);
+            _activeIceSlows.Remove(target);
+        }
+
+        if (_activeFireDoTs.TryGetValue(target, out var fireCo))
+        {
+            if (fireCo != null) StopCoroutine(fireCo);
+            _activeFireDoTs.Remove(target);
+        }
     }
 
     private void ApplyElectricChainLogic(Vector3 origin, float baseDamage, GameObject owner)

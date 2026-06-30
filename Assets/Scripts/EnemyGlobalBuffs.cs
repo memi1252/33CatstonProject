@@ -1,3 +1,5 @@
+using UnityEngine;
+
 /// <summary>
 /// 각인/계약으로 적용된 적 전역 버프 누적값.
 /// 모든 클라이언트에서 RPC_ApplyImprintBuffs 이후 동일하게 갱신되므로 static으로 관리.
@@ -26,7 +28,10 @@ public static class EnemyGlobalBuffs
     public static void SetStageScaling(int stageIndex)
     {
         int n = stageIndex < 0 ? 0 : stageIndex;
-        stageDamageBonus = n * 0.12f; // 스테이지마다 데미지 +12%
+        // 데미지는 스테이지마다 +12%씩 상한 없이 계속 누적돼서, 후반 스테이지(20+)에선
+        // 기본 데미지의 3배가 넘어가는데 플레이어 체력은 증강으로 골라야만 느는 구조라
+        // 갈수록 일방적으로 세진다는 문제가 있었다. 증가율을 더 낮추고 상한(+100%)을 둔다.
+        stageDamageBonus = Mathf.Min(n * 0.05f, 1.0f);
         stageHealthBonus = n * 0.15f; // 스테이지마다 체력 +15%
         stageSpeedBonus = n * 0.03f;  // 스테이지마다 이동속도 +3% (너무 빨라지지 않게 적게)
     }

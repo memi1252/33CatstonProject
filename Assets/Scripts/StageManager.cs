@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Fusion;
@@ -40,6 +41,8 @@ public class StageManager : NetworkBehaviour
         public int maxEnemies = 12;
         [Tooltip("보스 스테이지에서 스폰할 보스 프리팹")]
         public Enemy bossPrefab;
+        [Tooltip("보스 HP UI에 표시할 이름. 비워두면 stageName 사용.")]
+        public string bossDisplayName;
 
         [Header("보상 (전투 클리어 직후 그 자리에서 오픈)")]
         public StageReward rewardOnClear = StageReward.None;
@@ -70,6 +73,8 @@ public class StageManager : NetworkBehaviour
     public float weaponRewardWait = 16f;
     [Tooltip("보상(투표)이 비정상 종료될 때를 대비한 최대 대기 시간(초).")]
     public float rewardTimeout = 60f;
+    [Tooltip("보스 스테이지: 사전 잡몹 전멸 후 보스 등장까지 대기 시간(초).")]
+    public float preBossDelay = 2f;
 
     [Header("게임 시작 무기 선택")]
     [Tooltip("게임 씬 진입 시 첫 스테이지 전에 무기 선택 UI를 열지 여부")]
@@ -90,6 +95,10 @@ public class StageManager : NetworkBehaviour
     // DespawnAllEnemies 후 1틱 기다렸다가 스폰 (이전 스테이지 잡몹 잔존 방지)
     private int _pendingSpawnStageIndex = -1;
     private TickTimer _spawnDelayTimer;
+
+    // 보스 스테이지: 맨홀 스폰 후 보스 등장 대기
+    private TickTimer _preBossDelayTimer;
+    private readonly List<ManholeCover> _pendingManholes = new List<ManholeCover>();
 
     private StageReward _rewardKind;
     private bool _rewardSawActive;     // 보상 투표가 실제로 시작됨(active==true)을 확인했는지
@@ -159,6 +168,17 @@ public class StageManager : NetworkBehaviour
             return; // 무기 선택 중에는 다른 로직 정지
         }
 
+        // 전투 중뿐 아니라 보상/증강 투표 중(팀킬 등으로) 전원이 죽는 경우도 게임오버로 잡아야 한다.
+        // 기존엔 TickCombat 안에서만 전멸 체크를 해서, 스테이지 클리어 후 각인/계약 투표 중에
+        // 전원이 사망하면 게임오버 화면이 영영 뜨지 않는 문제가 있었다.
+        if ((_phase == StagePhase.Combat || _phase == StagePhase.Reward) && AllPlayersDead())
+        {
+            _combatActive = false;
+            _phase = StagePhase.Cleared;
+            RPC_GameOver();
+            return;
+        }
+
         TickPendingSpawn();
 
         switch (_phase)
@@ -224,17 +244,10 @@ public class StageManager : NetworkBehaviour
 
         if (def.isBoss)
         {
-            SpawnBoss(def);
-            if (_aliveEnemies.Count > 0)
-            {
-                _phase = StagePhase.Combat;
-                _combatActive = true;
-            }
-            else
-            {
-                Debug.LogError($"[StageManager] {def.stageName}: 보스 스테이지인데 보스가 스폰되지 않았습니다.");
-                OnBossDefeated();
-            }
+            // 스폰 포인트에 맨홀 먼저 생성 → 딜레이 후 보스 스폰
+            SpawnManholes(def);
+            _preBossDelayTimer = TickTimer.CreateFromSeconds(Runner, preBossDelay);
+            _phase = StagePhase.Combat; // TickCombat에서 타이머 감시
         }
         else
         {
@@ -321,26 +334,115 @@ public class StageManager : NetworkBehaviour
         Debug.Log($"[StageManager] {def.stageName}: 적 {_aliveEnemies.Count}마리 스폰");
     }
 
-private void SpawnBoss(StageDefinition def)
+    // 보스 스테이지 1단계: 스폰 포인트마다 맨홀 생성 (모든 클라이언트에서 동일하게 로컬 생성)
+    private void SpawnManholes(StageDefinition def)
+    {
+        _pendingManholes.Clear();
+        if (def.bossPrefab == null) return;
+
+        // 보스 프리팹에서 manholeCoverPrefab 읽기
+        var bossPrefabScript = def.bossPrefab as ManholeBossEnemy;
+        if (bossPrefabScript == null || bossPrefabScript.manholeCoverPrefab == null) return;
+        if (def.enemySpawnPoints == null || def.enemySpawnPoints.Length == 0) return;
+
+        RPC_SpawnManholes(CurrentStageIndex);
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_SpawnManholes(int stageIndex)
+    {
+        if (stageIndex < 0 || stageIndex >= stages.Count) return;
+        StageDefinition def = stages[stageIndex];
+        if (def.bossPrefab == null) return;
+
+        var bossPrefabScript = def.bossPrefab as ManholeBossEnemy;
+        if (bossPrefabScript == null || bossPrefabScript.manholeCoverPrefab == null) return;
+
+        _pendingManholes.Clear();
+        foreach (var pt in def.enemySpawnPoints)
+        {
+            if (pt == null) { _pendingManholes.Add(null); continue; }
+            ManholeCover cover = Instantiate(bossPrefabScript.manholeCoverPrefab, pt.position, pt.rotation);
+            _pendingManholes.Add(cover);
+        }
+        Debug.Log($"[StageManager] 보스 스테이지 맨홀 {_pendingManholes.Count}개 생성");
+    }
+
+    // 보스 스테이지 2단계: 맨홀 중 하나에 보스 스폰 후 맨홀 리스트 등록
+    private void SpawnBossAtManhole(StageDefinition def)
     {
         if (def.bossPrefab == null)
         {
             Debug.LogWarning($"[StageManager] {def.stageName}: bossPrefab 이 비어있습니다.");
             return;
         }
-        Vector3 pos = (def.enemySpawnPoints != null && def.enemySpawnPoints.Length > 0)
-            ? def.enemySpawnPoints[0].position : transform.position;
-        Quaternion rot = (def.enemySpawnPoints != null && def.enemySpawnPoints.Length > 0)
-            ? def.enemySpawnPoints[0].rotation : Quaternion.identity;
 
-        Enemy boss = Runner.Spawn(def.bossPrefab, pos, rot);
+        // 스폰 위치: 스폰 포인트 중 랜덤 (없으면 [0], 없으면 자기 위치)
+        Vector3 pos = transform.position;
+        Quaternion rot = Quaternion.identity;
+        if (def.enemySpawnPoints != null && def.enemySpawnPoints.Length > 0)
+        {
+            int pick = Random.Range(0, def.enemySpawnPoints.Length);
+            pos = def.enemySpawnPoints[pick].position;
+            rot = def.enemySpawnPoints[pick].rotation;
+        }
+
+        // onBeforeSpawned: Spawned() 호출 전에 isBoss=true를 설정 → 체력 계산 시 보스 배율 적용
+        Enemy boss = Runner.Spawn(def.bossPrefab, pos, rot,
+            onBeforeSpawned: (runner, obj) =>
+            {
+                var e = obj.GetComponent<Enemy>();
+                if (e != null) e.isBoss = true;
+            });
+
         if (boss != null)
         {
-            boss.isBoss = true;
             _aliveEnemies.Add(boss);
+
+            // 미리 생성된 맨홀 리스트를 보스에게 등록 (보스의 Start()에서 중복 생성하지 않도록)
+            if (boss is ManholeBossEnemy manholeBoss && _pendingManholes.Count > 0)
+            {
+                manholeBoss.SetManholeCovers(_pendingManholes);
+            }
+
             SoundManager.Instance?.PlayEnemyBossSpawn();
             SoundManager.Instance?.PlayBossBGM();
+
+            // 보스 HP UI 표시. 이 메서드 자체가 StateAuthority(호스트)의 FixedUpdateNetwork에서만
+            // 실행되므로, RPC 없이 직접 ShowBoss를 부르면 호스트 화면에만 떠서 다른 클라이언트는 보스
+            // HP 바를 영영 못 보는 문제가 있었다 (보스방마다 누가 호스트인지에 따라 다르게 보였던 원인).
+            // → RPC로 모든 클라이언트에 전파한다.
+            string displayName = string.IsNullOrEmpty(def.bossDisplayName) ? def.stageName : def.bossDisplayName;
+            RPC_ShowBossHP(boss.Object.Id, displayName);
         }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_ShowBossHP(NetworkId bossId, string bossName)
+    {
+        // Shared 모드에서는 이 RPC가 보스 NetworkObject의 스폰 복제보다 클라이언트에 먼저 도착할 수
+        // 있다. 그 경우 FindObject가 그 순간 null을 반환해 ShowBoss가 조용히 스킵되고, 이후로는
+        // 다시 시도하지 않아 클라이언트 화면에 보스 HP UI가 영영 안 뜨는 문제가 있었다.
+        // → 오브젝트가 실제로 나타날 때까지 몇 프레임 재시도한다.
+        StartCoroutine(ShowBossHPWhenReady(bossId, bossName));
+    }
+
+    private IEnumerator ShowBossHPWhenReady(NetworkId bossId, string bossName)
+    {
+        float timeout = 3f;
+        while (timeout > 0f)
+        {
+            NetworkObject bossObj = Runner.FindObject(bossId);
+            Enemy boss = bossObj != null ? bossObj.GetComponent<Enemy>() : null;
+            if (boss != null)
+            {
+                UIManager.Instance?.bossHPUI?.ShowBoss(boss, bossName);
+                yield break;
+            }
+            yield return null;
+            timeout -= Time.deltaTime;
+        }
+        Debug.LogWarning($"[StageManager] RPC_ShowBossHP: {bossId} 보스 오브젝트를 찾지 못해 보스 HP UI를 표시하지 못했습니다.");
     }
 
     // ===== 전투 진행 =====
@@ -361,21 +463,33 @@ private void SpawnBoss(StageDefinition def)
 
     private void TickCombat()
     {
-        if (!_combatActive) return;
-
-        // 전투 중 모든 플레이어가 사망하면 게임오버
-        if (AllPlayersDead())
+        // 보스 스테이지: 맨홀 스폰 후 딜레이 → 보스 등장
+        if (_preBossDelayTimer.IsRunning)
         {
-            _combatActive = false;
-            _phase = StagePhase.Cleared;
-            RPC_GameOver();
+            if (!_preBossDelayTimer.Expired(Runner)) return;
+            _preBossDelayTimer = default;
+            StageDefinition bsDef = stages[CurrentStageIndex];
+            SpawnBossAtManhole(bsDef);
+            if (_aliveEnemies.Count > 0)
+            {
+                _combatActive = true;
+            }
+            else
+            {
+                Debug.LogError($"[StageManager] {bsDef.stageName}: 보스가 스폰되지 않았습니다.");
+                OnBossDefeated();
+            }
             return;
         }
+
+        if (!_combatActive) return;
+
+        // 전멸 체크는 FixedUpdateNetwork 상단에서 전 단계 공통으로 처리한다 (보상/투표 중 전멸 대응).
 
         CleanDeadEnemies();
         if (_aliveEnemies.Count > 0) return;
 
-        // 전멸 → 클리어
+        // 전멸
         _combatActive = false;
         StageDefinition def = stages[CurrentStageIndex];
 
@@ -390,14 +504,42 @@ private void SpawnBoss(StageDefinition def)
 
     /// <summary>
     /// 치트(F2): 현재 스테이지의 적을 전부 즉사시켜 클리어를 강제한다. 기존 전멸 처리 흐름(TickCombat)을 그대로 탄다.
+    /// 방장이 아니어도 동작하도록 StateAuthority(방장)에게 RPC로 요청한다 (_aliveEnemies는 방장만 갖고 있음).
     /// </summary>
     public void CheatForceClearStage()
     {
-        if (!HasStateAuthority) return;
+        RPC_CheatForceClearStage();
+    }
+
+    [Rpc(RpcSources.All, RpcTargets.StateAuthority)]
+    private void RPC_CheatForceClearStage()
+    {
         foreach (var e in _aliveEnemies.ToArray())
         {
             if (e != null) e.CheatKill();
         }
+    }
+
+    /// <summary>
+    /// 치트(F7): 보스 HP UI가 (네트워크 타이밍 등으로) 안 떴을 때 로컬에서 강제로 다시 띄운다.
+    /// _aliveEnemies는 방장만 채워져 있으므로, 어떤 클라이언트에서든 동작하도록 씬에서 직접 살아있는
+    /// 보스를 찾는다. RPC가 필요 없다 — 보스 HP UI는 각자 자기 화면에 표시하는 로컬 UI이기 때문이다.
+    /// </summary>
+    public void CheatRefreshBossUI()
+    {
+        Enemy[] all = FindObjectsByType<Enemy>(FindObjectsSortMode.None);
+        foreach (var e in all)
+        {
+            if (e == null || !e.isBoss || e.isDead) continue;
+
+            string displayName = (CurrentStageIndex >= 0 && CurrentStageIndex < stages.Count)
+                ? (string.IsNullOrEmpty(stages[CurrentStageIndex].bossDisplayName) ? stages[CurrentStageIndex].stageName : stages[CurrentStageIndex].bossDisplayName)
+                : "Boss";
+            UIManager.Instance?.bossHPUI?.ShowBoss(e, displayName);
+            Debug.Log($"[Cheat] F7: 보스 HP UI 강제 갱신 ({e.name})");
+            return;
+        }
+        Debug.Log("[Cheat] F7: 살아있는 보스를 찾지 못했습니다.");
     }
 
     private void CleanDeadEnemies()
@@ -471,7 +613,7 @@ private void SpawnBoss(StageDefinition def)
 
     [Header("클리어 보상")]
     [Tooltip("스테이지/보스 클리어 시 최대 체력 대비 회복 비율")]
-    public float clearHealPercent = 0.2f;
+    public float clearHealPercent = 0.5f;
 
     private void OnStageFullyCleared()
     {
@@ -483,9 +625,13 @@ private void SpawnBoss(StageDefinition def)
         Announce($"[{stages[CurrentStageIndex].stageName}] 클리어! 포탈이 열렸습니다.");
     }
 
-private void OnBossDefeated()
+    private void OnBossDefeated()
     {
         _phase = StagePhase.Cleared;
+
+        // 보스 BGM 정지 + HP UI 숨김 (모든 클라이언트)
+        RPC_OnBossDefeatedVisuals();
+
         if (CurrentStageIndex >= stages.Count - 1)
         {
             RPC_RunComplete();
@@ -497,6 +643,13 @@ private void OnBossDefeated()
             Announce($"[{stages[CurrentStageIndex].stageName}] 보스 처치! 포탈이 열렸습니다.");
             SoundManager.Instance?.PlayStageClear();
         }
+    }
+
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_OnBossDefeatedVisuals()
+    {
+        SoundManager.Instance?.StopBGM();
+        UIManager.Instance?.bossHPUI?.HideBoss();
     }
 
     // 스테이지/보스 클리어 보상: 모든 클라이언트가 각자 자기 플레이어에게만 회복을 적용한다 (Shared 모드 권한 규칙).
@@ -582,12 +735,23 @@ private void OnBossDefeated()
     }
 
     // ===== 런 클리어 =====
-private void RPC_RunComplete()
+    // [Rpc] 어트리뷰트가 빠져있어서 실제로는 일반 메서드 호출이었다. 호출부(OnBossDefeated)가
+    // 호스트(StateAuthority)에서만 실행되므로 이 메서드도 호스트에서만 돌아, 최종 보스를 잡아도
+    // 클리어 UI가 호스트한테만 뜨고 클라이언트에는 전혀 안 뜨는 버그의 원인이었다.
+    [Rpc(RpcSources.StateAuthority, RpcTargets.All)]
+    private void RPC_RunComplete()
     {
-        if (ChatManager.Instance != null)
-            ChatManager.Instance.SendSystemMessage("최종 보스 처치! 스테이지 클리어!", Color.yellow);
-        if (GameManager.Instance != null)
-            GameManager.Instance.ReviveAllDeadPlayers();
+        // ChatManager.SendSystemMessage / GameManager.ReviveAllDeadPlayers는 그 자체가 내부적으로
+        // RpcTargets.All 브로드캐스트라서, 이 RPC가 모든 클라이언트에서 실행되는 것과 합쳐지면
+        // 인원수만큼 채팅 메시지/부활 처리가 중복 실행된다. 호스트에서 한 번만 트리거한다.
+        if (HasStateAuthority)
+        {
+            if (ChatManager.Instance != null)
+                ChatManager.Instance.SendSystemMessage("최종 보스 처치! 스테이지 클리어!", Color.yellow);
+            if (GameManager.Instance != null)
+                GameManager.Instance.ReviveAllDeadPlayers();
+        }
+
         if (UIManager.Instance != null && UIManager.Instance.gameClearUI != null)
             UIManager.Instance.gameClearUI.Show();
         SoundManager.Instance?.PlayGameClear();
