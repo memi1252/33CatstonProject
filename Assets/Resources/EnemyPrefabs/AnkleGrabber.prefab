@@ -4013,7 +4013,7 @@ GameObject:
   - component: {fileID: 1533473481388447180}
   - component: {fileID: 2467863139747643767}
   - component: {fileID: 7812910131612269994}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: AnkleGrabber
   m_TagString: Untagged
   m_Icon: {fileID: 0}

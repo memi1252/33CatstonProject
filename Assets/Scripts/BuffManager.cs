@@ -276,7 +276,13 @@ public class BuffManager : NetworkBehaviour
         // isContractBuffActive가 true일 때만 닫기 로직을 실행하므로 그 프레임에 닫기 코드 자체가 스킵되어
         // 클라이언트 화면에 버프 UI가 영원히 남는 문제가 있었다. 두 플래그가 모두 꺼졌는데 UI가 아직
         // 떠 있다면 여기서 무조건 닫아서 어떤 타이밍에도 클라이언트에서 UI가 닫히도록 보장한다.
-        if (!isContractBuffActive && !isImprintBuffActive)
+        //
+        // 단, RPC_ImprintBuffVote/RPC_ContractBuffVote가 클라이언트에서 UI를 막 띄운 직후에는
+        // 같은 RPC 안에서 직접 대입한 isImprintBuffActive=true가 비권한자 클라이언트에서는 즉시
+        // 반영되지 않고(네트워크 프로퍼티라 호스트의 진짜 동기화 값이 와야 함) 한두 틱 동안 false로
+        // 보일 수 있다. 그 찰나에 이 안전망이 막 연 UI를 바로 닫아버리는 버그가 있었으므로,
+        // UI가 열린 직후 짧은 유예시간 동안은 안전망을 건너뛴다.
+        if (!isContractBuffActive && !isImprintBuffActive && Time.time - _voteUIOpenedTime > 1f)
         {
             if (UIManager.Instance != null && UIManager.Instance.buffUI != null && UIManager.Instance.buffUI.activeSelf)
             {
